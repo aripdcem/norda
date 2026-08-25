@@ -1,36 +1,24 @@
 package com.aripd.norda
 
-import android.Manifest
 import android.app.Activity
 import android.app.AlertDialog
-import android.content.pm.PackageManager
-import android.location.Location
-import android.location.LocationListener
-import android.location.LocationManager
+import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
 import android.widget.Button
 import android.widget.TextView
-import com.aripd.norda.core.track.ActivityType
 import com.aripd.norda.core.track.Format
 import com.aripd.norda.core.track.RecordingSession
-import com.aripd.norda.core.track.TrackPoint
-import com.aripd.norda.storage.ActivityDao
-import com.aripd.norda.storage.AppDatabase
+import com.aripd.norda.tracking.TrackingService
 
 /**
- * Faz 2 kayıt ekranı. Kayıt bu fazda ekran açıkken sürer (keepScreenOn);
- * arka plan kaydı Faz 3'te foreground service ile gelir. Kabul edilen her
- * nokta anında diske yazılır — süreç ölürse Home açılışta kurtarır.
+ * Kayıt ekranı — Faz 3'ten itibaren yalnızca bir gösterge: kaydın sahibi
+ * TrackingService. Geri tuşu kaydı bitirmez; kayıt arka planda sürer ve
+ * bildirimden geri dönülür.
  */
-class RecordingActivity : Activity(), LocationListener {
-
-    private lateinit var locationManager: LocationManager
-    private lateinit var dao: ActivityDao
-    private lateinit var session: RecordingSession
-    private var activityId = 0L
+class RecordingActivity : Activity() {
 
     private lateinit var stateText: TextView
     private lateinit var durationText: TextView
@@ -61,22 +49,19 @@ class RecordingActivity : Activity(), LocationListener {
         pauseButton = findViewById(R.id.pauseButton)
         stopButton = findViewById(R.id.stopButton)
 
-        locationManager = getSystemService(LOCATION_SERVICE) as LocationManager
-        dao = ActivityDao(AppDatabase.get(this))
-
-        val type = ActivityType.fromName(intent.getStringExtra(EXTRA_TYPE))
-        session = RecordingSession(
-            type = type,
-            startWallMillis = System.currentTimeMillis(),
-            startMonotonicMillis = SystemClock.elapsedRealtime()
-        )
-        activityId = dao.startActivity(type, session.startWallMillis)
+        // Servis zaten kayıttaysa (bildirimden ya da Home'dan dönüş) yeni
+        // kayıt açılmaz; yalnızca gösterilir.
+        if (!TrackingService.isRecording) {
+            startForegroundService(
+                Intent(this, TrackingService::class.java)
+                    .putExtra(TrackingService.EXTRA_TYPE, intent.getStringExtra(EXTRA_TYPE))
+            )
+        }
 
         pauseButton.setOnClickListener {
-            val now = SystemClock.elapsedRealtime()
-            when (session.state) {
-                RecordingSession.State.PAUSED -> session.resumeManual(now)
-                else -> session.pauseManual(now)
+            when (TrackingService.session?.state) {
+                RecordingSession.State.PAUSED -> TrackingService.resumeManual()
+                else -> TrackingService.pauseManual()
             }
             render()
         }
@@ -85,52 +70,21 @@ class RecordingActivity : Activity(), LocationListener {
 
     override fun onStart() {
         super.onStart()
-        startLocationUpdates()
         handler.post(ticker)
     }
 
     override fun onStop() {
         super.onStop()
-        locationManager.removeUpdates(this)
         handler.removeCallbacks(ticker)
     }
 
-    private fun startLocationUpdates() {
-        if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) !=
-            PackageManager.PERMISSION_GRANTED
-        ) {
+    private fun render() {
+        val session = TrackingService.session
+        if (session == null) {
+            // Kayıt başka yerden bitirildi ya da servis kapandı.
             finish()
             return
         }
-        // Mesafe süzgeci bilerek 0 (docs/MVP.md, 5.3).
-        if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000L, 0f, this)
-        }
-    }
-
-    override fun onLocationChanged(location: Location) {
-        val point = TrackPoint(
-            timeMillis = location.time,
-            latitude = location.latitude,
-            longitude = location.longitude,
-            altitude = location.altitude,
-            accuracyM = if (location.hasAccuracy()) location.accuracy else 0f,
-            speedMps = if (location.hasSpeed()) location.speed else 0f,
-            bearingDeg = if (location.hasBearing()) location.bearing else 0f
-        )
-        val accepted = session.onFix(point, location.hasAltitude(), SystemClock.elapsedRealtime())
-        if (accepted != null) {
-            dao.appendPoint(activityId, accepted, location.hasAltitude())
-        }
-        render()
-    }
-
-    @Deprecated("Framework çağırmaya devam ediyor; API 29 öncesi için gerekli")
-    override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) = Unit
-    override fun onProviderEnabled(provider: String) = Unit
-    override fun onProviderDisabled(provider: String) = Unit
-
-    private fun render() {
         val now = SystemClock.elapsedRealtime()
         durationText.text = Format.duration(session.durationMillis(now))
         val d = session.distanceM
@@ -162,23 +116,13 @@ class RecordingActivity : Activity(), LocationListener {
     private fun confirmStop() {
         AlertDialog.Builder(this)
             .setMessage(getString(R.string.finish_confirm))
-            .setPositiveButton(R.string.finish) { _, _ -> finishRecording() }
+            .setPositiveButton(R.string.finish) { _, _ ->
+                TrackingService.finishRecording()
+                startActivity(Intent(this, HistoryActivity::class.java))
+                finish()
+            }
             .setNegativeButton(R.string.cancel, null)
             .show()
-    }
-
-    private fun finishRecording() {
-        val now = SystemClock.elapsedRealtime()
-        session.stop(now)
-        dao.finishActivity(session.summary(activityId, System.currentTimeMillis(), now))
-        startActivity(android.content.Intent(this, HistoryActivity::class.java))
-        finish()
-    }
-
-    @Deprecated("Deprecated in Java")
-    override fun onBackPressed() {
-        // Geri = sessiz veri kaybı olmasın: bitir ya da kayda dön.
-        confirmStop()
     }
 
     companion object {

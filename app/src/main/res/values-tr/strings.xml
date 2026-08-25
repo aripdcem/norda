@@ -59,6 +59,10 @@
     <string name="delete">Sil</string>
     <string name="recovered_toast">Yarım kalan kayıt geçmişe kaydedildi.</string>
 
+    <string name="notif_channel_name">Kayıt</string>
+    <string name="notif_channel_desc">Aktivite kaydı sürerken görünen kalıcı bildirim.</string>
+    <string name="notif_text">%1$s · %2$s · %3$s</string>
+
     <string-array name="cardinals_8">
         <item>K</item><item>KD</item><item>D</item><item>GD</item>
         <item>G</item><item>GB</item><item>B</item><item>KB</item>
