@@ -3,6 +3,26 @@
 Biçim [Keep a Changelog](https://keepachangelog.com/), sürümleme
 [SemVer](https://semver.org/) — kurallar için `docs/MVP.md` 15. bölüm.
 
+## [0.3.0] - 2026-08-25
+
+### Added
+
+- Faz 3 — Foreground Tracking: kayıt artık `TrackingService`'in malı; ekran
+  kapansa da, başka uygulamaya geçilse de sürer. Kalıcı bildirim durum ·
+  süre · mesafe gösterir ve kayda geri götürür.
+- Sistem servisi öldürüp yeniden başlatırsa (START_STICKY) kayıt diskteki
+  yarım aktiviteden devralınır (`RecordingSession.prime`, testli): mesafe ve
+  süre korunur, yükseklik saklanan rakımlardan aynı histerezisle kurulur.
+- Bildirim izni (Android 13+) konumla birlikte istenir; reddi kaydı
+  engellemez.
+
+### Changed
+
+- Kayıt ekranı artık yalnızca gösterge; geri tuşu kaydı bitirmez, kayıt
+  arka planda sürer. Bitirme yalnız Bitir düğmesiyle.
+- Home, servis kayıttayken kurtarma çalıştırmaz (canlı kayıt "yarım"
+  sanılıp kapatılmaz).
+
 ## [0.2.0] - 2026-08-25
 
 ### Added
