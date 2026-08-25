@@ -60,6 +60,23 @@
     <string name="recovered_toast">Yarım kalan kayıt geçmişe kaydedildi.</string>
 
     <string name="compass">Pusula</string>
+    <string name="waypoints">Noktalar</string>
+    <string name="waypoint_prefix">Nokta</string>
+    <string name="add_waypoint">+ Nokta</string>
+    <string name="add_waypoint_title">Nokta kaydet</string>
+    <string name="waypoint_added">%1$s kaydedildi.</string>
+    <string name="waypoint_rename">Noktayı yeniden adlandır</string>
+    <string name="waypoint_save">Kaydet</string>
+    <string name="waypoint_coords">%1$.5f°  %2$.5f°</string>
+    <string name="waypoints_empty">Henüz nokta yok. Kayıt sırasında ekle ya da haritaya uzun bas.</string>
+    <string name="waypoints_hint">Nokta yok — yönetmek için dokun.</string>
+    <string name="wpt_line">%1$s %2$d° · %3$s</string>
+    <string name="gpx_export">GPX</string>
+    <string name="gpx_exported">GPX kaydedildi.</string>
+    <string name="gpx_export_failed">GPX dosyası kaydedilemedi.</string>
+    <string name="gpx_import">GPX içe aktar</string>
+    <string name="gpx_imported">Alındı: %1$d iz noktası, %2$d nokta.</string>
+    <string name="gpx_import_failed">GPX dosyası okunamadı.</string>
     <string name="heading_label_true">Gerçek kuzey</string>
     <string name="heading_label_magnetic">Manyetik</string>
     <string name="status_disturbance">Manyetik bozulma: alan %1$d µT, beklenen %2$d µT — telefonu metalden uzaklaştır.</string>

@@ -53,6 +53,10 @@
             android:exported="false" />
 
         <activity
+            android:name=".WaypointsActivity"
+            android:exported="false" />
+
+        <activity
             android:name=".MapsActivity"
             android:exported="false" />
 

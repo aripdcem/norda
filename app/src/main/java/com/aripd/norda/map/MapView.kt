@@ -16,6 +16,7 @@ import android.view.View
 import com.aripd.norda.R
 import com.aripd.norda.core.map.WebMercator
 import com.aripd.norda.core.map.WebMercator.TILE_SIZE
+import com.aripd.norda.core.nav.Waypoint
 import com.aripd.norda.core.track.TrackPoint
 import kotlin.math.floor
 
@@ -46,9 +47,13 @@ class MapView @JvmOverloads constructor(
     private var centerY = WebMercator.yTile(0.0, 14)
 
     private var track: List<TrackPoint> = emptyList()
+    private var waypoints: List<Waypoint> = emptyList()
     private var hasLocation = false
     private var locLat = 0.0
     private var locLon = 0.0
+
+    /** Etkileşimli haritada uzun basış: nokta ekleme kancası (lat, lon). */
+    var onLongPressLatLon: ((Double, Double) -> Unit)? = null
 
     private val cache = TileCache()
     private val pending = HashSet<Long>()
@@ -77,7 +82,20 @@ class MapView @JvmOverloads constructor(
         color = Color.WHITE
         isAntiAlias = true
     }
+    private val waypointPaint = Paint().apply {
+        color = Color.rgb(197, 154, 46)
+        isAntiAlias = true
+    }
+    private val waypointText = Paint().apply {
+        color = Color.rgb(90, 70, 15)
+        textAlign = Paint.Align.CENTER
+        textSize = 30f
+        isFakeBoldText = true
+        isAntiAlias = true
+        setShadowLayer(4f, 0f, 0f, Color.WHITE)
+    }
     private val trackPath = Path()
+    private val waypointPath = Path()
 
     init {
         val accent = context.getColor(R.color.norda_green)
@@ -112,6 +130,11 @@ class MapView @JvmOverloads constructor(
 
     fun setTrack(points: List<TrackPoint>) {
         track = points
+        invalidate()
+    }
+
+    fun setWaypoints(list: List<Waypoint>) {
+        waypoints = list
         invalidate()
     }
 
@@ -157,6 +180,15 @@ class MapView @JvmOverloads constructor(
         override fun onDoubleTap(e: MotionEvent): Boolean {
             applyZoom((zoom + 1).coerceAtMost(maxZoom))
             return true
+        }
+
+        override fun onLongPress(e: MotionEvent) {
+            val callback = onLongPressLatLon ?: return
+            val topLeftX = centerX - width / 2.0 / TILE_SIZE
+            val topLeftY = centerY - height / 2.0 / TILE_SIZE
+            val lat = WebMercator.latDeg(topLeftY + e.y / TILE_SIZE, zoom)
+            val lon = WebMercator.lonDeg(topLeftX + e.x / TILE_SIZE, zoom)
+            callback(lat, lon)
         }
     })
 
@@ -230,7 +262,24 @@ class MapView @JvmOverloads constructor(
         }
 
         drawTrack(canvas, topLeftX, topLeftY)
+        drawWaypoints(canvas, topLeftX, topLeftY)
         drawMarker(canvas, topLeftX, topLeftY)
+    }
+
+    private fun drawWaypoints(canvas: Canvas, topLeftX: Double, topLeftY: Double) {
+        for (w in waypoints) {
+            val px = ((WebMercator.xTile(w.longitude, zoom) - topLeftX) * TILE_SIZE).toFloat()
+            val py = ((WebMercator.yTile(w.latitude, zoom) - topLeftY) * TILE_SIZE).toFloat()
+            if (px < -60 || py < -60 || px > width + 60 || py > height + 60) continue
+            waypointPath.rewind()
+            waypointPath.moveTo(px, py - 14f)
+            waypointPath.lineTo(px + 14f, py)
+            waypointPath.lineTo(px, py + 14f)
+            waypointPath.lineTo(px - 14f, py)
+            waypointPath.close()
+            canvas.drawPath(waypointPath, waypointPaint)
+            canvas.drawText(w.name, px, py + 44f, waypointText)
+        }
     }
 
     private fun drawGridTile(canvas: Canvas, sx: Float, sy: Float, tx: Int, ty: Int) {

@@ -74,6 +74,29 @@ class ActivityDao(private val helper: AppDatabase) {
             out
         }
 
+    /** Noktalar + rakımın geçerli olup olmadığı bilgisi — GPX dışa aktarma için. */
+    fun pointsDetailed(activityId: Long): List<Pair<TrackPoint, Boolean>> =
+        helper.readableDatabase.query(
+            "track_point",
+            arrayOf("timestamp", "latitude", "longitude", "altitude", "accuracy", "speed", "bearing"),
+            "activity_id = ?", arrayOf(activityId.toString()), null, null, "timestamp ASC"
+        ).use { c ->
+            val out = ArrayList<Pair<TrackPoint, Boolean>>(c.count)
+            while (c.moveToNext()) {
+                val hasAltitude = !c.isNull(3)
+                out += TrackPoint(
+                    timeMillis = c.getLong(0),
+                    latitude = c.getDouble(1),
+                    longitude = c.getDouble(2),
+                    altitude = if (hasAltitude) c.getDouble(3) else 0.0,
+                    accuracyM = c.getFloat(4),
+                    speedMps = c.getFloat(5),
+                    bearingDeg = c.getFloat(6)
+                ) to hasAltitude
+            }
+            out
+        }
+
     /** Geçerli rakım bildirmiş noktaların rakımları, zaman sırasıyla. */
     fun altitudesFor(activityId: Long): List<Double> =
         helper.readableDatabase.query(

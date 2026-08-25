@@ -19,8 +19,10 @@ import com.aripd.norda.core.nav.ReturnToStart
 import com.aripd.norda.core.track.Format
 import com.aripd.norda.core.track.Stats
 import com.aripd.norda.core.track.TrackPoint
+import com.aripd.norda.core.nav.Waypoint
 import com.aripd.norda.storage.ActivityDao
 import com.aripd.norda.storage.AppDatabase
+import com.aripd.norda.storage.WaypointDao
 import com.aripd.norda.tracking.TrackingService
 import kotlin.math.abs
 import kotlin.math.roundToInt
@@ -38,6 +40,8 @@ class CompassActivity : Activity(), LocationListener {
     private lateinit var headingLabel: TextView
     private lateinit var statusText: TextView
     private lateinit var targetText: TextView
+    private lateinit var waypointText: TextView
+    private var waypoints: List<Waypoint> = emptyList()
 
     private lateinit var locationManager: LocationManager
     private lateinit var headingProvider: HeadingProvider
@@ -57,6 +61,10 @@ class CompassActivity : Activity(), LocationListener {
         headingLabel = findViewById(R.id.compassLabel)
         statusText = findViewById(R.id.compassStatus)
         targetText = findViewById(R.id.compassTarget)
+        waypointText = findViewById(R.id.compassWaypoints)
+        waypointText.setOnClickListener {
+            startActivity(android.content.Intent(this, WaypointsActivity::class.java))
+        }
 
         locationManager = getSystemService(LOCATION_SERVICE) as LocationManager
         headingProvider = HeadingProvider(this, ::displayRotation, ::onHeading)
@@ -77,6 +85,7 @@ class CompassActivity : Activity(), LocationListener {
         super.onResume()
         field = DeclinationCache.cached(this)
         startPoint = resolveStartPoint()
+        waypoints = WaypointDao(AppDatabase.get(this)).list()
         headingProvider.start()
         startLocationUpdates()
     }
@@ -135,6 +144,36 @@ class CompassActivity : Activity(), LocationListener {
         )
         renderStatus(accuracyLow, fieldMicroTesla)
         renderTarget(heading)
+        renderWaypoints()
+    }
+
+    /** En yakın iki nokta: kadranda içi boş baklava en yakını gösterir. */
+    private fun renderWaypoints() {
+        val fix = lastFix
+        if (fix == null || waypoints.isEmpty()) {
+            compassView.setWaypointBearing(null)
+            waypointText.text = getString(
+                if (waypoints.isEmpty()) R.string.waypoints_hint else R.string.rts_waiting_fix
+            )
+            return
+        }
+        val nearest = waypoints
+            .map { w ->
+                Triple(
+                    w,
+                    Geo.distanceMeters(fix.latitude, fix.longitude, w.latitude, w.longitude),
+                    Geo.initialBearingDeg(fix.latitude, fix.longitude, w.latitude, w.longitude)
+                )
+            }
+            .sortedBy { it.second }
+            .take(2)
+        compassView.setWaypointBearing(nearest.firstOrNull()?.third)
+        waypointText.text = nearest.joinToString("   ") { (w, distance, bearing) ->
+            val distanceText =
+                if (distance < 1000) getString(R.string.distance_m, distance.toInt())
+                else getString(R.string.distance_km, distance / 1000.0)
+            getString(R.string.wpt_line, w.name, bearing.roundToInt() % 360, distanceText)
+        }
     }
 
     private fun renderStatus(accuracyLow: Boolean, fieldMicroTesla: Double?) {

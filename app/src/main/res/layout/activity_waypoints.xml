@@ -9,30 +9,21 @@
     <TextView
         style="@style/Norda.SectionLabel"
         android:layout_marginBottom="8dp"
-        android:text="@string/history" />
+        android:text="@string/waypoints" />
 
     <ListView
-        android:id="@+id/historyList"
+        android:id="@+id/waypointList"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
+        android:layout_height="match_parent"
         android:divider="@null"
         android:dividerHeight="0dp" />
 
     <TextView
-        android:id="@+id/emptyText"
+        android:id="@+id/waypointsEmpty"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
+        android:layout_height="match_parent"
         android:gravity="center"
-        android:text="@string/history_empty"
+        android:text="@string/waypoints_empty"
         android:textSize="16sp" />
-
-    <Button
-        android:id="@+id/gpxImportButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:minHeight="48dp"
-        android:text="@string/gpx_import" />
 
 </LinearLayout>

@@ -11,8 +11,12 @@ import android.widget.Button
 import android.widget.TextView
 import com.aripd.norda.core.track.Format
 import com.aripd.norda.core.track.RecordingSession
+import android.widget.Toast
+import com.aripd.norda.core.nav.WaypointNaming
 import com.aripd.norda.map.MapPackages
 import com.aripd.norda.map.MapView
+import com.aripd.norda.storage.AppDatabase
+import com.aripd.norda.storage.WaypointDao
 import com.aripd.norda.tracking.TrackingService
 
 /**
@@ -76,11 +80,31 @@ class RecordingActivity : Activity() {
         findViewById<Button>(R.id.compassButton).setOnClickListener {
             startActivity(android.content.Intent(this, CompassActivity::class.java))
         }
+        findViewById<Button>(R.id.addWaypointButton).setOnClickListener { addWaypointHere() }
     }
 
     override fun onStart() {
         super.onStart()
+        refreshWaypoints()
         handler.post(ticker)
+    }
+
+    private fun refreshWaypoints() {
+        liveMap.setWaypoints(WaypointDao(AppDatabase.get(this)).list())
+    }
+
+    /** Kayıt sırasında tek dokunuşla nokta: son kabul edilen konuma (MVP 2.1). */
+    private fun addWaypointHere() {
+        val last = TrackingService.session?.points?.lastOrNull()
+        if (last == null) {
+            Toast.makeText(this, R.string.rts_waiting_fix, Toast.LENGTH_SHORT).show()
+            return
+        }
+        val dao = WaypointDao(AppDatabase.get(this))
+        val name = WaypointNaming.nextDefaultName(dao.names(), getString(R.string.waypoint_prefix))
+        dao.insert(name, last.latitude, last.longitude, null, System.currentTimeMillis())
+        Toast.makeText(this, getString(R.string.waypoint_added, name), Toast.LENGTH_SHORT).show()
+        refreshWaypoints()
     }
 
     override fun onStop() {

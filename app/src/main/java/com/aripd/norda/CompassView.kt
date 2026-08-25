@@ -21,6 +21,7 @@ class CompassView @JvmOverloads constructor(
 
     private var headingDeg = 0.0
     private var targetBearingDeg: Double? = null
+    private var waypointBearingDeg: Double? = null
     private var cardinals: Array<String> =
         resources.getStringArray(R.array.cardinals_8).let {
             arrayOf(it[0], it[2], it[4], it[6])
@@ -50,6 +51,12 @@ class CompassView @JvmOverloads constructor(
         color = Color.rgb(232, 196, 104)
         isAntiAlias = true
     }
+    private val waypointStroke = Paint().apply {
+        style = Paint.Style.STROKE
+        strokeWidth = 4f
+        color = Color.rgb(232, 196, 104)
+        isAntiAlias = true
+    }
     private val indicatorPaint = Paint().apply { isAntiAlias = true }
     private val needlePath = Path()
     private val diamondPath = Path()
@@ -71,6 +78,12 @@ class CompassView @JvmOverloads constructor(
 
     fun setTargetBearing(deg: Double?) {
         targetBearingDeg = deg
+        invalidate()
+    }
+
+    /** En yakın noktanın kerterizi — içi boş baklava (başlangıç dolu olandır). */
+    fun setWaypointBearing(deg: Double?) {
+        waypointBearingDeg = deg
         invalidate()
     }
 
@@ -123,6 +136,21 @@ class CompassView @JvmOverloads constructor(
             diamondPath.lineTo(cx - r, my)
             diamondPath.close()
             canvas.drawPath(diamondPath, targetPaint)
+            canvas.restore()
+        }
+
+        waypointBearingDeg?.let { bearing ->
+            canvas.save()
+            canvas.rotate(bearing.toFloat(), cx, cy)
+            val my = cy - radius * 0.90f
+            val r = radius * 0.055f
+            diamondPath.rewind()
+            diamondPath.moveTo(cx, my - r)
+            diamondPath.lineTo(cx + r, my)
+            diamondPath.lineTo(cx, my + r)
+            diamondPath.lineTo(cx - r, my)
+            diamondPath.close()
+            canvas.drawPath(diamondPath, waypointStroke)
             canvas.restore()
         }
 
