@@ -16,4 +16,4 @@ modüllerinin birleşiminden doğar.
 indirme). Tracking, pusula, navigasyon ve GPX internetsiz çalışır; konum
 verisi cihazda kalır, telemetri yoktur.
 
-Harita verisi: © OpenStreetMap contributors (ODbL).
+Lisans: [MIT](LICENSE). Harita verisi: © OpenStreetMap contributors (ODbL).

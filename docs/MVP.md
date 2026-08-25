@@ -33,6 +33,7 @@ değil, bir taşıma projesidir.
 | SDK | `minSdk 26` (Android 8.0) · `targetSdk 35` (Android 15, kenardan kenara) |
 | Sürümleme | SemVer; her değişikliğe etiket + release (15. bölüm) |
 | Geliştirme | TDD — kırmızı → yeşil → refactor (13. bölüm) |
+| Lisans | Kod **MIT** (`LICENSE`); harita verisi © OpenStreetMap contributors (ODbL) |
 
 ## 1. Ürün tanımı ve konumlandırma
 
