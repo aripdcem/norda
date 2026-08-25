@@ -3,6 +3,33 @@
 Biçim [Keep a Changelog](https://keepachangelog.com/), sürümleme
 [SemVer](https://semver.org/) — kurallar için `docs/MVP.md` 15. bölüm.
 
+## [0.8.0] - 2026-08-25
+
+### Added
+
+- Faz 8 — Polish: kalite çıtası her ekranda.
+- Pil ölçümü: kayıt başında ve sonunda pil yüzdesi saklanır (şema sürümü 3,
+  göçlü); geçmiş satırı tüketimi ve süre yeterliyse %/saat oranını gösterir.
+  Ölçüm kirliyse (seviye okunamadı, kayıtta şarj, 5 dk'dan kısa süre) sayı
+  uydurulmaz — hiç gösterilmez. Saf `Battery` modülü, 5 JVM testiyle.
+- Filtre kalibrasyonu: GPS filtresi artık ret NEDENİ üretir (doğruluk /
+  titreme / ışınlama / zaman) ve kayıt bunları sayar; tanılama ekranı kayıt
+  sürerken canlı sayaçları gösterir. Saha verisiyle eşik ayarının ham
+  verisi bu — 4 yeni JVM testi.
+- İzin UX (Home): ret nedeni ekranda kalır; kalıcı ret "Ayarları aç"
+  diyaloğuna götürür (tanılama ekranındaki akışla aynı dil).
+
+### Changed
+
+- Konum kapalıyken START, kaydın boş kalacağını baştan söyler: "Konumu aç"
+  ya da "Yine de başlat". Servis sağlayıcıya artık kapalıyken de kayıt olur —
+  konum sonradan açılırsa fix'ler kendiliğinden akmaya başlar.
+- Hiç nokta girmemiş kayıt geçmişe gürültü olarak yazılmaz: bitirmede ve
+  kurtarmada silinir, kullanıcıya söylenir.
+- Erişilebilirlik: pusula kadranı ve kayıt haritası ekran okuyucuya süs
+  olarak işaretlendi (değerler zaten metinlerde); tüm yazı boyutları sp,
+  dokunma hedefleri ≥ 48 dp doğrulandı.
+
 ## [0.7.1] - 2026-08-25
 
 ### Fixed
