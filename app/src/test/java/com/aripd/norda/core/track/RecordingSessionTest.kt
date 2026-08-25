@@ -112,6 +112,26 @@ class RecordingSessionTest {
         assertEquals(0.0, sum.elevationLossM, 1e-9)
     }
 
+    // Servis öldürülüp yeniden başlatıldığında kayıt diskten devralınır:
+    // mesafe/süre korunur, yeni fix eski son noktadan ölçülür, yükseklik
+    // saklanan rakımlardan aynı histerezisle yeniden kurulur.
+    @Test
+    fun primeRestoresRecoveredState() {
+        val s = session()
+        s.prime(
+            recoveredDistanceM = 500.0,
+            recoveredDurationMillis = 600_000,
+            lastPoint = fix(0, 0.0, alt = 100.0),
+            altitudes = listOf(100.0, 110.0, 105.0)
+        )
+        assertEquals(500.0, s.distanceM, 1e-9)
+        assertEquals(610_000, s.durationMillis(10_000))
+        assertEquals(10.0, s.elevationGainM, 1e-9)
+        assertEquals(5.0, s.elevationLossM, 1e-9)
+        assertNotNull(s.onFix(fix(5_000, 1.0), false, 5_000))
+        assertEquals(510.0, s.distanceM, 0.5)
+    }
+
     // Rakım bildirmeyen fix yükseklik hesabına girmez — 0.0 nöbetçi değeri
     // hayalet iniş üretirdi.
     @Test

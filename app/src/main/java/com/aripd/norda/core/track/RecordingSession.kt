@@ -80,6 +80,25 @@ class RecordingSession(
         return fix
     }
 
+    /**
+     * Süreç ölümü sonrası kurtarma: diskteki yarım kayıttan devralınan durum.
+     * Yalnızca kurgudan hemen sonra, ilk fix'ten önce çağrılır. Mesafe ve
+     * süre devralınır; yükseklik, saklanan rakımlar sırayla beslenerek
+     * aynı histerezisle yeniden hesaplanır; son nokta filtreye "önceki"
+     * olarak verilir.
+     */
+    fun prime(
+        recoveredDistanceM: Double,
+        recoveredDurationMillis: Long,
+        lastPoint: TrackPoint?,
+        altitudes: List<Double>
+    ) {
+        distanceM = recoveredDistanceM
+        stopwatch.prime(recoveredDurationMillis)
+        lastPoint?.let { recorded += it }
+        altitudes.forEach { elevation.onAltitude(it) }
+    }
+
     fun pauseManual(nowMonotonicMillis: Long) {
         if (state == State.RECORDING || state == State.AUTO_PAUSED) {
             state = State.PAUSED
