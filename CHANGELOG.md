@@ -3,6 +3,26 @@
 Biçim [Keep a Changelog](https://keepachangelog.com/), sürümleme
 [SemVer](https://semver.org/) — kurallar için `docs/MVP.md` 15. bölüm.
 
+## [0.6.0] - 2026-08-25
+
+### Added
+
+- Faz 6 — Navigation: Pusula ekranı ve Return to Start. Elle çizilen kadran
+  (gerçek kuzeye göre döner, üst gösterge sabit), başlangıç yönünde altın
+  baklava; alt satırda kerteriz + mesafe + tempo biliniyorsa tahmini süre
+  ve yönlendirme ("12° sağa" / "yön tutuyor", ±5°).
+- Gerçek kuzey: sapma `GeomagneticField`'den, 1 km yol alınmadan yeniden
+  hesaplanmaz ve kalıcı saklanır — sonraki açılışta anında hazır. Sapma
+  bilinmiyorsa etiket "Manyetik" der.
+- Manyetik bozulma uyarısı: ölçülen alan şiddeti beklenenle karşılaştırılır
+  (%25 giriş / kesintisiz 2,5 sn / %15 çıkış histerezisi). Durum önceliği:
+  bozulma > kalibrasyon.
+- Çekirdeğe 3 saf modül, 11 yeni JVM testiyle: `Smoothing` (zaman sabitli,
+  sin/cos üzerinden — 50 Hz ↔ 16 Hz aynı his), `DisturbanceDetector`,
+  `ReturnToStart` (kerteriz + mesafe + ETA + işaretli dönüş açısı).
+- Pusula, Home'dan ve kayıt ekranından tek dokunuş uzaklıkta. Başlangıç
+  noktası: aktif kaydın ilk noktası; kayıt yoksa son aktivitenin başlangıcı.
+
 ## [0.5.0] - 2026-08-25
 
 ### Added
