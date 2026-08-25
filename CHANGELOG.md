@@ -3,6 +3,28 @@
 Biçim [Keep a Changelog](https://keepachangelog.com/), sürümleme
 [SemVer](https://semver.org/) — kurallar için `docs/MVP.md` 15. bölüm.
 
+## [0.5.0] - 2026-08-25
+
+### Added
+
+- Faz 5 — Offline Maps: kendi karo paketleme hattı devrede. `map-pack.yml`
+  elle tetiklenir (id + ad + bbox + zoom), paketi üretir, `maps/<id>-vN`
+  etiketiyle Release'e asar ve `docs/maps/index.json`'u günceller.
+- Haritalar ekranı artık `index.json`'daki paketleri listeler ve indirir:
+  ilerleme yüzdesi, SHA-256 doğrulaması (tutmazsa dosya silinir), yarım
+  indirme asla geçerli paket gibi görünmez (`.part` + adlandırma).
+- `TileDownloader`: ağa dokunan TEK sınıf; `INTERNET` izni yalnız bunun için
+  eklendi. Elle içe aktarma çevrimdışı yedek yol olarak duruyor.
+- `core/io/Digests`: SHA-256, NIST test vektörleriyle doğrulanmış.
+- `tools/make-map-pack.py` (bölge parametreli üretici, eski test üretecinin
+  yerine) + `tools/update-map-index.py`.
+
+### Notlar
+
+- Üretim adımı şimdilik prosedürel kartografya kullanır; gerçek OSM
+  kartografyası geldiğinde yalnız map-pack'in "Paketi üret" adımı değişir —
+  paket biçimi, yayın ve indirme zinciri aynı kalır.
+
 ## [0.4.0] - 2026-08-25
 
 ### Added
