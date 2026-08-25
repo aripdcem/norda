@@ -3,6 +3,30 @@
 Biçim [Keep a Changelog](https://keepachangelog.com/), sürümleme
 [SemVer](https://semver.org/) — kurallar için `docs/MVP.md` 15. bölüm.
 
+## [0.9.0] - 2026-08-25
+
+### Added
+
+- Faz 9 — Release Candidate açılışı: saha kanıtı + Play hazırlığı.
+- "Testler diş geçiriyor mu" turu (MVP 13.1/5) ilk kez koşuldu ve README'ye
+  tablo olarak işlendi: 8 kasıtlı hata, 8'i de yakalandı. Turun kendi
+  bulgusu da kapatıldı — şema taban listesine sızan DDL'yi parite testi
+  göremiyordu; sürüm başına ifade sayısını donduran altın-tablo testi
+  eklendi (96 test).
+- `docs/PRIVACY.md` (TR+EN): konum cihazda kalır, ağ yalnız harita paketi
+  indirir — Play'in konum izni için gizlilik politikası şartına hazır.
+- `docs/SAHA.md`: 20 adımlık saha turu protokolü + rapor şablonu; üç temiz
+  tur v1.0.0 kapısıdır.
+- `check-tag` artık versionCode formülünü de doğrular
+  (MAJOR×10000+MINOR×100+PATCH) — 15.1'deki "monotonluğu CI doğrular"
+  sözü yerine geldi; iki ret dalı da yerelde kanıtlı.
+
+### Changed
+
+- Pusula ve tanılama ekranları konum sağlayıcısına kapalıyken de kayıt
+  olur (0.8.0'daki servis düzeltmesiyle aynı desen): ekran açıkken konum
+  açılırsa fix'ler kendiliğinden akmaya başlar.
+
 ## [0.8.0] - 2026-08-25
 
 ### Added
