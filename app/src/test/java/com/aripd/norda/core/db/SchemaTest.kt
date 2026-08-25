@@ -64,6 +64,19 @@ class SchemaTest {
         assertFalse(ddl.contains("CREATE TABLE waypoint("))
     }
 
+    /**
+     * Mutasyon turu bulgusu (v0.9.0): taban listeye sızan bir DDL her sürümün
+     * kurulumuna girdiği için parite testi onu göremez — iki taraf birlikte
+     * kirlenir. Sürüm başına ifade sayısı altın tablo olarak dondurulur;
+     * yeni sürüm eklerken buraya bilinçli bir satır eklenir.
+     */
+    @Test
+    fun statementCountPerVersionIsFrozen() {
+        assertEquals(3, Schema.createStatements(1).size)
+        assertEquals(4, Schema.createStatements(2).size)
+        assertEquals(6, Schema.createStatements(3).size)
+    }
+
     @Test
     fun waypointColumnsMatchDaoContract() {
         val ddl = Schema.createStatements().first { it.contains("CREATE TABLE waypoint(") }
