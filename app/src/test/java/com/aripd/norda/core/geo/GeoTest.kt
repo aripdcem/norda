@@ -50,8 +50,7 @@ class GeoTest {
         assertEquals(0.0, Geo.initialBearingDeg(40.0, 29.0, 41.0, 29.0), 0.01)
     }
 
-    // İstanbul'dan Kâbe'ye kerteriz ≈ 151,6° — Compass'ın kadranda doğruladığı
-    // değerle uyumlu (koordinat farkı yüzünden küçük sapma payı).
+    // İstanbul'dan Kâbe'ye kerteriz ≈ 151,6° — bilinen coğrafi referans değer.
     @Test
     fun bearingIstanbulToKaaba() {
         val b = Geo.initialBearingDeg(41.0082, 28.9784, 21.4225, 39.8262)

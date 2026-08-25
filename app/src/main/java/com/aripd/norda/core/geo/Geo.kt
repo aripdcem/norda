@@ -9,8 +9,8 @@ import kotlin.math.sin
 import kotlin.math.sqrt
 
 /**
- * Saf jeodezi: mesafe (WalkRun mirası) ve büyük daire kerterizi (Compass
- * mirası) tek modülde. Android'e dokunmaz; tamamı JVM'de test edilir.
+ * Saf jeodezi: mesafe, büyük daire kerterizi ve açı aritmetiği tek modülde.
+ * Android'e dokunmaz; tamamı JVM'de test edilir.
  */
 object Geo {
 

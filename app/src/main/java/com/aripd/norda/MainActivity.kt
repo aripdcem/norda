@@ -180,7 +180,7 @@ class MainActivity : Activity(), LocationListener, SensorEventListener {
             return
         }
         // Mesafe süzgeci bilerek 0: süzgeç verilince sabit duran telefona GPS
-        // hiç fix göndermiyor (docs/MVP.md, 5.3 — Compass'ta ölçülen tuzak).
+        // hiç fix göndermiyor (docs/MVP.md, 5.3'te belgelenen tuzak).
         if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
             locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000L, 0f, this)
         }

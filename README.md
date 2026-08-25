@@ -4,9 +4,7 @@
 uygulaması (Android, Kotlin, sıfır çalışma zamanı bağımlılığı).
 
 Yürüyüş ve koşu kaydını pusula, offline harita, waypoint'ler ve "Return to
-Start" navigasyonuyla birleştirir. [WalkRun](https://github.com/aripdcem/WalkRun)
-ve [Compass](https://github.com/aripdcem/compass) projelerinin test edilmiş
-modüllerinin birleşiminden doğar.
+Start" navigasyonuyla birleştirir.
 
 - Ürün kapsamı, teknik tasarım ve yol haritası: **[docs/MVP.md](docs/MVP.md)**
 - Süreç: SemVer, her uygulama-etkileyen değişikliğe etiket + release,

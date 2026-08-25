@@ -1,5 +1,5 @@
 <!-- Norda ikonu: başlangıç noktasından hedefe giden iz, ortada waypoint
-     baklavası. Kimlik rota/iz; Compass'ın ibresiyle karışmaz. -->
+     baklavası. Kimlik rota/iz. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"

@@ -2,19 +2,15 @@
 
 **Minimalist Outdoor Navigation — MVP ve Teknik Tasarım**
 
-rev 2 · 25 Ağustos 2026
+rev 3 · 25 Ağustos 2026
 
 Bu belge, yürüyüş ve koşu takibini pusula, offline harita, waypoint'ler ve
 "Return to Start" navigasyonu ile birleştiren minimalist bir Android uygulaması
 için ürün kapsamını, ekranları, teknik mimariyi, veri modelini, GPS/sensör
 işleme yaklaşımını, süreç kurallarını ve geliştirme yol haritasını tanımlar.
 
-İlk taslak (Drive, 25 Ağustos 2026) verilen kararlarla yeniden yazılmıştır;
-**projenin tek doğru kaynağı bu dosyadır.** Norda, iki mevcut uygulamanın
-birleşiminden doğar: [WalkRun](https://github.com/aripdcem/WalkRun) (kayıt
-motoru) ve [Compass](https://github.com/aripdcem/compass) (yön bulma). Her iki
-depo da test edilmiş modül kaynağı olarak kullanılır — Norda bir yeniden yazma
-değil, bir taşıma projesidir.
+İlk taslak (25 Ağustos 2026) verilen kararlarla yeniden yazılmıştır;
+**projenin tek doğru kaynağı bu dosyadır.**
 
 | Alan | Karar |
 |---|---|
@@ -57,7 +53,7 @@ MVP'nin odak noktası:
 - Offline harita: kendi hattımızda üretilen bölge paketleri.
 - Waypoint'ler ve GPX alışverişi: veri kullanıcınındır, taşınabilir.
 - Return to Start: başlangıca kuş uçuşu yön + mesafe + tahmini süre.
-- Hesap, sosyal ağ, bulut, routing, kalori, Strava **yok**.
+- Hesap, sosyal ağ, bulut, routing, kalori **yok**.
 
 ## 2. MVP kapsamı
 
@@ -77,29 +73,28 @@ MVP'nin odak noktası:
 | Manyetik bozulma uyarısı | Evet | Alan şiddeti karşılaştırması, histerezisli (6.3) |
 | Offline map | Evet | Raster karo; MBTiles paketleri (7. bölüm) |
 | Map paket indirme | Evet | Kendi hatta üretilen bölge paketleri (7.2) |
-| Return to Start | Evet | Kuş uçuşu kerteriz + mesafe + ETA (10. bölüm) |
+| Return to Start | Evet | Kuş uçuşu kerteriz + mesafe + ETA (9. bölüm) |
 | Waypoints | Evet | Adlandırılmış noktalar; haritada ve pusulada (2.1) |
 | GPX import/export | Evet | `<trk>` + `<wpt>` birlikte; SAF ile dosya alışverişi |
 | Activity history | Evet | Yerel SQLite |
 | Serbest alan seçerek indirme | Sonraki sürüm | MVP'de hazır bölge paketleri (7.2) |
 | Breadcrumb navigation | Sonraki sürüm | Kaydedilen izi ters yönde takip |
-| Gün ışığı bütçesi | Sonraki sürüm | Batış saati × dönüş temposu uyarısı (Compass `Sun.kt`) |
-| Gece modu | Sonraki sürüm | Kırmızı palet, alacakaranlıkta otomatik (Compass) |
-| Sesli anonslar / rekorlar / haftalık özet | Sonraki sürüm | WalkRun mirası |
+| Gün ışığı bütçesi | Sonraki sürüm | Batış saati × dönüş temposu uyarısı |
+| Gece modu | Sonraki sürüm | Kırmızı palet, alacakaranlıkta otomatik |
+| Sesli anonslar / rekorlar / haftalık özet | Sonraki sürüm | |
 | Turn-by-turn routing | Hayır | Kapsam dışı |
 | Account / Cloud / Social | Hayır | Kapsam dışı |
 | Kalori | Hayır | Güvenilirliği düşük metrik ürünün merkezine alınmaz |
-| Strava | Hayır | Ağ kuralıyla çelişir (11. bölüm); WalkRun'daki kod istenirse sonra |
+| Üçüncü parti servis entegrasyonu | Hayır | Ağ kuralıyla çelişir (11. bölüm) |
 | AI / öneriler / hava durumu / saat–nabız | Hayır | Kapsam dışı |
 
 ### 2.1 Waypoint davranışı
 
 - Waypoint her zaman eklenebilir: kayıt sırasında tek dokunuşla (araç, kamp,
   su kaynağı, yol ayrımı) ya da haritada uzun basarak.
-- Yeni nokta adı "Nokta N" — N, listedeki boş ilk numara (Compass kuralı);
-  yeniden adlandırılabilir, silinebilir.
-- Sayı sınırı yok (Compass'taki 8 sınırı ekran yerleşiminden geliyordu ve
-  taşınmıyor); liste ekranında mesafeye göre sıralama.
+- Yeni nokta adı "Nokta N" — N, listedeki boş ilk numara; yeniden
+  adlandırılabilir, silinebilir.
+- Sayı sınırı yok; liste ekranında mesafeye göre sıralama.
 - Haritada işaret, pusulada kerteriz ve mesafe olarak görünür.
 - GPX `<wpt>` olarak dışa/içe aktarılır.
 
@@ -213,13 +208,13 @@ olmasa bile çalışır).
 com.aripd.norda
 │
 ├── core/                    saf Kotlin — Android import'u YASAK, tamamı JVM'de test edilir
-│   ├── geo/                 mesafe, kerteriz, açı aritmetiği        ← WalkRun + Compass Geo birleşimi
+│   ├── geo/                 mesafe, kerteriz, açı aritmetiği
 │   ├── track/               TrackPoint, GpsFilter, AutoPauseDetector,
-│   │                        PauseAwareStopwatch, Stats, Elevation   ← WalkRun (+Elevation yeni)
-│   ├── nav/                 ReturnToStart, WaypointLogic            ← Compass Geo + Waypoints mantığı
-│   ├── heading/             Smoothing, Declination modeli           ← Compass
-│   ├── map/                 MapProjection (WebMercator), TileMath   ← yeni (saf matematik)
-│   └── io/                  Gpx (trk+wpt), satır↔model mapper'lar   ← WalkRun Gpx/GpxImport
+│   │                        PauseAwareStopwatch, Stats, Elevation
+│   ├── nav/                 ReturnToStart, WaypointLogic
+│   ├── heading/             Smoothing, sapma modeli
+│   ├── map/                 MapProjection (WebMercator), TileMath
+│   └── io/                  Gpx (trk+wpt), satır↔model mapper'lar
 │
 ├── location/                GpsLocationSource (LocationManager sarmalı)
 ├── compasshw/               sensör kaydı, rotation vector, kalibrasyon/bozulma uyarıları
@@ -230,27 +225,9 @@ com.aripd.norda
                              MapsView, SettingsActivity, Palette
 ```
 
-### 4.1 Hazır modül eşlemesi
-
-| Norda modülü | Kaynak | Durum |
-|---|---|---|
-| `GpsFilter` | WalkRun | Testli; eşikler başlangıç değeri (5.2) |
-| `Geo` (mesafe) | WalkRun | Testli |
-| `Geo` (kerteriz, açı, birleştirme) | Compass | Testli (fiziksel sabitlerle) |
-| `PauseAwareStopwatch` | WalkRun | Testli |
-| `AutoPauseDetector` | WalkRun | Testli |
-| `Stats` (mesafe/tempo) | WalkRun | Testli; yükseklik kazanımı **yeni** |
-| `Smoothing` (zaman sabitli) | Compass | Testli (50 Hz ↔ 16 Hz aynı his) |
-| Bozulma algılama (`Disturbance`) | Compass | Testli, sahada doğrulanmış |
-| `ReturnToStart` kerterizi | Compass `Geo` | Testli; 10. bölümdeki düzeltilmiş formül |
-| ETA | WalkRun `currentPace` penceresi | Testli |
-| Çökme kurtarma deseni | WalkRun | SQLite + WAL'a uyarlanır (8.3) |
-| İz çizimi | WalkRun `TrackView` | Harita katmanına uyarlanır |
-| GPX | WalkRun `Gpx` + `GpxImport` | Testli; `<wpt>` desteği eklenir |
-| Waypoint adlandırma/temizlik | Compass `Waypoints` | Testli; depo SQLite'a taşınır |
-| MapProjection · TileStore · TileCache · TileDownloader · CustomMapView | — | **Yeni: MVP'nin tek büyük yatırımı** |
-
-Kural: **taşınan her modül testleriyle birlikte gelir; testsiz port birleşmez.**
+Kural: **her modül testleriyle birlikte gelir; testsiz kod birleşmez.**
+MVP'nin en büyük yeni yatırımı harita motorudur (`core/map` + `map/`);
+diğer modüllerin mantığı bilinen, test edilmiş desenler üzerine kurulur.
 
 ## 5. GPS / Location Engine
 
@@ -269,7 +246,7 @@ GNSS / LocationManager
 `timestamp, latitude, longitude, altitude, accuracy, speed, bearing` —
 saf model, Android bağımlılığı yok.
 
-### 5.2 Filtre başlangıç değerleri (WalkRun'dan, testli)
+### 5.2 Filtre başlangıç değerleri
 
 | Filtre | Değer | Gerekçe |
 |---|---|---|
@@ -286,10 +263,11 @@ durur. İstatistikler her zaman filtrelenmiş veriyle hesaplanır.
 
 Başlangıç: ~1 sn aralık. "Her saniye kaydet" sabit kuralı yerine adaptif
 yaklaşım hedeflenir; gerçek değerler cihaz ve pil testleriyle belirlenir.
-Mesafe süzgeci `LocationManager`'a **verilmez** — Compass'ta ölçülen tuzak:
-mesafe süzgeci konunca sabit duran telefona GPS hiç fix göndermiyor.
+Mesafe süzgeci `LocationManager`'a **verilmez** — ölçülmüş tuzak: mesafe
+süzgeci verilince Android güncellemeyi ancak hem süre dolduğunda hem o kadar
+yol alındığında gönderir, sabit duran telefona GPS hiç fix göndermez.
 
-### 5.4 Yükseklik kazanımı/kaybı (yeni modül)
+### 5.4 Yükseklik kazanımı/kaybı
 
 GNSS dikey hatası yatayın 2–3 katıdır; ham farkları toplamak düz yolda bile
 yüzlerce metre hayalet tırmanış üretir. **Histerezisli birikim**: yükseklik,
@@ -299,7 +277,7 @@ işlenir ve demir güncellenir. Test: sabit yükseklikte gürültülü seri → 
 0; bilinen merdiven profili → beklenen toplam. Barometrik iyileştirme MVP
 sonrası.
 
-### 5.5 Otomatik duraklatma (WalkRun `AutoPauseDetector`, testli)
+### 5.5 Otomatik duraklatma
 
 - Kabul edilmiş fix gelmeden **20 sn** geçerse (fix'ler gelmeye devam ederken)
   → otomatik duraklat; süre saymaz.
@@ -322,7 +300,7 @@ Play politikaları hedef SDK ile birlikte geliştirme sırasında yeniden doğru
 (`getRotationMatrix`). `remapCoordinateSystem` ile eksenler ekran yönüne
 eşlenir — dikey ve yatay yerleşimde aynı kod çalışır.
 
-### 6.2 Yumuşatma (Compass `Smoothing`, testli)
+### 6.2 Yumuşatma
 
 Açı doğrudan değil `sin`/`cos` bileşenleri üzerinden süzülür (359°→0°
 geçişinde ibre tam tur atmasın). Saklanan şey katsayı değil **zaman
@@ -335,8 +313,9 @@ hesaplanır, örnekleme hızı değişse de his sabit kalır.
   manyetik + sapma`. Sapma önbelleğe alınır (yüzlerce km'de bir derece oynar;
   1 km yol alınmadan yeniden hesaplanmaz), sonraki açılışta anında hazır.
 - Harita, kerteriz ve pusula **aynı kuzey çerçevesini** kullanır; sapma
-  bilinmiyorsa etiket "manyetik" der, hedefler manyetik çerçevede saklanır
-  (izin sonradan verilirse kilitlenen fiziksel yön kaymasın — Compass dersi).
+  bilinmiyorsa etiket "manyetik" der. Hedefler manyetik çerçevede saklanır:
+  konum izni sonradan verilirse sapma devreye girer ve ekrandaki açılar kayar;
+  hedef manyetik tutulunca kilitlenen fiziksel yön aynı kalır.
 - Bozulma uyarısı: ölçülen toplam alan şiddeti beklenenle
   (`getFieldStrength()`) karşılaştırılır; %25'i aşan sapma kesintisiz 2.5 sn
   sürerse uyarı, %15'in altında kalkar. Uyarı önceliği: bozulma > kalibrasyon >
@@ -361,11 +340,11 @@ yerine **raster XYZ karoları** kullanan küçük bir custom renderer + karolar�
 - Web Mercator projeksiyonu, XYZ karo matematiği (`core/map`te saf Kotlin,
   JVM testli: lat/lon ↔ tile/piksel dönüşümleri bilinen sabit noktalarla).
 - Yalnızca viewport'u kesen karolar yüklenir ve çizilir; bitmap önbelleği
-  (LRU); pan/zoom; kare başına tahsis yok (Compass `onDraw` disiplini).
+  (LRU); pan/zoom; kare başına tahsis yok.
 - İz, waypoint ve konum imleci karoların üstünde ayrı katman.
 - MapLibre MVP'de **kullanılmaz**. Gerekçe: MapLibre bir istemci render
   kütüphanesidir (vector tile çizer) ve tek başına paketleme hattı değildir;
-  custom raster renderer sıfır bağımlılık kimliğini korur ve belgedeki ölçüm
+  custom raster renderer sıfır bağımlılık kimliğini korur ve MVP hedefi
   ("harita motoru ürünü yapmıyoruz, outdoor tracker'ı doğruluyoruz") için
   yeterlidir. Faz 4–5 ölçümünden sonra vector tile + MapLibre'ye geçiş, "tek
   kontrollü bağımlılık" olarak yeniden değerlendirilebilir (kazanımlar: ~10×
@@ -433,14 +412,14 @@ app.db yalnız indirilen paketlerin metadata'sını tutar.
 
 ### 8.2 İnce katman kuralı
 
-`android.database` JVM birim testlerinde yoktur (Compass'ın `org.json`'u tam
-bu yüzden dışladığı gibi). Kural: **SQL'e dokunan katman aptal kalır** — DAO
-yalnız okur/yazar; filtre, istatistik, yükseklik, kerteriz, karo matematiği,
-GPX üretimi/ayrıştırması saf çekirdekte JVM testlidir. Satır↔model
-dönüştürücüler saf fonksiyondur ve testlidir; DAO'lar için küçük bir
-instrumented duman testi seti sonradan eklenir.
+`android.database` (ve `org.json` gibi diğer Android sınıfları) JVM birim
+testlerinde yoktur. Kural: **SQL'e dokunan katman aptal kalır** — DAO yalnız
+okur/yazar; filtre, istatistik, yükseklik, kerteriz, karo matematiği, GPX
+üretimi/ayrıştırması saf çekirdekte JVM testlidir. Satır↔model dönüştürücüler
+saf fonksiyondur ve testlidir; DAO'lar için küçük bir instrumented duman
+testi seti sonradan eklenir.
 
-### 8.3 Çökmeye dayanıklılık (WalkRun standardı)
+### 8.3 Çökmeye dayanıklılık
 
 Fix başına tek `INSERT`, WAL modu. `end_time NULL` aktivite = yarım kalmış
 kayıt; açılışta bulunur ve kayda devam edilir ya da geçmişe kurtarılır.
@@ -465,9 +444,8 @@ Akıl sağlaması: ekvatorda başlangıç tam doğudaysa (`λs > λc`) → `Δλ
 
 > Not: İlk taslakta `Δλ = λ2 − λ1` (ters işaret) yazıyordu; bu, doğu–batı
 > aynalanmış kerteriz verir (aynı örnekte 270°). Bu belge düzeltilmiş formülü
-> içerir. Uygulamada bu satır elle yazılmaz: Compass `Geo.kt`'nin test edilmiş
-> büyük daire kerterizi port edilir — testleri "İstanbul'dan Kâbe 152.0°" gibi
-> fiziksel sabitlere bağlıdır ve bu sınıf hatayı anında yakalar.
+> içerir ve gerçekleme fiziksel sabit testleriyle korunur: ekvator testi bu
+> sınıf hatayı kalıcı olarak kapatır (`core/geo` testleri).
 
 Sınırlama bilinçlidir: bu bir yol ağı rotası değildir. Routing engine
 gerektirmez, offline çalışır, harita paketi olmasa bile çalışır, teknik riski
@@ -477,7 +455,7 @@ düşüktür, outdoor kullanıcıya hemen değer verir.
 
 - **Dışa**: aktivite → `<trk>/<trkseg>/<trkpt>` (`ele`, `time` ile);
   waypoint'ler → `<wpt name=...>`. Tek dosyada iz + noktalar. SAF
-  (`ACTION_CREATE_DOCUMENT`) ile kaydedilir — WalkRun deseni.
+  (`ACTION_CREATE_DOCUMENT`) ile kaydedilir.
 - **İçe**: `<trkpt>`'ler aktivite olarak (`lat/lon/ele/time`), `<wpt>`'ler
   waypoint olarak. Bozuk girdi satır atlanarak tolere edilir, testli.
 - "Route sharing" MVP'de ayrı özellik değildir: GPX dosyası paylaşmak zaten
@@ -494,8 +472,8 @@ düşüktür, outdoor kullanıcıya hemen değer verir.
 | `INTERNET` | **Yalnız harita paketi indirme** |
 
 **Ağ kuralı:** ağa dokunan tek sınıf `TileDownloader`'dır; tracking, pusula,
-navigasyon ve GPX internetsiz çalışır. Bu cümle README'de yazar — Compass'ın
-"izin yok = doğrulanabilir gizlilik" duruşunun Norda karşılığıdır. Konum verisi
+navigasyon ve GPX internetsiz çalışır. Bu cümle README'de yazar — "izin
+listesi = doğrulanabilir gizlilik" duruşunun karşılığıdır. Konum verisi
 varsayılan olarak cihazda kalır; hiçbir telemetri yoktur.
 
 ## 12. Geliştirme yol haritası
@@ -519,9 +497,9 @@ uygulama-etkileyen `main` birleşimi kendi sürümünü alır (15. bölüm).
 ### Sprint 1 somut görevleri (Faz 1)
 
 - `com.aripd.norda` Kotlin projesi; `minSdk 26` / `targetSdk 35`; kenardan
-  kenara çizim (Compass çözümü).
+  kenara çizim.
 - CI: her itişte test + lint + debug APK (`ci.yml`); etikette imzalı release
-  (`release.yml` + `check-tag.sh`) — Compass'tan uyarlanır.
+  (`release.yml` + `check-tag.sh`).
 - `ACCESS_FINE_LOCATION` izin akışı; ret/kalıcı ret durumları.
 - `LocationManager` GPS güncellemeleri; debug ekranında lat/lon/accuracy/speed.
 - Rotation vector heading; debug ekranında açı + doğruluk bayrağı.
@@ -538,15 +516,16 @@ CI yeşil, ilk imzalı APK Releases'ta.*
 2. Çekirdek saftır; testler cihazsız, JVM'de, saniyeler içinde koşar. SQL'e ve
    Android'e dokunan katmanlar incedir (8.2).
 3. Mümkün olan her yerde **fiziksel sabitlere karşı test**: kendi çıktını
-   değil, jeodeziyi/dünyayı doğrula (ekvator kerterizi 90°, İstanbul→Kâbe
-   152.0°, bilinen karo koordinatları, düz seride kazanım 0). 9. bölümdeki
-   formül hatası bu kuralın gerekçesidir.
-4. Taşınan her modül testleriyle gelir; testsiz port birleşmez.
-5. **"Testler diş geçiriyor mu"** geleneği (Compass): kasıtlı hata sokulup
-   hangi testlerin düştüğü README'de tablo olarak tutulur.
+   değil, jeodeziyi/dünyayı doğrula (ekvator kerterizi 90°, bilinen karo
+   koordinatları, düz seride kazanım 0). 9. bölümdeki formül hatası bu
+   kuralın gerekçesidir.
+4. Her modül testleriyle gelir; testsiz kod birleşmez.
+5. **"Testler diş geçiriyor mu"** tablosu: kasıtlı hata sokulup hangi
+   testlerin düştüğü README'de tutulur.
 6. Sensör, titreşim ve pil konularında cihazda elle doğrulama, birim testin
-   yerine değil **yanına** konur; sürüm notunda işaretlenir (Compass dersi:
-   `dumpsys` de API dönüş değerleri de yalan söyleyebilir).
+   yerine değil **yanına** konur; sürüm notunda işaretlenir. (`dumpsys`
+   kaydının düşmesi de API'nin `true` dönmesi de davranışın gerçekleştiği
+   anlamına gelmez — tek geçerli doğrulama cihazın kendisidir.)
 
 ### 13.2 Birim test alanları
 
@@ -599,7 +578,7 @@ mapper'lar, waypoint adlandırma.
 - Uygulamayı etkileyen her `main` birleşimi bir sürümdür; yalnız-belge
   değişiklikleri sürüm almaz.
 
-### 15.2 Yayın akışı (Compass'tan)
+### 15.2 Yayın akışı
 
 ```
 1. versionCode/versionName yükselt → commit
@@ -615,8 +594,11 @@ mapper'lar, waypoint adlandırma.
 - İmzalama: anahtar depoya girmez; Actions secrets — `KEYSTORE_BASE64`,
   `KEYSTORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSWORD`. Secret yoksa koşu
   kırılmaz: APK imzasız üretilir ve adında belirtilir.
-- Yayımlanan sürüm **değişmezdir**: aynı sürümün dosyaları üzerine yazılmaz
-  (WalkRun CI'ının mutable release modeli taşınmaz).
+- Yayımlanan sürüm **değişmezdir**: aynı sürümün dosyaları üzerine yazılmaz.
+- Etiket itme yetkisi olmayan bir ortamdan (örn. yalnız kendi dalına
+  yazabilen bir oturum) yayın gerekiyorsa: `release.yml` elle tetiklenip
+  `tag` girdisi verilir; `gh release create --target` etiketi CI tarafında
+  oluşturur. `check-tag` her iki yolda da koşar.
 
 ### 15.3 Commit disiplini
 
@@ -631,9 +613,9 @@ kararı commit'lerden okunur. Araç gerektirmez — disiplindir.
 | Offline map renderer | Yüksek | Raster ile başla; MapLibre kapısını Faz 4–5 ölçümünden sonra değerlendir (7.1) |
 | Karo hattı kurulum maliyeti | Yüksek | Faz 4'te küçük test paketiyle başla; rasterize aracını erken seç ve CI'da kanıtla (7.2) |
 | GPS accuracy | Yüksek | Test edilmiş filtreler + saha matrisi |
-| Battery drain | Yüksek | Örnekleme + sensör yaşam döngüsü; Compass ölçüm kültürü |
+| Battery drain | Yüksek | Örnekleme + sensör yaşam döngüsü; ölçüm kültürü |
 | Background kısıtları | Yüksek | Foreground service + güncel Android/Play kuralları |
-| Compass interference | Orta | Rotation vector + bozulma uyarısı + kalibrasyon UX (Compass'tan hazır) |
+| Compass interference | Orta | Rotation vector + bozulma uyarısı + kalibrasyon UX |
 | Büyük paket depolama | Orta | Paket başına ayrı `.mbtiles`; ölçüp ayarla |
 | Routing beklentisi | Orta | MVP'de yapma; Return to Start sınırını açıkça anlat |
 
@@ -643,16 +625,15 @@ kararı commit'lerden okunur. Araç gerektirmez — disiplindir.
 |---|---|
 | Breadcrumb navigation | Kaydedilen izi ters yönde takip — Return to Start'ın güçlü devamı, offline |
 | Serbest alan seçerek indirme | Paket listesinin ötesinde dikdörtgen alan seçimi |
-| Gün ışığı bütçesi | Batış saati (Compass `Sun.kt`) × dönüş temposu → "karanlığa kalma" uyarısı |
-| Gece modu | Kırmızı palet, alacakaranlıkta otomatik (Compass `Palette` + `Sun`) |
-| Koordinat al/paylaş | `geo:`/metin/harita bağlantısı ayrıştırıcı (Compass, 5 biçim, testli) |
+| Gün ışığı bütçesi | Batış saati × dönüş temposu → "karanlığa kalma" uyarısı |
+| Gece modu | Kırmızı palet, alacakaranlıkta otomatik |
+| Koordinat al/paylaş | `geo:`/metin/harita bağlantısı ayrıştırıcı |
 | Yükseklik profili | Aktivite detayında kesit grafiği |
-| Sesli anonslar | Kilometre + split temposu (WalkRun, TTS) |
-| Rekorlar + haftalık özet | En uzun, en hızlı 1/5/10 km; haftalık toplamlar (WalkRun) |
+| Sesli anonslar | Kilometre + split temposu (TTS) |
+| Rekorlar + haftalık özet | En uzun, en hızlı 1/5/10 km; haftalık toplamlar |
 | Barometrik yükseklik | Basınç sensörüyle kazanım hassasiyeti |
 | Offline routing | Yol ağı üzerinde navigasyon |
 | Wear OS · Cloud yedek (ops.) · iOS | Daha sonra; iOS çekirdek saf kaldığı sürece arayüz portudur |
-| Kalori · Strava | İstenirse WalkRun modülleri hazır |
 
 ## Kaynaklar
 
@@ -667,4 +648,3 @@ kararı commit'lerden okunur. Araç gerektirmez — disiplindir.
   [Geofabrik özetleri](https://download.geofabrik.de/) ·
   [tilemaker](https://github.com/systemed/tilemaker) · [Planetiler](https://github.com/onthegomap/planetiler) ·
   [MapLibre Native](https://github.com/maplibre/maplibre-native)
-- Miras kod: [WalkRun](https://github.com/aripdcem/WalkRun) · [Compass](https://github.com/aripdcem/compass)
