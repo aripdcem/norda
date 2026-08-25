@@ -38,6 +38,16 @@ class BatteryTest {
         assertEquals(4.0, Battery.drainPerHour(1, 15 * 60 * 1000L)!!, 1e-9)
     }
 
+    /**
+     * Saha Turu 1 verisi (F-1): %2 tüketim, 42:46 duvar saati → 2,8 %/sa.
+     * Payda DUVAR saatidir, aktif kayıt süresi değil — pil duraklatmada da
+     * tükenir; aktif süreye bölmek oranı şişirir (aynı turda 4,2 görünürdü).
+     */
+    @Test
+    fun rateDenominatorIsWallClockNotActiveDuration() {
+        assertEquals(2.81, Battery.drainPerHour(2, 2_566_000L)!!, 0.01)
+    }
+
     @Test
     fun tooShortDurationGivesNoRate() {
         // %1'lik yuvarlama hatası kısa sürede devasa orana dönüşür.

@@ -19,9 +19,15 @@ object Battery {
         return if (drain >= 0) drain else null
     }
 
-    /** Saat başına tüketim; süre eşiğin altındaysa null. */
-    fun drainPerHour(drainPct: Int, durationMillis: Long): Double? {
-        if (durationMillis < MIN_RATE_DURATION_MILLIS) return null
-        return drainPct * 3_600_000.0 / durationMillis
+    /**
+     * Saat başına tüketim; süre eşiğin altındaysa null.
+     *
+     * Payda DUVAR saatidir (kayıt başı → sonu), aktif süre değil: GPS
+     * duraklatmada da açık kalır ve pil akmaya devam eder. Aktif süreye
+     * bölmek oranı şişirir — saha Turu 1'de 2,8 yerine 4,2 gösterirdi (F-1).
+     */
+    fun drainPerHour(drainPct: Int, wallSpanMillis: Long): Double? {
+        if (wallSpanMillis < MIN_RATE_DURATION_MILLIS) return null
+        return drainPct * 3_600_000.0 / wallSpanMillis
     }
 }

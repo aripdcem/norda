@@ -57,9 +57,10 @@ class HistoryActivity : Activity() {
                 )
             )
             // Pil ölçüm kültürü (Faz 8): tüketim ancak temiz ölçüldüyse yazılır.
+            // Oranın paydası duvar saati (F-1): pil duraklatmada da tükenir.
             val drain = Battery.drainPercent(a.startBatteryPct, a.endBatteryPct)
             if (drain != null) {
-                val rate = Battery.drainPerHour(drain, a.durationMillis)
+                val rate = Battery.drainPerHour(drain, a.endTimeMillis - a.startTimeMillis)
                 stats.append(
                     if (rate != null) getString(R.string.history_row_battery_rate, drain, rate)
                     else getString(R.string.history_row_battery, drain)

@@ -62,8 +62,16 @@ tur o sürümle tekrarlanır. Üç temiz tur = v1.0.0 kapısı.
 
 | Tur | Tarih | Sürüm | Sonuç |
 |---|---|---|---|
-| 1 | 2026-08-25 | v0.9.0 | **Temiz** — hiçbir sorunla karşılaşılmadı (ölçüm şablonu raporlanmadı) |
-| 2 | — | — | Bekliyor. Öneri: güç tasarrufu **açık** ve/veya farklı ortam (dar sokak/orman); şablondaki ölçümlerle |
+| 1 | 2026-08-25 | v0.9.0 | **Temiz** — sorun yok. Ölçümler: 2,98 km · 28:16 aktif (42:46 duvar) · ▲135 m · 🔋 %2. GPX dışa aktarımı çekirdekle yeniden hesaplandı: 962 nokta + 1 wpt; mesafe ✓ (ham 3513,7 − duraklatma sıçramaları 531,2 ≈ 2982,5), yükseklik ✓ (tam 135,0), süre ✓. Analiz bulgusu **F-1** → v0.9.1 |
+| 2 | — | — | Bekliyor. Öneri: güç tasarrufu **açık** ve/veya farklı ortam (dar sokak/orman); v0.9.1 ile |
 | 3 | — | — | Bekliyor |
 
 Kapı durumu: **1/3 temiz tur.**
+
+### Bulgular
+
+- **F-1** (Tur 1 analizi, giderildi → v0.9.1): geçmişteki pil oranı aktif
+  süreye bölünüyordu; GPS duraklatmada da açık kaldığından pil duvar
+  saatiyle akar. Turda 4,2 %/sa görünen gerçekte 2,8 %/sa idi. Payda artık
+  kayıt başı→sonu duvar saati; saha verisi regresyon testi olarak çekirdeğe
+  eklendi.
