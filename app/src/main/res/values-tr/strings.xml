@@ -6,6 +6,7 @@
     <string name="section_start">BAŞLANGIÇ</string>
     <string name="section_permission">İZİN</string>
     <string name="section_filter">KAYIT FİLTRESİ</string>
+    <string name="section_filter_last">KAYIT FİLTRESİ (SON KAYIT)</string>
     <string name="diag_filter_line">kabul %1$d · doğruluk %2$d · titreme %3$d · ışınlama %4$d · zaman %5$d</string>
 
     <string name="heading_degrees">%1$d°</string>

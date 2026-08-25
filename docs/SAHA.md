@@ -50,7 +50,8 @@ Adım | Sonuç (✓ / ✗ + not)
 Ölçümler:
 - Mesafe: bilinen … m ↔ uygulama … m (sapma %…)
 - Pil: 🔋 …% (…%/sa) — ekran kapalı/açık oranı: …
-- Filtre sayaçları (Tanılama): kabul … · doğruluk … · titreme … ·
+- Filtre sayaçları (Tanılama; v0.9.2'den beri tur bittikten sonra da
+  "SON KAYIT" olarak okunur): kabul … · doğruluk … · titreme … ·
   ışınlama … · zaman …
 - Yükseklik: beklenen ▲… ↔ uygulama ▲…
 ```
@@ -75,3 +76,9 @@ Kapı durumu: **1/3 temiz tur.**
   saatiyle akar. Turda 4,2 %/sa görünen gerçekte 2,8 %/sa idi. Payda artık
   kayıt başı→sonu duvar saati; saha verisi regresyon testi olarak çekirdeğe
   eklendi.
+- **F-2** (Tur 1 sonrası, giderildi → v0.9.2): filtre sayaçları yalnız
+  kayıt sürerken görünüyordu — sahada bulması ve not alması zor. Kayıt
+  bitince son kaydın sayaçları kalıcı saklanır (süreç ölümüne dayanır) ve
+  Tanılama'da "KAYIT FİLTRESİ (SON KAYIT)" olarak görünmeye devam eder;
+  boş/atılan kayıtta da yazılır ("kayıt neden boş"un cevabı çoğu zaman
+  buradadır).

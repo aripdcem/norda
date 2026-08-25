@@ -231,13 +231,15 @@ class DiagnosticsActivity : Activity(), LocationListener, SensorEventListener {
         ).joinToString("\n")
     }
 
-    /** Kayıt sürerken filtre sayaçları — kalibrasyonun ham verisi (Faz 8). */
+    /**
+     * Filtre sayaçları — kalibrasyonun ham verisi (Faz 8). Kayıt sürerken
+     * canlı; kayıt yokken son kaydın kalıcı sayaçları gösterilir (F-2):
+     * tur raporu eve dönünce yazılabilsin.
+     */
     private fun renderFilter() {
         val s = TrackingService.session
-        val visibility = if (s == null) View.GONE else View.VISIBLE
-        filterLabel.visibility = visibility
-        filterText.visibility = visibility
         if (s != null) {
+            filterLabel.text = getString(R.string.section_filter)
             filterText.text = getString(
                 R.string.diag_filter_line,
                 s.filterCount(GpsFilter.Verdict.ACCEPT),
@@ -246,7 +248,27 @@ class DiagnosticsActivity : Activity(), LocationListener, SensorEventListener {
                 s.filterCount(GpsFilter.Verdict.TELEPORT),
                 s.filterCount(GpsFilter.Verdict.NON_MONOTONIC)
             )
+            filterLabel.visibility = View.VISIBLE
+            filterText.visibility = View.VISIBLE
+            return
         }
+        val prefs = getSharedPreferences(TrackingService.FILTER_STATS_PREFS, MODE_PRIVATE)
+        if (!prefs.contains("saved_at")) {
+            filterLabel.visibility = View.GONE
+            filterText.visibility = View.GONE
+            return
+        }
+        filterLabel.text = getString(R.string.section_filter_last)
+        filterText.text = getString(
+            R.string.diag_filter_line,
+            prefs.getInt("accept", 0),
+            prefs.getInt("bad_accuracy", 0),
+            prefs.getInt("jitter", 0),
+            prefs.getInt("teleport", 0),
+            prefs.getInt("non_monotonic", 0)
+        )
+        filterLabel.visibility = View.VISIBLE
+        filterText.visibility = View.VISIBLE
     }
 
     private fun renderStart() {

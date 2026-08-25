@@ -20,6 +20,7 @@ import com.aripd.norda.R
 import com.aripd.norda.RecordingActivity
 import com.aripd.norda.core.track.ActivityType
 import com.aripd.norda.core.track.Format
+import com.aripd.norda.core.track.GpsFilter
 import com.aripd.norda.core.track.RecordingSession
 import com.aripd.norda.core.track.Stats
 import com.aripd.norda.core.track.TrackPoint
@@ -151,6 +152,7 @@ class TrackingService : Service(), LocationListener {
 
     private fun stopRecording(discard: Boolean) {
         val s = session
+        if (s != null) saveFilterStats(s)
         if (s != null && !discard) {
             val now = SystemClock.elapsedRealtime()
             s.stop(now)
@@ -170,6 +172,23 @@ class TrackingService : Service(), LocationListener {
         locationManager.removeUpdates(this)
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
+    }
+
+    /**
+     * Son kaydın filtre sayaçları kalıcı saklanır (F-2, Saha Turu 1 bulgusu):
+     * tur bittikten SONRA da Tanılama'dan okunabilsin — yürüyüş ortasında
+     * not almak gerekmesin. Boş/atılan kayıtta da yazılır: "kayıt neden boş
+     * kaldı"nın cevabı çoğu zaman bu sayaçlardadır.
+     */
+    private fun saveFilterStats(s: RecordingSession) {
+        getSharedPreferences(FILTER_STATS_PREFS, MODE_PRIVATE).edit()
+            .putInt("accept", s.filterCount(GpsFilter.Verdict.ACCEPT))
+            .putInt("bad_accuracy", s.filterCount(GpsFilter.Verdict.BAD_ACCURACY))
+            .putInt("jitter", s.filterCount(GpsFilter.Verdict.JITTER))
+            .putInt("teleport", s.filterCount(GpsFilter.Verdict.TELEPORT))
+            .putInt("non_monotonic", s.filterCount(GpsFilter.Verdict.NON_MONOTONIC))
+            .putLong("saved_at", System.currentTimeMillis())
+            .apply()
     }
 
     override fun onDestroy() {
@@ -233,6 +252,8 @@ class TrackingService : Service(), LocationListener {
 
     companion object {
         const val EXTRA_TYPE = "type"
+        /** Tanılama ekranı son kaydın sayaçlarını buradan okur. */
+        const val FILTER_STATS_PREFS = "filter_stats"
         private const val CHANNEL_ID = "tracking"
         private const val NOTIFICATION_ID = 1
 

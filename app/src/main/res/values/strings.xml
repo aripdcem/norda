@@ -6,6 +6,7 @@
     <string name="section_start">START POINT</string>
     <string name="section_permission">PERMISSION</string>
     <string name="section_filter">RECORDING FILTER</string>
+    <string name="section_filter_last">RECORDING FILTER (LAST)</string>
     <string name="diag_filter_line">accepted %1$d · accuracy %2$d · jitter %3$d · teleport %4$d · time %5$d</string>
 
     <string name="heading_degrees">%1$d°</string>
