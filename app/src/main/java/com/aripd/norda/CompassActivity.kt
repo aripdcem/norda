@@ -111,10 +111,13 @@ class CompassActivity : Activity(), LocationListener {
         ) {
             return
         }
-        if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+        // Sağlayıcı kapalıyken de kayıt olunur (0.8.0'daki servis düzeltmesiyle
+        // aynı desen): kullanıcı konumu ekran açıkken açarsa fix'ler akar.
+        // Guard yalnız var olmayan sağlayıcı içindir — ona kayıt fırlatır.
+        if (LocationManager.GPS_PROVIDER in locationManager.allProviders) {
             locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000L, 0f, this)
         }
-        if (locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
+        if (LocationManager.NETWORK_PROVIDER in locationManager.allProviders) {
             locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 5000L, 0f, this)
         }
     }
