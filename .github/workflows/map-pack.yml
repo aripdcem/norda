@@ -1,0 +1,113 @@
+# Kendi karo paketleme hattımız (docs/MVP.md, 7.2): elle tetiklenir, bölge
+# için MBTiles paketi üretir, `maps/<id>-vN` etiketiyle Release'e asar ve
+# docs/maps/index.json'u günceller — uygulama listeyi oradan okur.
+#
+# Hiçbir canlı karo sunucusuna bağımlılık yok; secret da gerekmez
+# (GITHUB_TOKEN yeter). Üretim adımı bugün prosedüreldir; gerçek OSM
+# kartografyası geldiğinde yalnız "Paketi üret" adımı değişir.
+#
+# `maps/...` etiketleri release.yml'i tetiklemez (o yalnız `v*` dinler).
+
+name: Map pack
+
+on:
+  workflow_dispatch:
+    inputs:
+      id:
+        description: 'Paket kimliği (dosya adı, ör. istanbul)'
+        required: true
+        type: string
+      name:
+        description: 'Görünen ad (ör. İstanbul)'
+        required: true
+        type: string
+      bbox:
+        description: 'left,bottom,right,top (lon/lat)'
+        required: true
+        type: string
+      minzoom:
+        description: 'En küçük zoom'
+        required: false
+        default: '8'
+        type: string
+      maxzoom:
+        description: 'En büyük zoom'
+        required: false
+        default: '13'
+        type: string
+
+permissions:
+  contents: write   # release açmak ve index.json'u itmek için
+
+concurrency:
+  group: map-pack-${{ inputs.id }}
+  cancel-in-progress: false
+
+jobs:
+  pack:
+    name: Paket üret ve yayımla
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Kaynağı al
+        uses: actions/checkout@v4
+
+      # Girdiler kabuğa ortam değişkeninden geçer; ad/bbox içindeki özel
+      # karakterler komut olarak yorumlanamaz.
+      - name: Paketi üret
+        env:
+          PKG_ID: ${{ inputs.id }}
+          PKG_NAME: ${{ inputs.name }}
+          PKG_BBOX: ${{ inputs.bbox }}
+          PKG_MINZOOM: ${{ inputs.minzoom }}
+          PKG_MAXZOOM: ${{ inputs.maxzoom }}
+        run: |
+          python3 tools/make-map-pack.py \
+            --id "$PKG_ID" --name "$PKG_NAME" --bbox "$PKG_BBOX" \
+            --minzoom "$PKG_MINZOOM" --maxzoom "$PKG_MAXZOOM" --out dist
+          FILE="dist/$PKG_ID.mbtiles"
+          echo "PKG_FILE=$FILE" >> "$GITHUB_ENV"
+          echo "PKG_SHA=$(sha256sum "$FILE" | cut -d' ' -f1)" >> "$GITHUB_ENV"
+          echo "PKG_SIZE=$(stat -c%s "$FILE")" >> "$GITHUB_ENV"
+          sha256sum "$FILE" > "$FILE.sha256"
+
+      # Paket sürümü koşu numarasıdır: her yayın yeni, değişmez bir etikettir.
+      - name: Release'e yayımla
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PKG_ID: ${{ inputs.id }}
+          PKG_NAME: ${{ inputs.name }}
+          PKG_BBOX: ${{ inputs.bbox }}
+        run: |
+          TAG="maps/$PKG_ID-v$GITHUB_RUN_NUMBER"
+          {
+            echo "Harita paketi **$PKG_NAME** (\`$PKG_ID\`, v$GITHUB_RUN_NUMBER)."
+            echo
+            echo "- Kapsam: \`$PKG_BBOX\` · zoom ${{ inputs.minzoom }}-${{ inputs.maxzoom }}"
+            echo "- Boyut: $PKG_SIZE bayt"
+            echo "- SHA-256: \`$PKG_SHA\`"
+            echo
+            echo "Uygulama bu paketi Haritalar ekranındaki listeden indirir;"
+            echo "elle kurulum için dosyayı indirip 'Paket içe aktar' da kullanılabilir."
+          } > notes.md
+          gh release create "$TAG" "$PKG_FILE" "$PKG_FILE.sha256" \
+            --title "Harita paketi: $PKG_NAME v$GITHUB_RUN_NUMBER" \
+            --notes-file notes.md
+          echo "PKG_URL=https://github.com/$GITHUB_REPOSITORY/releases/download/$TAG/$PKG_ID.mbtiles" >> "$GITHUB_ENV"
+
+      - name: index.json'u güncelle ve it
+        env:
+          PKG_ID: ${{ inputs.id }}
+          PKG_NAME: ${{ inputs.name }}
+          PKG_BBOX: ${{ inputs.bbox }}
+        run: |
+          python3 tools/update-map-index.py \
+            --id "$PKG_ID" --name "$PKG_NAME" --bbox "$PKG_BBOX" \
+            --minzoom "${{ inputs.minzoom }}" --maxzoom "${{ inputs.maxzoom }}" \
+            --size "$PKG_SIZE" --sha256 "$PKG_SHA" --url "$PKG_URL" \
+            --version "$GITHUB_RUN_NUMBER"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/maps/index.json
+          git commit -m "chore(maps): $PKG_ID v$GITHUB_RUN_NUMBER [skip ci]"
+          git push
