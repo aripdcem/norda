@@ -3,6 +3,19 @@
 Biçim [Keep a Changelog](https://keepachangelog.com/), sürümleme
 [SemVer](https://semver.org/) — kurallar için `docs/MVP.md` 15. bölüm.
 
+## [0.9.3] - 2026-08-25
+
+### Added
+
+- F-3 (saha iş akışı): tur telemetrisi artık GPX'in içinde gider. Dışa
+  aktarılan dosyaya `extensions`/`norda:report` bloğu gömülür: uygulama
+  özeti (mesafe, aktif süre, ▲▼), pil (başı/sonu) ve filtre sayaçları.
+  GPX'i paylaşmak = tur raporunu paylaşmak; elle not gerekmez. Diğer
+  araçlar bloğu yok sayar; filtre sayaçları yalnız son kayıt o aktiviteyse
+  eklenir (eski ize yanlış sayaç gömülmez). İçe aktarmada blok veri
+  sayılmaz — istatistikler noktalardan yeniden hesaplanır. Çekirdekte 3
+  yeni JVM testi (gidiş-dönüş, bloksuz dosya, bilinmeyen pil/sayaç).
+
 ## [0.9.2] - 2026-08-25
 
 ### Fixed
