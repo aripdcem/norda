@@ -57,3 +57,13 @@ Adım | Sonuç (✓ / ✗ + not)
 
 Bulgu → issue ya da doğrudan mesaj; her düzeltme kendi z-sürümüyle çıkar,
 tur o sürümle tekrarlanır. Üç temiz tur = v1.0.0 kapısı.
+
+## Tur günlüğü
+
+| Tur | Tarih | Sürüm | Sonuç |
+|---|---|---|---|
+| 1 | 2026-08-25 | v0.9.0 | **Temiz** — hiçbir sorunla karşılaşılmadı (ölçüm şablonu raporlanmadı) |
+| 2 | — | — | Bekliyor. Öneri: güç tasarrufu **açık** ve/veya farklı ortam (dar sokak/orman); şablondaki ölçümlerle |
+| 3 | — | — | Bekliyor |
+
+Kapı durumu: **1/3 temiz tur.**
