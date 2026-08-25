@@ -3,6 +3,22 @@
 Biçim [Keep a Changelog](https://keepachangelog.com/), sürümleme
 [SemVer](https://semver.org/) — kurallar için `docs/MVP.md` 15. bölüm.
 
+## [0.9.1] - 2026-08-25
+
+### Fixed
+
+- F-1 (Saha Turu 1 analizi): geçmişteki pil oranının paydası aktif kayıt
+  süresiydi; GPS duraklatmada da açık kaldığından pil duvar saatiyle akar
+  ve oran şişiyordu (turda 4,2 %/sa görünen gerçekte 2,8 %/sa). Payda artık
+  kayıt başı→sonu duvar saati. Turun gerçek verisi (%2 / 42:46) çekirdeğe
+  regresyon testi olarak girdi.
+
+### Notlar
+
+- Tur 1 GPX'i üretim kod yollarıyla yeniden hesaplandı: mesafe, süre ve
+  yükseklik (tam 135,0 m) uygulamayla birebir tuttu; elle duraklatmada ara
+  mesafenin sayılmaması (510 m'lik mola yürüyüşü) sahada doğrulandı.
+
 ## [0.9.0] - 2026-08-25
 
 ### Added
