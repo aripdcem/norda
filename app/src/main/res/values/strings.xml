@@ -1,0 +1,36 @@
+<resources>
+    <string name="app_name">Norda</string>
+    <string name="placeholder_dash">—</string>
+
+    <string name="section_location">LOCATION</string>
+    <string name="section_start">START POINT</string>
+    <string name="section_permission">PERMISSION</string>
+
+    <string name="heading_degrees">%1$d°</string>
+    <string name="sensor_missing">No rotation vector sensor on this device.</string>
+    <string name="sensor_calibration_needed">Compass needs calibration: move the phone in a figure-eight.</string>
+
+    <string name="location_waiting">Waiting for a fix…</string>
+    <string name="location_needs_permission">Location permission is required.</string>
+    <string name="location_coords">%1$.5f°  %2$.5f°</string>
+    <string name="location_accuracy">± %1$d m</string>
+    <string name="location_altitude">altitude %1$d m</string>
+    <string name="location_speed">%1$.1f km/h</string>
+    <string name="location_meta">%1$s · %2$d s ago</string>
+
+    <string name="start_waiting">Waiting for the first solid fix…</string>
+    <string name="start_line">to start %1$d° · %2$s</string>
+    <string name="distance_m">%1$d m</string>
+    <string name="distance_km">%1$.2f km</string>
+
+    <string name="permission_needed">Location permission is needed to verify GPS.</string>
+    <string name="permission_granted">Location permission granted.</string>
+    <string name="permission_denied_forever">Permission permanently denied — grant it from Settings.</string>
+    <string name="grant_permission">Grant permission</string>
+    <string name="open_settings">Open settings</string>
+
+    <string-array name="cardinals_8">
+        <item>N</item><item>NE</item><item>E</item><item>SE</item>
+        <item>S</item><item>SW</item><item>W</item><item>NW</item>
+    </string-array>
+</resources>

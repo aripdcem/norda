@@ -1,0 +1,15 @@
+<resources>
+    <style name="Theme.Norda" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:colorPrimary">@color/norda_green</item>
+        <item name="android:colorAccent">@color/norda_green</item>
+    </style>
+
+    <style name="Norda.SectionLabel" parent="">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:letterSpacing">0.1</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/norda_green</item>
+    </style>
+</resources>

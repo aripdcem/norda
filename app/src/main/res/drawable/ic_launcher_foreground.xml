@@ -1,0 +1,33 @@
+<!-- Norda ikonu: başlangıç noktasından hedefe giden iz, ortada waypoint
+     baklavası. Kimlik rota/iz; Compass'ın ibresiyle karışmaz. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- İz: başlangıçtan hedefe kıvrılan rota -->
+    <path
+        android:pathData="M30,76 C40,60 46,80 56,64 C62,54 68,48 76,40"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="5"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000" />
+
+    <!-- Başlangıç noktası -->
+    <path
+        android:pathData="M30,76 m-5,0 a5,5 0 1,1 10,0 a5,5 0 1,1 -10,0"
+        android:fillColor="#FFFFFF" />
+
+    <!-- Waypoint baklavası -->
+    <path
+        android:pathData="M56,56 L63,64 L56,72 L49,64 Z"
+        android:fillColor="#E8C468" />
+
+    <!-- Hedef halkası -->
+    <path
+        android:pathData="M76,40 m-6,0 a6,6 0 1,1 12,0 a6,6 0 1,1 -12,0"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="3.5"
+        android:fillColor="#00000000" />
+</vector>

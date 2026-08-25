@@ -1,0 +1,36 @@
+<resources>
+    <string name="app_name">Norda</string>
+    <string name="placeholder_dash">—</string>
+
+    <string name="section_location">KONUM</string>
+    <string name="section_start">BAŞLANGIÇ</string>
+    <string name="section_permission">İZİN</string>
+
+    <string name="heading_degrees">%1$d°</string>
+    <string name="sensor_missing">Bu cihazda rotation vector sensörü yok.</string>
+    <string name="sensor_calibration_needed">Pusula kalibrasyon istiyor: telefonu havada 8 çizer gibi hareket ettirin.</string>
+
+    <string name="location_waiting">Fix bekleniyor…</string>
+    <string name="location_needs_permission">Konum izni gerekli.</string>
+    <string name="location_coords">%1$.5f°  %2$.5f°</string>
+    <string name="location_accuracy">± %1$d m</string>
+    <string name="location_altitude">yükseklik %1$d m</string>
+    <string name="location_speed">%1$.1f km/sa</string>
+    <string name="location_meta">%1$s · %2$d sn önce</string>
+
+    <string name="start_waiting">İlk sağlam fix bekleniyor…</string>
+    <string name="start_line">başlangıç %1$d° · %2$s</string>
+    <string name="distance_m">%1$d m</string>
+    <string name="distance_km">%1$.2f km</string>
+
+    <string name="permission_needed">GPS doğrulaması için konum izni gerekli.</string>
+    <string name="permission_granted">Konum izni verildi.</string>
+    <string name="permission_denied_forever">İzin kalıcı olarak reddedildi — Ayarlar\'dan verin.</string>
+    <string name="grant_permission">İzin ver</string>
+    <string name="open_settings">Ayarları aç</string>
+
+    <string-array name="cardinals_8">
+        <item>K</item><item>KD</item><item>D</item><item>GD</item>
+        <item>G</item><item>GB</item><item>B</item><item>KB</item>
+    </string-array>
+</resources>
