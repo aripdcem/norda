@@ -3,6 +3,14 @@
 Biçim [Keep a Changelog](https://keepachangelog.com/), sürümleme
 [SemVer](https://semver.org/) — kurallar için `docs/MVP.md` 15. bölüm.
 
+## [0.1.1] - 2026-08-25
+
+### Changed
+
+- Release iş akışı imzalama secret'larını `ANDROID_*` adlarından okur; alias
+  boşsa `norda`, anahtar parolası boşsa depo parolası varsayılır.
+- İlk imzalı APK yayını.
+
 ## [0.1.0] - 2026-08-25
 
 ### Added
