@@ -3,6 +3,17 @@
 Biçim [Keep a Changelog](https://keepachangelog.com/), sürümleme
 [SemVer](https://semver.org/) — kurallar için `docs/MVP.md` 15. bölüm.
 
+## [0.7.1] - 2026-08-25
+
+### Fixed
+
+- 0.7.0 çökmesi: `waypoint` tablosu şemada hiç yaratılmamıştı — DAO'su olan
+  ama `CREATE`'i olmayan tablo. Pusula, kayıt, harita ve nokta ekranları
+  açılır açılmaz "no such table: waypoint" ile kapanıyordu. DDL ve göç planı
+  artık saf `Schema` modülünde (şema sürümü 2): eski kurulum göçle, yeni
+  kurulum sıfırdan aynı şemaya varır; 5 yeni JVM testi — göç zinciri ile
+  sıfırdan kurulumun parite değişmezi dahil — bunu kalıcı korur.
+
 ## [0.7.0] - 2026-08-25
 
 ### Added
