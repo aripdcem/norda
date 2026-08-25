@@ -6,10 +6,11 @@
 # İmzalama anahtarı depoya girmez; depo ayarlarındaki secret'lardan gelir
 # (Settings -> Secrets and variables -> Actions):
 #
-#   KEYSTORE_BASE64      anahtar deposunun base64 hâli:  base64 -w0 keys/norda.jks
-#   KEYSTORE_PASSWORD    depo parolası
-#   KEY_ALIAS            anahtar takma adı
-#   KEY_PASSWORD         anahtarın parolası
+#   ANDROID_KEYSTORE_BASE64    anahtar deposunun base64 hâli:  base64 -w0 keys/norda-release.jks
+#   ANDROID_KEYSTORE_PASSWORD  depo parolası
+#   ANDROID_KEY_ALIAS          isteğe bağlı; boşsa "norda" varsayılır
+#   ANDROID_KEY_PASSWORD       isteğe bağlı; boşsa depo parolası kullanılır
+#                              (keytool'un PKCS12 varsayılanında ikisi zaten aynıdır)
 #
 # Secret'lar tanımlı değilse koşu kırılmaz: APK imzasız üretilir, adında
 # "imzasiz" geçer ve uyarı düşer. İmzasız APK telefona kurulamaz — kalıcı
@@ -84,10 +85,10 @@ jobs:
       # app/build.gradle.kts içindeki signingValues).
       - name: İmzalama anahtarını çöz
         env:
-          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
         run: |
           if [ -z "${KEYSTORE_BASE64:-}" ]; then
-            echo "::warning::KEYSTORE_BASE64 secret'ı tanımlı değil; APK imzasız üretilecek ve telefona kurulamaz."
+            echo "::warning::ANDROID_KEYSTORE_BASE64 secret'ı tanımlı değil; APK imzasız üretilecek ve telefona kurulamaz."
             exit 0
           fi
           printf '%s' "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.jks"
@@ -99,9 +100,9 @@ jobs:
 
       - name: Release APK
         env:
-          NORDA_KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          NORDA_KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          NORDA_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          NORDA_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          NORDA_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS || 'norda' }}
+          NORDA_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD || secrets.ANDROID_KEYSTORE_PASSWORD }}
         run: ./gradlew assembleRelease
 
       - name: Anahtarı sil

@@ -591,8 +591,9 @@ mapper'lar, waypoint adlandırma.
   wrapper doğrulaması.
 - Betikler `.github/scripts/` altında ve yerelde de koşar (`check-tag.sh`,
   `collect-apk.sh`, `android-sdk.sh`).
-- İmzalama: anahtar depoya girmez; Actions secrets — `KEYSTORE_BASE64`,
-  `KEYSTORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSWORD`. Secret yoksa koşu
+- İmzalama: anahtar depoya girmez; Actions secrets — `ANDROID_KEYSTORE_BASE64`,
+  `ANDROID_KEYSTORE_PASSWORD` (isteğe bağlı: `ANDROID_KEY_ALIAS`, boşsa
+  `norda`; `ANDROID_KEY_PASSWORD`, boşsa depo parolası). Secret yoksa koşu
   kırılmaz: APK imzasız üretilir ve adında belirtilir.
 - Yayımlanan sürüm **değişmezdir**: aynı sürümün dosyaları üzerine yazılmaz.
 - Etiket itme yetkisi olmayan bir ortamdan (örn. yalnız kendi dalına
