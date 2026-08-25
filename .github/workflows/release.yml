@@ -20,7 +20,14 @@ name: Release
 on:
   push:
     tags: ['v*']
+  # Etiket itme yetkisi olmayan bir ortamdan yayın: elle tetikle, etiketi
+  # girdiyle ver — `gh release create --target` etiketi burada oluşturur.
   workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Yayımlanacak etiket (vX.Y.Z); boşsa yalnız APK üretilir'
+        required: false
+        type: string
 
 permissions:
   contents: write   # sürüm oluşturmak ve APK eklemek için
@@ -41,13 +48,21 @@ jobs:
           # sığ kopyada o geçmiş bulunmaz.
           fetch-depth: 0
 
+      # Etiket iki kaynaktan gelebilir: etiket itişi ya da elle tetiklemedeki
+      # `tag` girdisi. Sonraki adımlar tek bir RELEASE_TAG değişkenine bakar.
+      - name: Etiketi belirle
+        env:
+          PUSHED_TAG: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
+          INPUT_TAG: ${{ inputs.tag || '' }}
+        run: echo "RELEASE_TAG=${PUSHED_TAG:-$INPUT_TAG}" >> "$GITHUB_ENV"
+
       # Etiket adı kabuğa doğrudan gömülmüyor, ortam değişkeninden geçiyor:
       # git etiket adlarında `;`, `&`, `$` gibi karakterlere izin veriyor ve
       # gömülen bir ad koşucuda komut çalıştırabilirdi.
       - name: Etiket sürümle tutuyor mu
-        if: github.ref_type == 'tag'
+        if: env.RELEASE_TAG != ''
         env:
-          TAG: ${{ github.ref_name }}
+          TAG: ${{ env.RELEASE_TAG }}
         run: bash .github/scripts/check-tag.sh "$TAG"
 
       - name: JDK 17
@@ -106,7 +121,7 @@ jobs:
           retention-days: 90
 
       - name: Sürüm notlarını hazırla
-        if: github.ref_type == 'tag'
+        if: env.RELEASE_TAG != ''
         env:
           VERSION: ${{ steps.apk.outputs.version }}
           CODE: ${{ steps.apk.outputs.code }}
@@ -134,14 +149,17 @@ jobs:
 
       # `--generate-notes` önceki etiketten beri gelen commit listesini üretir;
       # GitHub API'si onu verilen gövdenin *ardına* ekler, üzerine yazmaz.
+      # `--target`: etiket yoksa (elle tetikleme yolu) bu commit'te oluşturulur;
+      # etiket zaten varsa GitHub bu bayrağı yok sayar.
       - name: GitHub sürümünü yayımla
-        if: github.ref_type == 'tag'
+        if: env.RELEASE_TAG != ''
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ github.ref_name }}
+          TAG: ${{ env.RELEASE_TAG }}
           VERSION: ${{ steps.apk.outputs.version }}
         run: |
           gh release create "$TAG" dist/* \
+            --target "$GITHUB_SHA" \
             --title "Norda $VERSION" \
             --notes-file "$RUNNER_TEMP/notes.md" \
             --generate-notes
