@@ -214,7 +214,8 @@ com.aripd.norda
 │   ├── nav/                 ReturnToStart, WaypointLogic
 │   ├── heading/             Smoothing, sapma modeli
 │   ├── map/                 MapProjection (WebMercator), TileMath
-│   └── io/                  Gpx (trk+wpt), satır↔model mapper'lar
+│   ├── io/                  Gpx (trk+wpt), satır↔model mapper'lar
+│   └── db/                  Schema — DDL + göç planı (8.1)
 │
 ├── location/                GpsLocationSource (LocationManager sarmalı)
 ├── compasshw/               sensör kaydı, rotation vector, kalibrasyon/bozulma uyarıları
@@ -400,12 +401,16 @@ start_time INTEGER            timestamp INTEGER             latitude REAL
 end_time INTEGER NULL         latitude REAL                 longitude REAL
 distance_m REAL               longitude REAL                altitude REAL NULL
 duration_ms INTEGER           altitude REAL                 created_at INTEGER
-elevation_gain_m REAL         accuracy REAL                 activity_id INTEGER NULL
+elevation_gain_m REAL         accuracy REAL
 elevation_loss_m REAL         speed REAL
                               bearing REAL
-
-schema_version (PRAGMA user_version) — göçler sürüm numarasıyla
 ```
+
+Waypoint'ler kayda bağlı değil, küreseldir. DDL ve göç planı saf
+`core/db/Schema` modülünde yaşar ve JVM testlidir (şema sürümü 1: activity +
+track_point; sürüm 2: + waypoint). Parite testi, göçle gelen kurulumun
+sıfırdan kurulumla aynı şemaya vardığını garanti eder — tablo create'e
+girip göçten unutulamaz.
 
 Harita paketleri app.db'de değil, paket başına `.mbtiles` dosyasında (7.3);
 app.db yalnız indirilen paketlerin metadata'sını tutar.
