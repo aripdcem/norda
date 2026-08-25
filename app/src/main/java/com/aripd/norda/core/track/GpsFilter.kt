@@ -18,24 +18,33 @@ object GpsFilter {
     /** Bunun altındaki kıpırdama yol değil, durağan titremedir. */
     const val MIN_DISTANCE_M = 2.0
 
-    fun accept(previous: TrackPoint?, candidate: TrackPoint): Boolean {
+    /**
+     * Karar + neden. Neden, filtre kalibrasyonunun ham verisidir (Faz 8):
+     * sahada eşik ayarlamak için hangi kuralın kaç fix elediği görünür olmalı.
+     */
+    enum class Verdict { ACCEPT, BAD_ACCURACY, NON_MONOTONIC, JITTER, TELEPORT }
+
+    fun evaluate(previous: TrackPoint?, candidate: TrackPoint): Verdict {
         // accuracy <= 0, cihazın doğruluk bildirmediği anlamına gelir; böyle
         // cihazlarda hiç kayıt yapmamaktansa fix kabul edilir.
-        if (candidate.accuracyM > MAX_ACCURACY_M) return false
-        if (previous == null) return true
+        if (candidate.accuracyM > MAX_ACCURACY_M) return Verdict.BAD_ACCURACY
+        if (previous == null) return Verdict.ACCEPT
 
         val dtMillis = candidate.timeMillis - previous.timeMillis
-        if (dtMillis <= 0) return false
+        if (dtMillis <= 0) return Verdict.NON_MONOTONIC
 
         val distance = Geo.distanceMeters(
             previous.latitude, previous.longitude,
             candidate.latitude, candidate.longitude
         )
-        if (distance < MIN_DISTANCE_M) return false
+        if (distance < MIN_DISTANCE_M) return Verdict.JITTER
 
         val impliedSpeed = distance / (dtMillis / 1000.0)
-        if (impliedSpeed > MAX_SPEED_MPS) return false
+        if (impliedSpeed > MAX_SPEED_MPS) return Verdict.TELEPORT
 
-        return true
+        return Verdict.ACCEPT
     }
+
+    fun accept(previous: TrackPoint?, candidate: TrackPoint): Boolean =
+        evaluate(previous, candidate) == Verdict.ACCEPT
 }

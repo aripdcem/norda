@@ -10,11 +10,12 @@ package com.aripd.norda.core.db
  * kurulumun sıfırdan kurulumla aynı şemaya varmadığını yakalar — 0.7.0'daki
  * "DAO var, tablo yok" çökmesi tam olarak bu değişmezin ihlaliydi.
  *
- * Sürümler: v1 activity + track_point (+ indeks), v2 + waypoint.
+ * Sürümler: v1 activity + track_point (+ indeks), v2 + waypoint,
+ * v3 + activity.start_battery/end_battery.
  */
 object Schema {
 
-    const val VERSION = 2
+    const val VERSION = 3
 
     private const val CREATE_ACTIVITY = """CREATE TABLE activity(
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -51,12 +52,21 @@ object Schema {
                 created_at INTEGER NOT NULL
             )"""
 
-    /** Sıfırdan kurulum (onCreate): verilen sürümün tam şeması. */
+    // v3: aktivite başına pil ölçümü — okunamadıysa NULL kalır.
+    private const val ALTER_ACTIVITY_START_BATTERY =
+        "ALTER TABLE activity ADD COLUMN start_battery INTEGER"
+    private const val ALTER_ACTIVITY_END_BATTERY =
+        "ALTER TABLE activity ADD COLUMN end_battery INTEGER"
+
+    /**
+     * Sıfırdan kurulum (onCreate) = v1 tabanı + göç zinciri: iki kurulum yolu
+     * aynı tanımdan beslenir, parite yapısal olarak da korunur (test yine
+     * nöbette — birisi bu bileşimi bozarsa yakalar).
+     */
     fun createStatements(version: Int = VERSION): List<String> {
         require(version in 1..VERSION) { "bilinmeyen şema sürümü: $version" }
-        val out = mutableListOf(CREATE_ACTIVITY, CREATE_TRACK_POINT, CREATE_POINT_INDEX)
-        if (version >= 2) out += CREATE_WAYPOINT
-        return out
+        return listOf(CREATE_ACTIVITY, CREATE_TRACK_POINT, CREATE_POINT_INDEX) +
+            upgradeStatements(1, version)
     }
 
     /** Göç (onUpgrade): eski sürümü hedef sürüme taşıyan DDL, sırayla. */
@@ -66,6 +76,10 @@ object Schema {
         }
         val out = mutableListOf<String>()
         if (oldVersion < 2 && newVersion >= 2) out += CREATE_WAYPOINT
+        if (oldVersion < 3 && newVersion >= 3) {
+            out += ALTER_ACTIVITY_START_BATTERY
+            out += ALTER_ACTIVITY_END_BATTERY
+        }
         return out
     }
 }

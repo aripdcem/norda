@@ -38,6 +38,13 @@ class RecordingSession(
     private var breakSegment = false
     private var pendingDetectorReset = false
 
+    // Filtre kalibrasyonunun ham verisi (Faz 8): karar başına sayaç. Yalnız
+    // RECORDING durumunda değerlendirilen fix'ler sayılır — duraklatmada
+    // gelenler kalibrasyon verisi değildir.
+    private val filterCounts = IntArray(GpsFilter.Verdict.entries.size)
+
+    fun filterCount(verdict: GpsFilter.Verdict): Int = filterCounts[verdict.ordinal]
+
     /**
      * Ham fix işlenir; kayda giren nokta döner (çağıran kalıcılaştırır),
      * girmeyen için null. [hasAltitude] yalnız geçerli rakımlarda true olmalı.
@@ -51,7 +58,12 @@ class RecordingSession(
         }
 
         val previous = recorded.lastOrNull()
-        val accepted = state == State.RECORDING && GpsFilter.accept(previous, fix)
+        var accepted = false
+        if (state == State.RECORDING) {
+            val verdict = GpsFilter.evaluate(previous, fix)
+            filterCounts[verdict.ordinal]++
+            accepted = verdict == GpsFilter.Verdict.ACCEPT
+        }
 
         when (autoPause.onFix(fix, accepted)) {
             AutoPauseDetector.Decision.PAUSE -> {

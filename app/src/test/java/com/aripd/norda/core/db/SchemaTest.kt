@@ -1,6 +1,7 @@
 package com.aripd.norda.core.db
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -45,6 +46,22 @@ class SchemaTest {
                 (Schema.createStatements(old) + Schema.upgradeStatements(old)).toSet()
             )
         }
+    }
+
+    // Faz 8: aktivite başı pil ölçümü — sürüm 3 sütunları.
+    @Test
+    fun currentSchemaCarriesBatteryColumns() {
+        val all = Schema.createStatements().joinToString("\n")
+        assertTrue(all.contains("start_battery"))
+        assertTrue(all.contains("end_battery"))
+    }
+
+    @Test
+    fun upgradeFromV2AddsOnlyBatteryColumns() {
+        val ddl = Schema.upgradeStatements(2).joinToString("\n")
+        assertTrue(ddl.contains("start_battery"))
+        assertTrue(ddl.contains("end_battery"))
+        assertFalse(ddl.contains("CREATE TABLE waypoint("))
     }
 
     @Test

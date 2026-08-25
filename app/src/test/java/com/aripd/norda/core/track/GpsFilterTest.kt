@@ -1,5 +1,6 @@
 package com.aripd.norda.core.track
 
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -54,5 +55,49 @@ class GpsFilterTest {
     fun nonPositiveTimeDeltaIsRejected() {
         assertFalse(GpsFilter.accept(p(5_000), p(5_000, lat = 41.0 + step10m)))
         assertFalse(GpsFilter.accept(p(5_000), p(4_000, lat = 41.0 + step10m)))
+    }
+
+    // Faz 8, filtre kalibrasyonu: sahada eşik ayarlamak için yalnız kabul/ret
+    // değil, RET NEDENİ de görünür olmalı.
+    @Test
+    fun evaluateNamesTheRejectionReason() {
+        assertEquals(GpsFilter.Verdict.ACCEPT, GpsFilter.evaluate(null, p(0)))
+        assertEquals(
+            GpsFilter.Verdict.ACCEPT,
+            GpsFilter.evaluate(p(0), p(5_000, lat = 41.0 + step10m))
+        )
+        assertEquals(
+            GpsFilter.Verdict.BAD_ACCURACY,
+            GpsFilter.evaluate(p(0), p(5_000, lat = 41.0 + step10m, acc = 31f))
+        )
+        assertEquals(
+            GpsFilter.Verdict.NON_MONOTONIC,
+            GpsFilter.evaluate(p(5_000), p(4_000, lat = 41.0 + step10m))
+        )
+        assertEquals(
+            GpsFilter.Verdict.JITTER,
+            GpsFilter.evaluate(p(0), p(5_000, lat = 41.0 + step10m / 10))
+        )
+        assertEquals(
+            GpsFilter.Verdict.TELEPORT,
+            GpsFilter.evaluate(p(0), p(5_000, lat = 41.0 + step10m * 10))
+        )
+    }
+
+    @Test
+    fun acceptStaysConsistentWithEvaluate() {
+        val cases = listOf(
+            null to p(0),
+            p(0) to p(5_000, lat = 41.0 + step10m),
+            p(0) to p(5_000, lat = 41.0 + step10m, acc = 31f),
+            p(0) to p(5_000, lat = 41.0 + step10m / 10),
+            p(0) to p(5_000, lat = 41.0 + step10m * 10)
+        )
+        for ((prev, cand) in cases) {
+            assertEquals(
+                GpsFilter.evaluate(prev, cand) == GpsFilter.Verdict.ACCEPT,
+                GpsFilter.accept(prev, cand)
+            )
+        }
     }
 }

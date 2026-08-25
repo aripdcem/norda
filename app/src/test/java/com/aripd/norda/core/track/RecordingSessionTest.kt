@@ -24,6 +24,29 @@ class RecordingSessionTest {
     )
 
     @Test
+    fun filterCountsFeedCalibration() {
+        val s = session()
+        s.onFix(fix(0, 0.0), false, 0)                          // kabul
+        s.onFix(fix(5_000, 1.0), false, 5_000)                  // kabul
+        s.onFix(fix(10_000, 1.05), false, 10_000)               // ~0,5 m titreme
+        s.onFix(fix(15_000, 1.0, acc = 99f), false, 15_000)     // kötü doğruluk
+        assertEquals(2, s.filterCount(GpsFilter.Verdict.ACCEPT))
+        assertEquals(1, s.filterCount(GpsFilter.Verdict.JITTER))
+        assertEquals(1, s.filterCount(GpsFilter.Verdict.BAD_ACCURACY))
+        assertEquals(0, s.filterCount(GpsFilter.Verdict.TELEPORT))
+        assertEquals(0, s.filterCount(GpsFilter.Verdict.NON_MONOTONIC))
+    }
+
+    @Test
+    fun manualPauseDoesNotPolluteFilterCounts() {
+        val s = session()
+        s.onFix(fix(0, 0.0), false, 0)
+        s.pauseManual(1_000)
+        s.onFix(fix(5_000, 1.0), false, 5_000)   // duraklatmada gelen fix sayılmaz
+        assertEquals(1, s.filterCount(GpsFilter.Verdict.ACCEPT))
+    }
+
+    @Test
     fun recordsAcceptedFixesAndAccumulatesDistance() {
         val s = session()
         assertNotNull(s.onFix(fix(0, 0.0), hasAltitude = false, nowMonotonicMillis = 0))
