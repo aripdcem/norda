@@ -26,6 +26,21 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- Faz 2: kayıt ekran açıkken sürer; döndürme oturumu öldürmesin diye
+             dikey kilitli. Foreground service ile kalıcı çözüm Faz 3'te. -->
+        <activity
+            android:name=".RecordingActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name=".HistoryActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".DiagnosticsActivity"
+            android:exported="false" />
     </application>
 
 </manifest>

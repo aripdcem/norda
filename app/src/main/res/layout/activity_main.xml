@@ -1,85 +1,86 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fillViewport="true">
+    android:orientation="vertical"
+    android:gravity="center_horizontal"
+    android:padding="24dp">
 
-    <LinearLayout
+    <TextView
+        style="@style/Norda.SectionLabel"
+        android:layout_marginTop="8dp"
+        android:text="@string/app_name" />
+
+    <RadioGroup
+        android:id="@+id/typeGroup"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="48dp"
+        android:orientation="horizontal">
+
+        <RadioButton
+            android:id="@+id/typeWalk"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:checked="true"
+            android:minHeight="48dp"
+            android:paddingEnd="24dp"
+            android:paddingStart="4dp"
+            android:text="@string/walk"
+            android:textSize="18sp" />
+
+        <RadioButton
+            android:id="@+id/typeRun"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            android:paddingStart="4dp"
+            android:text="@string/run"
+            android:textSize="18sp" />
+    </RadioGroup>
+
+    <Button
+        android:id="@+id/startButton"
+        android:layout_width="match_parent"
+        android:layout_height="72dp"
+        android:layout_marginTop="24dp"
+        android:text="@string/start"
+        android:textSize="22sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/permissionHint"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="24dp">
+        android:layout_marginTop="12dp"
+        android:gravity="center"
+        android:text="@string/permission_needed"
+        android:textSize="14sp"
+        android:visibility="gone" />
 
-        <TextView
-            android:id="@+id/headingDegrees"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/placeholder_dash"
-            android:textSize="64sp"
-            android:textStyle="bold" />
+    <Button
+        android:id="@+id/historyButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:minHeight="48dp"
+        android:text="@string/history" />
 
-        <TextView
-            android:id="@+id/headingCardinal"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textColor="@color/norda_green"
-            android:textSize="22sp"
-            android:textStyle="bold" />
+    <View
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
 
-        <TextView
-            android:id="@+id/sensorStatus"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:minLines="1"
-            android:textSize="14sp" />
+    <TextView
+        android:id="@+id/diagnosticsLink"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:minHeight="48dp"
+        android:gravity="center"
+        android:padding="12dp"
+        android:text="@string/diagnostics"
+        android:textColor="@color/norda_green"
+        android:textSize="14sp" />
 
-        <TextView
-            style="@style/Norda.SectionLabel"
-            android:layout_marginTop="28dp"
-            android:text="@string/section_location" />
-
-        <TextView
-            android:id="@+id/locationText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:text="@string/location_waiting"
-            android:textSize="16sp" />
-
-        <TextView
-            style="@style/Norda.SectionLabel"
-            android:layout_marginTop="24dp"
-            android:text="@string/section_start" />
-
-        <TextView
-            android:id="@+id/startText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:text="@string/start_waiting"
-            android:textSize="16sp" />
-
-        <TextView
-            style="@style/Norda.SectionLabel"
-            android:layout_marginTop="24dp"
-            android:text="@string/section_permission" />
-
-        <TextView
-            android:id="@+id/permissionText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:textSize="16sp" />
-
-        <Button
-            android:id="@+id/permissionButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:minHeight="48dp"
-            android:text="@string/grant_permission" />
-
-    </LinearLayout>
-</ScrollView>
+</LinearLayout>

@@ -4,140 +4,70 @@ import android.Manifest
 import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.hardware.Sensor
-import android.hardware.SensorEvent
-import android.hardware.SensorEventListener
-import android.hardware.SensorManager
-import android.location.Location
-import android.location.LocationListener
-import android.location.LocationManager
-import android.net.Uri
-import android.os.Build
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
-import android.os.SystemClock
-import android.provider.Settings
-import android.view.Surface
 import android.view.View
-import android.view.WindowInsets
 import android.widget.Button
+import android.widget.RadioButton
 import android.widget.TextView
-import com.aripd.norda.core.geo.Geo
+import android.widget.Toast
+import com.aripd.norda.core.track.ActivityType
+import com.aripd.norda.core.track.ElevationTracker
+import com.aripd.norda.core.track.Stats
+import com.aripd.norda.storage.ActivityDao
+import com.aripd.norda.storage.AppDatabase
 
 /**
- * Faz 1 — Sensor Core: ham konum ve yön verisini gösteren doğrulama ekranı.
- * Amaç sensörleri gerçek cihazlarda sınamak; ürün arayüzü sonraki fazlarda
- * bu ekranın yerini alır (docs/MVP.md, 12. bölüm).
+ * Home (docs/MVP.md, 3.1): olabildiğince boş — tip seç, START'a bas.
+ * Açılışta yarım kalmış kayıt varsa (süreç ölümü) geçmişe kurtarılır.
  */
-class MainActivity : Activity(), LocationListener, SensorEventListener {
+class MainActivity : Activity() {
 
-    private lateinit var locationManager: LocationManager
-    private lateinit var sensorManager: SensorManager
-    private var rotationVector: Sensor? = null
-
-    private lateinit var headingDegrees: TextView
-    private lateinit var headingCardinal: TextView
-    private lateinit var sensorStatus: TextView
-    private lateinit var locationText: TextView
-    private lateinit var startText: TextView
-    private lateinit var permissionText: TextView
-    private lateinit var permissionButton: Button
-
-    private val rotationMatrix = FloatArray(9)
-    private val remappedMatrix = FloatArray(9)
-    private val orientation = FloatArray(3)
-
-    private var lastFix: Location? = null
-    private var lastFixElapsedMs = 0L
-    private var startFix: Location? = null
-
-    private val handler = Handler(Looper.getMainLooper())
-    private val ageTicker = object : Runnable {
-        override fun run() {
-            renderLocation()
-            handler.postDelayed(this, 1000L)
-        }
-    }
+    private lateinit var dao: ActivityDao
+    private lateinit var walkButton: RadioButton
+    private lateinit var runButton: RadioButton
+    private lateinit var permissionHint: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        Insets.apply(findViewById(R.id.root))
 
-        // targetSdk 35: kenardan kenara çizim zorunlu; sistem çubuklarının
-        // boşluğunu pencere değil uygulama bırakır.
-        applyInsets(findViewById(R.id.root))
+        dao = ActivityDao(AppDatabase.get(this))
+        walkButton = findViewById(R.id.typeWalk)
+        runButton = findViewById(R.id.typeRun)
+        permissionHint = findViewById(R.id.permissionHint)
 
-        headingDegrees = findViewById(R.id.headingDegrees)
-        headingCardinal = findViewById(R.id.headingCardinal)
-        sensorStatus = findViewById(R.id.sensorStatus)
-        locationText = findViewById(R.id.locationText)
-        startText = findViewById(R.id.startText)
-        permissionText = findViewById(R.id.permissionText)
-        permissionButton = findViewById(R.id.permissionButton)
-
-        locationManager = getSystemService(LOCATION_SERVICE) as LocationManager
-        sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
-        rotationVector = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR)
-        if (rotationVector == null) {
-            sensorStatus.text = getString(R.string.sensor_missing)
+        findViewById<Button>(R.id.startButton).setOnClickListener { onStartTapped() }
+        findViewById<Button>(R.id.historyButton).setOnClickListener {
+            startActivity(Intent(this, HistoryActivity::class.java))
         }
-
-        permissionButton.setOnClickListener {
-            if (shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION) ||
-                !permissionAskedBefore
-            ) {
-                requestLocation()
-            } else {
-                // Kalıcı ret: sistem diyaloğu artık hiç görünmez, tek yol ayarlar.
-                startActivity(
-                    Intent(
-                        Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-                        Uri.fromParts("package", packageName, null)
-                    )
-                )
-            }
+        findViewById<TextView>(R.id.diagnosticsLink).setOnClickListener {
+            startActivity(Intent(this, DiagnosticsActivity::class.java))
         }
-
-        if (!hasLocationPermission()) requestLocation()
     }
 
     override fun onResume() {
         super.onResume()
-        rotationVector?.let {
-            sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_UI)
+        recoverUnfinished()
+        permissionHint.visibility =
+            if (hasLocationPermission()) View.GONE else View.VISIBLE
+    }
+
+    private fun onStartTapped() {
+        if (!hasLocationPermission()) {
+            requestPermissions(
+                arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                ),
+                REQUEST_LOCATION
+            )
+            return
         }
-        startLocationUpdates()
-        renderPermission()
-        renderLocation()
-        renderStart()
-        handler.post(ageTicker)
-    }
-
-    // Pil kuralı: ekran görünmüyorken ne sensör ne konum dinlenir.
-    override fun onPause() {
-        super.onPause()
-        sensorManager.unregisterListener(this)
-        locationManager.removeUpdates(this)
-        handler.removeCallbacks(ageTicker)
-    }
-
-    // ---- İzin ----
-
-    private var permissionAskedBefore = false
-
-    private fun hasLocationPermission(): Boolean =
-        checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) ==
-            PackageManager.PERMISSION_GRANTED
-
-    private fun requestLocation() {
-        permissionAskedBefore = true
-        requestPermissions(
-            arrayOf(
-                Manifest.permission.ACCESS_FINE_LOCATION,
-                Manifest.permission.ACCESS_COARSE_LOCATION
-            ),
-            REQUEST_LOCATION
+        val type = if (runButton.isChecked) ActivityType.RUN else ActivityType.WALK
+        startActivity(
+            Intent(this, RecordingActivity::class.java)
+                .putExtra(RecordingActivity.EXTRA_TYPE, type.name)
         )
     }
 
@@ -147,166 +77,41 @@ class MainActivity : Activity(), LocationListener, SensorEventListener {
         grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == REQUEST_LOCATION) {
-            renderPermission()
-            startLocationUpdates()
+        if (requestCode == REQUEST_LOCATION && hasLocationPermission()) {
+            permissionHint.visibility = View.GONE
+            onStartTapped()
         }
     }
 
-    private fun renderPermission() {
-        if (hasLocationPermission()) {
-            permissionText.text = getString(R.string.permission_granted)
-            permissionButton.visibility = View.GONE
-        } else {
-            val deniedForever = permissionAskedBefore &&
-                !shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION)
-            permissionText.text = getString(
-                if (deniedForever) R.string.permission_denied_forever
-                else R.string.permission_needed
-            )
-            permissionButton.text = getString(
-                if (deniedForever) R.string.open_settings else R.string.grant_permission
-            )
-            permissionButton.visibility = View.VISIBLE
-        }
-    }
-
-    // ---- Konum ----
-
-    private fun startLocationUpdates() {
-        if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) !=
+    private fun hasLocationPermission(): Boolean =
+        checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) ==
             PackageManager.PERMISSION_GRANTED
-        ) {
-            return
-        }
-        // Mesafe süzgeci bilerek 0: süzgeç verilince sabit duran telefona GPS
-        // hiç fix göndermiyor (docs/MVP.md, 5.3'te belgelenen tuzak).
-        if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000L, 0f, this)
-        }
-        if (locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
-            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 5000L, 0f, this)
-        }
-    }
 
-    override fun onLocationChanged(location: Location) {
-        lastFix = location
-        lastFixElapsedMs = SystemClock.elapsedRealtime()
-        // Başlangıç çapası: kayıt filtresinin doğruluk çıtasını geçen ilk fix.
-        if (startFix == null && location.accuracy > 0f && location.accuracy <= 30f) {
-            startFix = location
-        }
-        renderLocation()
-        renderStart()
-    }
-
-    // API 26'da bu üçünün varsayılan gövdesi yok; boş bırakmak bilinçli.
-    @Deprecated("Framework çağırmaya devam ediyor; API 29 öncesi için gerekli")
-    override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) = Unit
-    override fun onProviderEnabled(provider: String) = Unit
-    override fun onProviderDisabled(provider: String) {
-        renderLocation()
-    }
-
-    private fun renderLocation() {
-        val fix = lastFix
-        if (!hasLocationPermission()) {
-            locationText.text = getString(R.string.location_needs_permission)
-            return
-        }
-        if (fix == null) {
-            locationText.text = getString(R.string.location_waiting)
-            return
-        }
-        val ageSec = ((SystemClock.elapsedRealtime() - lastFixElapsedMs) / 1000L).toInt()
-        val speedKmh = fix.speed * 3.6f
-        locationText.text = listOf(
-            getString(R.string.location_coords, fix.latitude, fix.longitude),
-            getString(R.string.location_accuracy, fix.accuracy.toInt()),
-            getString(R.string.location_altitude, fix.altitude.toInt()),
-            getString(R.string.location_speed, speedKmh),
-            getString(R.string.location_meta, fix.provider ?: "?", ageSec)
-        ).joinToString("\n")
-    }
-
-    private fun renderStart() {
-        val fix = lastFix
-        val start = startFix
-        if (start == null || fix == null) {
-            startText.text = getString(R.string.start_waiting)
-            return
-        }
-        val distance = Geo.distanceMeters(
-            fix.latitude, fix.longitude, start.latitude, start.longitude
+    /**
+     * Süreç ölümüyle yarım kalan kayıt (end_time NULL) diskteki noktalardan
+     * toparlanır: mesafe/yükseklik saf çekirdekle yeniden hesaplanır; süre,
+     * duraklatma bilgisi kaybolduğu için nokta aralığından yaklaşıktır.
+     */
+    private fun recoverUnfinished() {
+        val unfinished = dao.unfinishedActivity() ?: return
+        val points = dao.pointsFor(unfinished.id)
+        val distance = Stats.totalDistanceMeters(points)
+        val elevation = ElevationTracker()
+        dao.altitudesFor(unfinished.id).forEach { elevation.onAltitude(it) }
+        val endTime = points.lastOrNull()?.timeMillis ?: unfinished.startTimeMillis
+        dao.finishActivity(
+            com.aripd.norda.core.track.ActivitySummary(
+                id = unfinished.id,
+                type = unfinished.type,
+                startTimeMillis = unfinished.startTimeMillis,
+                endTimeMillis = endTime,
+                distanceM = distance,
+                durationMillis = (endTime - unfinished.startTimeMillis).coerceAtLeast(0),
+                elevationGainM = elevation.gainM,
+                elevationLossM = elevation.lossM
+            )
         )
-        val bearing = Geo.initialBearingDeg(
-            fix.latitude, fix.longitude, start.latitude, start.longitude
-        )
-        val distanceText =
-            if (distance < 1000) getString(R.string.distance_m, distance.toInt())
-            else getString(R.string.distance_km, distance / 1000.0)
-        startText.text = getString(R.string.start_line, bearing.toInt(), distanceText)
-    }
-
-    // ---- Yön ----
-
-    override fun onSensorChanged(event: SensorEvent) {
-        if (event.sensor.type != Sensor.TYPE_ROTATION_VECTOR) return
-        SensorManager.getRotationMatrixFromVector(rotationMatrix, event.values)
-
-        // Sensör eksenleri ekran yönüne eşlenir; okuma her iki yönde de
-        // ekranın üst kenarının baktığı yönü verir.
-        val rotation = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            display?.rotation ?: Surface.ROTATION_0
-        } else {
-            @Suppress("DEPRECATION")
-            windowManager.defaultDisplay.rotation
-        }
-        val (axisX, axisY) = when (rotation) {
-            Surface.ROTATION_90 -> SensorManager.AXIS_Y to SensorManager.AXIS_MINUS_X
-            Surface.ROTATION_180 -> SensorManager.AXIS_MINUS_X to SensorManager.AXIS_MINUS_Y
-            Surface.ROTATION_270 -> SensorManager.AXIS_MINUS_Y to SensorManager.AXIS_X
-            else -> SensorManager.AXIS_X to SensorManager.AXIS_Y
-        }
-        SensorManager.remapCoordinateSystem(rotationMatrix, axisX, axisY, remappedMatrix)
-        SensorManager.getOrientation(remappedMatrix, orientation)
-
-        val azimuth = Geo.normalizeDeg(Math.toDegrees(orientation[0].toDouble()))
-        headingDegrees.text = getString(R.string.heading_degrees, azimuth.toInt())
-        val cardinals = resources.getStringArray(R.array.cardinals_8)
-        headingCardinal.text = cardinals[(((azimuth + 22.5) / 45.0).toInt()) % 8]
-    }
-
-    override fun onAccuracyChanged(sensor: Sensor, accuracy: Int) {
-        if (sensor.type != Sensor.TYPE_ROTATION_VECTOR) return
-        sensorStatus.text = when (accuracy) {
-            SensorManager.SENSOR_STATUS_UNRELIABLE,
-            SensorManager.SENSOR_STATUS_ACCURACY_LOW ->
-                getString(R.string.sensor_calibration_needed)
-            else -> ""
-        }
-    }
-
-    // ---- Kenardan kenara ----
-
-    private fun applyInsets(root: View) {
-        root.setOnApplyWindowInsetsListener { view, insets ->
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                val bars = insets.getInsets(WindowInsets.Type.systemBars())
-                view.setPadding(bars.left, bars.top, bars.right, bars.bottom)
-                WindowInsets.CONSUMED
-            } else {
-                @Suppress("DEPRECATION")
-                view.setPadding(
-                    insets.systemWindowInsetLeft,
-                    insets.systemWindowInsetTop,
-                    insets.systemWindowInsetRight,
-                    insets.systemWindowInsetBottom
-                )
-                @Suppress("DEPRECATION")
-                insets.consumeSystemWindowInsets()
-            }
-        }
+        Toast.makeText(this, R.string.recovered_toast, Toast.LENGTH_LONG).show()
     }
 
     private companion object {

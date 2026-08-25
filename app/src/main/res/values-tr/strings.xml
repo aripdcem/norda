@@ -29,6 +29,36 @@
     <string name="grant_permission">İzin ver</string>
     <string name="open_settings">Ayarları aç</string>
 
+    <string name="walk">Yürüyüş</string>
+    <string name="run">Koşu</string>
+    <string name="start">BAŞLAT</string>
+    <string name="history">Geçmiş</string>
+    <string name="diagnostics">Sensör tanılama</string>
+
+    <string name="recording_state_recording">Kayıtta</string>
+    <string name="recording_state_paused">Duraklatıldı</string>
+    <string name="recording_state_auto">Otomatik duraklatıldı</string>
+    <string name="recording_state_stopped">Bitti</string>
+    <string name="pause">Duraklat</string>
+    <string name="resume">Devam</string>
+    <string name="stop">Bitir</string>
+    <string name="finish">Bitir</string>
+    <string name="cancel">Vazgeç</string>
+    <string name="finish_confirm">Kayıt bitirilsin mi?</string>
+
+    <string name="stat_distance">MESAFE</string>
+    <string name="stat_pace">TEMPO</string>
+    <string name="stat_elevation">YÜKSEKLİK</string>
+    <string name="elevation_line">▲ %1$d m · ▼ %2$d m</string>
+    <string name="pace_per_km">%1$s /km</string>
+
+    <string name="history_row_title">%1$s · %2$s</string>
+    <string name="history_row_stats">%1$s · %2$s · ▲ %3$d m</string>
+    <string name="history_empty">Henüz kayıt yok.</string>
+    <string name="delete_confirm">Bu kayıt silinsin mi?</string>
+    <string name="delete">Sil</string>
+    <string name="recovered_toast">Yarım kalan kayıt geçmişe kaydedildi.</string>
+
     <string-array name="cardinals_8">
         <item>K</item><item>KD</item><item>D</item><item>GD</item>
         <item>G</item><item>GB</item><item>B</item><item>KB</item>

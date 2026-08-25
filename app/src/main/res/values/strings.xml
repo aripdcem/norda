@@ -29,6 +29,36 @@
     <string name="grant_permission">Grant permission</string>
     <string name="open_settings">Open settings</string>
 
+    <string name="walk">Walk</string>
+    <string name="run">Run</string>
+    <string name="start">START</string>
+    <string name="history">History</string>
+    <string name="diagnostics">Sensor diagnostics</string>
+
+    <string name="recording_state_recording">Recording</string>
+    <string name="recording_state_paused">Paused</string>
+    <string name="recording_state_auto">Auto-paused</string>
+    <string name="recording_state_stopped">Finished</string>
+    <string name="pause">Pause</string>
+    <string name="resume">Resume</string>
+    <string name="stop">Stop</string>
+    <string name="finish">Finish</string>
+    <string name="cancel">Cancel</string>
+    <string name="finish_confirm">Finish this activity?</string>
+
+    <string name="stat_distance">DISTANCE</string>
+    <string name="stat_pace">PACE</string>
+    <string name="stat_elevation">ELEVATION</string>
+    <string name="elevation_line">▲ %1$d m · ▼ %2$d m</string>
+    <string name="pace_per_km">%1$s /km</string>
+
+    <string name="history_row_title">%1$s · %2$s</string>
+    <string name="history_row_stats">%1$s · %2$s · ▲ %3$d m</string>
+    <string name="history_empty">No activities yet.</string>
+    <string name="delete_confirm">Delete this activity?</string>
+    <string name="delete">Delete</string>
+    <string name="recovered_toast">Unfinished recording was saved to history.</string>
+
     <string-array name="cardinals_8">
         <item>N</item><item>NE</item><item>E</item><item>SE</item>
         <item>S</item><item>SW</item><item>W</item><item>NW</item>
