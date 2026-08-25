@@ -3,6 +3,17 @@
 Biçim [Keep a Changelog](https://keepachangelog.com/), sürümleme
 [SemVer](https://semver.org/) — kurallar için `docs/MVP.md` 15. bölüm.
 
+## [0.9.2] - 2026-08-25
+
+### Fixed
+
+- F-2 (Saha Turu 1 kullanışlılık bulgusu): filtre sayaçları yalnız kayıt
+  sürerken okunabiliyordu — sahada bulmak ve not almak zordu. Kayıt bitince
+  son kaydın sayaçları kalıcı saklanır ve Tanılama'da "KAYIT FİLTRESİ
+  (SON KAYIT)" olarak görünmeye devam eder; tur raporu eve dönünce
+  yazılabilir. Boş/atılan kayıtta da saklanır — "kayıt neden boş kaldı"nın
+  cevabı çoğu zaman bu sayaçlardadır.
+
 ## [0.9.1] - 2026-08-25
 
 ### Fixed
