@@ -64,6 +64,13 @@
     <string name="maps_empty">Henüz harita paketi yok. Bir .mbtiles dosyası içe aktar — kayıt ve izler paketsiz de çalışır.</string>
     <string name="map_row_size">%1$.1f MB</string>
     <string name="map_imported">Paket eklendi.</string>
+    <string name="map_remote_stats">%1$.1f MB · v%2$d · indirilebilir</string>
+    <string name="map_downloading">indiriliyor · %1$d%%</string>
+    <string name="map_download">İndir</string>
+    <string name="map_download_confirm">%1$s indirilsin mi? (%2$.1f MB)</string>
+    <string name="map_downloaded">Paket indirildi.</string>
+    <string name="map_download_failed">İndirme başarısız — bağlantını kontrol et; dosya SHA-256 ile doğrulanır.</string>
+    <string name="maps_index_offline">Paket listesi alınamadı — çevrimdışı olabilirsin. İçe aktarılan paketler çalışmaya devam eder.</string>
     <string name="map_import_failed">Paket içe aktarılamadı.</string>
     <string name="map_delete_confirm">%1$s silinsin mi?</string>
     <string name="attribution_osm">© OpenStreetMap contributors</string>

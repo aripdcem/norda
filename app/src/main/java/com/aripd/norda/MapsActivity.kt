@@ -14,15 +14,25 @@ import android.widget.ListView
 import android.widget.TextView
 import android.widget.Toast
 import com.aripd.norda.map.MapPackages
+import com.aripd.norda.map.TileDownloader
 import java.io.File
 
 /**
- * Harita paketleri (docs/MVP.md, 3.5). Faz 4'te paketler dosyadan içe
- * aktarılır (SAF); indirme ve `index.json` listesi Faz 5'te geliyor.
+ * Harita paketleri (docs/MVP.md, 3.5): indirilenler + index.json'daki
+ * indirilebilir paketler tek listede. İndirme SHA-256 ile doğrulanır.
+ * Elle içe aktarma (SAF) çevrimdışı yedek yol olarak durur.
  */
 class MapsActivity : Activity() {
 
-    private val items = mutableListOf<File>()
+    private sealed class Row {
+        class Local(val file: File) : Row()
+        class Remote(val pkg: TileDownloader.RemotePackage) : Row()
+    }
+
+    private val items = mutableListOf<Row>()
+    private var remoteIndex: List<TileDownloader.RemotePackage> = emptyList()
+    private val downloadProgress = HashMap<String, Int>()
+    private lateinit var indexHint: TextView
 
     private val adapter = object : BaseAdapter() {
         override fun getCount() = items.size
@@ -32,10 +42,28 @@ class MapsActivity : Activity() {
         override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
             val row = convertView
                 ?: layoutInflater.inflate(R.layout.row_activity, parent, false)
-            val f = items[position]
-            row.findViewById<TextView>(R.id.rowTitle).text = f.name
-            row.findViewById<TextView>(R.id.rowStats).text =
-                getString(R.string.map_row_size, f.length() / 1024.0 / 1024.0)
+            val title = row.findViewById<TextView>(R.id.rowTitle)
+            val stats = row.findViewById<TextView>(R.id.rowStats)
+            when (val item = items[position]) {
+                is Row.Local -> {
+                    title.text = item.file.name
+                    stats.text = getString(
+                        R.string.map_row_size, item.file.length() / 1024.0 / 1024.0
+                    )
+                }
+                is Row.Remote -> {
+                    title.text = item.pkg.name
+                    val progress = downloadProgress[item.pkg.id]
+                    stats.text = if (progress != null) {
+                        getString(R.string.map_downloading, progress)
+                    } else {
+                        getString(
+                            R.string.map_remote_stats,
+                            item.pkg.sizeBytes / 1024.0 / 1024.0, item.pkg.version
+                        )
+                    }
+                }
+            }
             return row
         }
     }
@@ -44,18 +72,22 @@ class MapsActivity : Activity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_maps)
         Insets.apply(findViewById(R.id.root))
+        indexHint = findViewById(R.id.indexHint)
 
         val list = findViewById<ListView>(R.id.mapList)
         list.emptyView = findViewById(R.id.mapsEmpty)
         list.adapter = adapter
         list.setOnItemClickListener { _, _, position, _ ->
-            startActivity(
-                Intent(this, MapActivity::class.java)
-                    .putExtra(MapActivity.EXTRA_PACKAGE_PATH, items[position].absolutePath)
-            )
+            when (val item = items[position]) {
+                is Row.Local -> startActivity(
+                    Intent(this, MapActivity::class.java)
+                        .putExtra(MapActivity.EXTRA_PACKAGE_PATH, item.file.absolutePath)
+                )
+                is Row.Remote -> confirmDownload(item.pkg)
+            }
         }
         list.setOnItemLongClickListener { _, _, position, _ ->
-            confirmDelete(items[position])
+            (items[position] as? Row.Local)?.let { confirmDelete(it.file) }
             true
         }
 
@@ -72,13 +104,82 @@ class MapsActivity : Activity() {
 
     override fun onResume() {
         super.onResume()
-        reload()
+        rebuild()
+        fetchIndex()
     }
 
-    private fun reload() {
+    private fun rebuild() {
+        val locals = MapPackages.list(this)
         items.clear()
-        items.addAll(MapPackages.list(this))
+        items.addAll(locals.map { Row.Local(it) })
+        items.addAll(
+            remoteIndex
+                .filter { pkg -> locals.none { it.name == "${pkg.id}.mbtiles" } }
+                .map { Row.Remote(it) }
+        )
         adapter.notifyDataSetChanged()
+    }
+
+    /** Liste ağdan gelir; ağ yoksa yalnız yerel paketler görünür. */
+    private fun fetchIndex() {
+        Thread {
+            val fetched = try {
+                TileDownloader.fetchIndex()
+            } catch (_: Exception) {
+                null
+            }
+            runOnUiThread {
+                if (isFinishing || isDestroyed) return@runOnUiThread
+                if (fetched != null) {
+                    remoteIndex = fetched
+                    indexHint.visibility = View.GONE
+                } else {
+                    indexHint.visibility = View.VISIBLE
+                }
+                rebuild()
+            }
+        }.start()
+    }
+
+    private fun confirmDownload(pkg: TileDownloader.RemotePackage) {
+        if (downloadProgress.containsKey(pkg.id)) return
+        AlertDialog.Builder(this)
+            .setMessage(
+                getString(
+                    R.string.map_download_confirm, pkg.name, pkg.sizeBytes / 1024.0 / 1024.0
+                )
+            )
+            .setPositiveButton(R.string.map_download) { _, _ -> startDownload(pkg) }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
+    }
+
+    private fun startDownload(pkg: TileDownloader.RemotePackage) {
+        downloadProgress[pkg.id] = 0
+        adapter.notifyDataSetChanged()
+        Thread {
+            val error = try {
+                TileDownloader.download(pkg, MapPackages.dir(this)) { percent ->
+                    runOnUiThread {
+                        downloadProgress[pkg.id] = percent
+                        adapter.notifyDataSetChanged()
+                    }
+                }
+                null
+            } catch (e: Exception) {
+                e
+            }
+            runOnUiThread {
+                if (isFinishing || isDestroyed) return@runOnUiThread
+                downloadProgress.remove(pkg.id)
+                Toast.makeText(
+                    this,
+                    if (error == null) R.string.map_downloaded else R.string.map_download_failed,
+                    Toast.LENGTH_SHORT
+                ).show()
+                rebuild()
+            }
+        }.start()
     }
 
     @Deprecated("Deprecated in Java")
@@ -100,7 +201,7 @@ class MapsActivity : Activity() {
                 target.outputStream().use { output -> input.copyTo(output) }
             } ?: return
             Toast.makeText(this, R.string.map_imported, Toast.LENGTH_SHORT).show()
-            reload()
+            rebuild()
         } catch (e: Exception) {
             target.delete()
             Toast.makeText(this, R.string.map_import_failed, Toast.LENGTH_LONG).show()
@@ -116,7 +217,7 @@ class MapsActivity : Activity() {
             .setMessage(getString(R.string.map_delete_confirm, file.name))
             .setPositiveButton(R.string.delete) { _, _ ->
                 file.delete()
-                reload()
+                rebuild()
             }
             .setNegativeButton(R.string.cancel, null)
             .show()

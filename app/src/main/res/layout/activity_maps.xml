@@ -11,6 +11,15 @@
         android:layout_marginBottom="8dp"
         android:text="@string/maps" />
 
+    <TextView
+        android:id="@+id/indexHint"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:text="@string/maps_index_offline"
+        android:textSize="13sp"
+        android:visibility="gone" />
+
     <ListView
         android:id="@+id/mapList"
         android:layout_width="match_parent"

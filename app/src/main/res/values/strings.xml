@@ -64,6 +64,13 @@
     <string name="maps_empty">No map packages yet. Import an .mbtiles file — recording and tracks work without one too.</string>
     <string name="map_row_size">%1$.1f MB</string>
     <string name="map_imported">Package imported.</string>
+    <string name="map_remote_stats">%1$.1f MB · v%2$d · available</string>
+    <string name="map_downloading">downloading · %1$d%%</string>
+    <string name="map_download">Download</string>
+    <string name="map_download_confirm">Download %1$s? (%2$.1f MB)</string>
+    <string name="map_downloaded">Package downloaded.</string>
+    <string name="map_download_failed">Download failed — check your connection; the file is verified with SHA-256.</string>
+    <string name="maps_index_offline">Couldn\'t fetch the package list — you may be offline. Imported packages still work.</string>
     <string name="map_import_failed">Could not import the package.</string>
     <string name="map_delete_confirm">Delete %1$s?</string>
     <string name="attribution_osm">© OpenStreetMap contributors</string>
