@@ -463,8 +463,14 @@ düşüktür, outdoor kullanıcıya hemen değer verir.
 - **Dışa**: aktivite → `<trk>/<trkseg>/<trkpt>` (`ele`, `time` ile);
   waypoint'ler → `<wpt name=...>`. Tek dosyada iz + noktalar. SAF
   (`ACTION_CREATE_DOCUMENT`) ile kaydedilir.
+- **Telemetri** (F-3): uygulama özeti (mesafe/aktif süre/yükseklik), pil ve
+  filtre sayaçları GPX 1.1 `extensions` içinde `norda:report` olarak
+  gömülür — saha raporu tek dosyadır. Diğer araçlar bloğu yok sayar;
+  filtre sayaçları yalnız son kayıt o aktiviteyse eklenir.
 - **İçe**: `<trkpt>`'ler aktivite olarak (`lat/lon/ele/time`), `<wpt>`'ler
   waypoint olarak. Bozuk girdi satır atlanarak tolere edilir, testli.
+  `norda:report` içe aktarmada veri sayılmaz — istatistikler her zaman
+  noktalardan yeniden hesaplanır.
 - "Route sharing" MVP'de ayrı özellik değildir: GPX dosyası paylaşmak zaten
   route sharing'dir.
 

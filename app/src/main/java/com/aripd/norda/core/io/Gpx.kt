@@ -23,14 +23,44 @@ object Gpx {
     class Parsed(
         val name: String?,
         val points: List<ParsedPoint>,
-        val waypoints: List<Waypoint>
+        val waypoints: List<Waypoint>,
+        val report: Report? = null
     )
+
+    /** GPS filtresi karar sayaçları — eşik kalibrasyonunun ham verisi. */
+    class FilterCounts(
+        val accept: Int,
+        val badAccuracy: Int,
+        val jitter: Int,
+        val teleport: Int,
+        val nonMonotonic: Int
+    )
+
+    /**
+     * Tur telemetrisi (F-3, Saha Turu 1): uygulamanın gördüğü özet, pil ve
+     * filtre sayaçları GPX'in İÇİNDE taşınır — saha raporu tek dosyadır,
+     * elle not gerekmez. GPX 1.1 `extensions` + kendi ad alanımızla gider;
+     * diğer araçlar bloğu yok sayar, içe aktarma bunu veri saymaz
+     * (istatistikler her zaman noktalardan yeniden hesaplanır).
+     */
+    class Report(
+        val filter: FilterCounts?,
+        val startBatteryPct: Int?,
+        val endBatteryPct: Int?,
+        val distanceM: Double,
+        val activeMillis: Long,
+        val gainM: Double,
+        val lossM: Double
+    )
+
+    private const val NORDA_NS = "https://github.com/aripdcem/norda/gpx/1"
 
     fun write(
         trackName: String,
         points: List<TrackPoint>,
         altitudeValid: List<Boolean>,
-        waypoints: List<Waypoint>
+        waypoints: List<Waypoint>,
+        report: Report? = null
     ): String {
         require(points.size == altitudeValid.size) { "nokta/rakım listeleri eş boyda olmalı" }
         val sb = StringBuilder()
@@ -58,6 +88,30 @@ object Gpx {
                 sb.append("</trkpt>\n")
             }
             sb.append("</trkseg>\n</trk>\n")
+        }
+        if (report != null) {
+            // GPX 1.1 şemasında extensions gpx'in SON çocuğudur.
+            sb.append("<extensions>\n<norda:report xmlns:norda=\"")
+                .append(NORDA_NS).append("\">\n")
+            sb.append("<norda:summary distanceM=\"").append(report.distanceM)
+                .append("\" activeMillis=\"").append(report.activeMillis)
+                .append("\" gainM=\"").append(report.gainM)
+                .append("\" lossM=\"").append(report.lossM).append("\"/>\n")
+            if (report.startBatteryPct != null || report.endBatteryPct != null) {
+                sb.append("<norda:battery")
+                report.startBatteryPct?.let { sb.append(" startPct=\"").append(it).append("\"") }
+                report.endBatteryPct?.let { sb.append(" endPct=\"").append(it).append("\"") }
+                sb.append("/>\n")
+            }
+            report.filter?.let { f ->
+                sb.append("<norda:filter accept=\"").append(f.accept)
+                    .append("\" badAccuracy=\"").append(f.badAccuracy)
+                    .append("\" jitter=\"").append(f.jitter)
+                    .append("\" teleport=\"").append(f.teleport)
+                    .append("\" nonMonotonic=\"").append(f.nonMonotonic)
+                    .append("\"/>\n")
+            }
+            sb.append("</norda:report>\n</extensions>\n")
         }
         sb.append("</gpx>\n")
         return sb.toString()
@@ -111,7 +165,42 @@ object Gpx {
                 createdAtMillis = 0
             )
         }
-        return Parsed(name, points, waypoints)
+        return Parsed(name, points, waypoints, parseReport(doc))
+    }
+
+    /** `norda:report` bloğu — yoksa ya da bozuksa null (tolerans kuralı). */
+    private fun parseReport(doc: org.w3c.dom.Document): Report? {
+        val reports = doc.getElementsByTagName("norda:report")
+        if (reports.length == 0) return null
+        val el = reports.item(0) as Element
+        val summary = firstChildElement(el, "norda:summary") ?: return null
+        return Report(
+            filter = parseFilter(firstChildElement(el, "norda:filter")),
+            startBatteryPct = firstChildElement(el, "norda:battery")
+                ?.getAttribute("startPct")?.toIntOrNull(),
+            endBatteryPct = firstChildElement(el, "norda:battery")
+                ?.getAttribute("endPct")?.toIntOrNull(),
+            distanceM = summary.getAttribute("distanceM").toDoubleOrNull() ?: return null,
+            activeMillis = summary.getAttribute("activeMillis").toLongOrNull() ?: return null,
+            gainM = summary.getAttribute("gainM").toDoubleOrNull() ?: return null,
+            lossM = summary.getAttribute("lossM").toDoubleOrNull() ?: return null
+        )
+    }
+
+    private fun parseFilter(el: Element?): FilterCounts? {
+        el ?: return null
+        return FilterCounts(
+            accept = el.getAttribute("accept").toIntOrNull() ?: return null,
+            badAccuracy = el.getAttribute("badAccuracy").toIntOrNull() ?: return null,
+            jitter = el.getAttribute("jitter").toIntOrNull() ?: return null,
+            teleport = el.getAttribute("teleport").toIntOrNull() ?: return null,
+            nonMonotonic = el.getAttribute("nonMonotonic").toIntOrNull() ?: return null
+        )
+    }
+
+    private fun firstChildElement(parent: Element, tag: String): Element? {
+        val children = parent.getElementsByTagName(tag)
+        return if (children.length == 0) null else children.item(0) as Element
     }
 
     private fun childText(parent: Element, tag: String): String? {

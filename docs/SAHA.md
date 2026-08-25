@@ -59,6 +59,11 @@ Adım | Sonuç (✓ / ✗ + not)
 Bulgu → issue ya da doğrudan mesaj; her düzeltme kendi z-sürümüyle çıkar,
 tur o sürümle tekrarlanır. Üç temiz tur = v1.0.0 kapısı.
 
+> Kısa yol (v0.9.3+): turu bitir → izi GPX olarak dışa aktar → dosyayı
+> paylaş. Özet, pil ve filtre sayaçları dosyanın içinde (`norda:report`)
+> gelir; şablondaki ölçümlerden yalnız bilinen-mesafe karşılaştırması elle
+> yazılır.
+
 ## Tur günlüğü
 
 | Tur | Tarih | Sürüm | Sonuç |
@@ -82,3 +87,7 @@ Kapı durumu: **1/3 temiz tur.**
   Tanılama'da "KAYIT FİLTRESİ (SON KAYIT)" olarak görünmeye devam eder;
   boş/atılan kayıtta da yazılır ("kayıt neden boş"un cevabı çoğu zaman
   buradadır).
+- **F-3** (Tur 1 sonrası, giderildi → v0.9.3): tur raporu için hiçbir şeyi
+  elle not etmeye gerek kalmasın diye telemetri GPX'in içinde gider:
+  uygulama özeti + pil + filtre sayaçları `extensions`/`norda:report`
+  bloğuna gömülür. GPX'i paylaşmak = tur raporunu paylaşmak.

@@ -115,6 +115,32 @@ class ActivityDao(private val helper: AppDatabase) {
             out
         }
 
+    fun summary(activityId: Long): ActivitySummary? =
+        helper.readableDatabase.query(
+            "activity",
+            arrayOf(
+                "id", "type", "start_time", "end_time",
+                "distance_m", "duration_ms", "elevation_gain_m", "elevation_loss_m",
+                "start_battery", "end_battery"
+            ),
+            "id = ? AND end_time IS NOT NULL", arrayOf(activityId.toString()),
+            null, null, null, "1"
+        ).use { c ->
+            if (!c.moveToFirst()) return null
+            ActivitySummary(
+                id = c.getLong(0),
+                type = ActivityType.fromName(c.getString(1)),
+                startTimeMillis = c.getLong(2),
+                endTimeMillis = c.getLong(3),
+                distanceM = c.getDouble(4),
+                durationMillis = c.getLong(5),
+                elevationGainM = c.getDouble(6),
+                elevationLossM = c.getDouble(7),
+                startBatteryPct = if (c.isNull(8)) null else c.getInt(8),
+                endBatteryPct = if (c.isNull(9)) null else c.getInt(9)
+            )
+        }
+
     fun listFinished(): List<ActivitySummary> =
         helper.readableDatabase.query(
             "activity",

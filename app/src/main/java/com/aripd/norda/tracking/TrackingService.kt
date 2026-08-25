@@ -182,6 +182,7 @@ class TrackingService : Service(), LocationListener {
      */
     private fun saveFilterStats(s: RecordingSession) {
         getSharedPreferences(FILTER_STATS_PREFS, MODE_PRIVATE).edit()
+            .putLong("activity_id", activityId)
             .putInt("accept", s.filterCount(GpsFilter.Verdict.ACCEPT))
             .putInt("bad_accuracy", s.filterCount(GpsFilter.Verdict.BAD_ACCURACY))
             .putInt("jitter", s.filterCount(GpsFilter.Verdict.JITTER))

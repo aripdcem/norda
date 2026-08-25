@@ -117,12 +117,14 @@ class MapActivity : Activity() {
         if (requestCode != REQUEST_EXPORT || resultCode != RESULT_OK) return
         val uri = data?.data ?: return
         try {
-            val detailed = ActivityDao(AppDatabase.get(this)).pointsDetailed(activityId)
+            val dao = ActivityDao(AppDatabase.get(this))
+            val detailed = dao.pointsDetailed(activityId)
             val xml = Gpx.write(
                 trackName = "Norda ${SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())}",
                 points = detailed.map { it.first },
                 altitudeValid = detailed.map { it.second },
-                waypoints = waypointDao.list()
+                waypoints = waypointDao.list(),
+                report = buildReport(dao)
             )
             contentResolver.openOutputStream(uri)?.use { out ->
                 out.write(xml.toByteArray(Charsets.UTF_8))
@@ -131,6 +133,36 @@ class MapActivity : Activity() {
         } catch (e: Exception) {
             Toast.makeText(this, R.string.gpx_export_failed, Toast.LENGTH_LONG).show()
         }
+    }
+
+    /**
+     * Tur telemetrisi (F-3): özet + pil DB'den; filtre sayaçları yalnız son
+     * kayıt BU aktiviteyse eklenir — sayaçlar aktiviteye değil son kayda ait,
+     * eski bir izi dışa aktarırken yanlış sayaç gömülmemeli.
+     */
+    private fun buildReport(dao: ActivityDao): Gpx.Report? {
+        val s = dao.summary(activityId) ?: return null
+        val prefs = getSharedPreferences(
+            com.aripd.norda.tracking.TrackingService.FILTER_STATS_PREFS, MODE_PRIVATE
+        )
+        val filter = if (prefs.getLong("activity_id", -1L) == activityId) {
+            Gpx.FilterCounts(
+                accept = prefs.getInt("accept", 0),
+                badAccuracy = prefs.getInt("bad_accuracy", 0),
+                jitter = prefs.getInt("jitter", 0),
+                teleport = prefs.getInt("teleport", 0),
+                nonMonotonic = prefs.getInt("non_monotonic", 0)
+            )
+        } else null
+        return Gpx.Report(
+            filter = filter,
+            startBatteryPct = s.startBatteryPct,
+            endBatteryPct = s.endBatteryPct,
+            distanceM = s.distanceM,
+            activeMillis = s.durationMillis,
+            gainM = s.elevationGainM,
+            lossM = s.elevationLossM
+        )
     }
 
     companion object {

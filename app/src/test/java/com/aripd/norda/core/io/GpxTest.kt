@@ -77,6 +77,57 @@ class GpxTest {
         assertEquals(null, parsed.waypoints[0].altitude)
     }
 
+    // F-3 (Saha Turu 1): tur telemetrisi GPX'in İÇİNDE gider — sayaçlar, pil
+    // ve uygulama özeti elle not gerektirmez. Standart yol: <extensions> +
+    // kendi ad alanımız; diğer araçlar bloğu yok sayar.
+    @Test
+    fun reportSurvivesRoundTrip() {
+        val xml = Gpx.write(
+            "Tur", listOf(p(1_700_000_000_000, 41.0, 29.0, 100.0)), listOf(true), emptyList(),
+            Gpx.Report(
+                filter = Gpx.FilterCounts(950, 3, 41, 1, 0),
+                startBatteryPct = 93, endBatteryPct = 91,
+                distanceM = 2980.5, activeMillis = 1_696_000,
+                gainM = 135.0, lossM = 142.0
+            )
+        )
+        assertTrue(xml.contains("<extensions>"))
+        val r = Gpx.parse(xml).report!!
+        val f = r.filter!!
+        assertEquals(950, f.accept)
+        assertEquals(3, f.badAccuracy)
+        assertEquals(41, f.jitter)
+        assertEquals(1, f.teleport)
+        assertEquals(0, f.nonMonotonic)
+        assertEquals(93, r.startBatteryPct)
+        assertEquals(91, r.endBatteryPct)
+        assertEquals(2980.5, r.distanceM, 1e-9)
+        assertEquals(1_696_000, r.activeMillis)
+        assertEquals(135.0, r.gainM, 1e-9)
+        assertEquals(142.0, r.lossM, 1e-9)
+    }
+
+    @Test
+    fun reportIsOmittedWhenAbsent() {
+        val xml = Gpx.write("Ad", emptyList(), emptyList(), emptyList())
+        assertFalse(xml.contains("<extensions>"))
+        assertEquals(null, Gpx.parse(xml).report)
+    }
+
+    @Test
+    fun unknownBatteryAndFilterAreOmittedFromReport() {
+        val xml = Gpx.write(
+            "Ad", emptyList(), emptyList(), emptyList(),
+            Gpx.Report(null, null, null, 1000.0, 600_000, 0.0, 0.0)
+        )
+        assertFalse(xml.contains("norda:battery"))
+        assertFalse(xml.contains("norda:filter"))
+        val r = Gpx.parse(xml).report!!
+        assertEquals(null, r.filter)
+        assertEquals(null, r.startBatteryPct)
+        assertEquals(1000.0, r.distanceM, 1e-9)
+    }
+
     @Test
     fun millisTimestampVariantIsParsed() {
         val xml = """<gpx><trk><trkseg>
