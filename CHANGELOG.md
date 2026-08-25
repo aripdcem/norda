@@ -3,6 +3,25 @@
 Biçim [Keep a Changelog](https://keepachangelog.com/), sürümleme
 [SemVer](https://semver.org/) — kurallar için `docs/MVP.md` 15. bölüm.
 
+## [0.4.0] - 2026-08-25
+
+### Added
+
+- Faz 4 — Custom MapView: elle çizilen offline raster harita. Yalnız
+  viewport'u kesen karolar çizilir; MBTiles okuma (TMS çevirmesiyle), LRU
+  bitmap önbelleği, arka planda karo çözme, pan/çift dokunuş/iki parmakla
+  zoom. Paket yokken prosedürel ızgara — iz ve imleç paketsiz de görünür.
+- `core/map/WebMercator`: projeksiyon + karo matematiği, bilinen sabit
+  noktalarla 8 JVM testi (İstanbul z10 karosu, TMS çevirmesi, sınır
+  enleminde kayan nokta sabitlemesi).
+- Kayıt ekranında canlı harita: iz ve konum imleci haritada, otomatik takip.
+- Geçmişte satıra dokunmak izi haritada açar (ekrana sığdırılmış).
+- Haritalar ekranı: `.mbtiles` içe aktarma (SAF), paket listesi, silme,
+  OSM atfı. İndirme + `index.json` Faz 5'te.
+- `tools/make-test-map.py`: yalnız stdlib ile prosedürel test paketi üreteci
+  (İstanbul z8–13, ~324 KB) — hizalama ve TMS hataları ızgarada anında belli
+  olur.
+
 ## [0.3.0] - 2026-08-25
 
 ### Added
