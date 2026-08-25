@@ -3,6 +3,25 @@
 Biçim [Keep a Changelog](https://keepachangelog.com/), sürümleme
 [SemVer](https://semver.org/) — kurallar için `docs/MVP.md` 15. bölüm.
 
+## [0.7.0] - 2026-08-25
+
+### Added
+
+- Faz 7 — Waypoints + GPX: veri döngüsü kapandı.
+- Waypoint'ler: kayıt sırasında "+ Nokta" (son kabul edilen konuma) ya da
+  haritaya uzun basarak (ad diyaloğuyla); sınırsız sayıda. Haritada altın
+  baklava + ad; pusulada en yakın nokta içi boş baklava, alt satırda en
+  yakın iki noktanın kerteriz + mesafesi. Nokta listesi: dokun → yeniden
+  adlandır, uzun bas → sil. Varsayılan ad "Nokta N" — boş İLK numara,
+  silinen numara yeniden kullanılır.
+- GPX dışa aktarma (iz ekranından, SAF): tek dosyada `trk` + tüm `wpt`'ler;
+  rakım yalnız geçerliyse yazılır (0.0 nöbetçisi sızmaz).
+- GPX içe aktarma (geçmişten): `trkpt`'ler aktivite olarak (mesafe/süre/
+  yükseklik saf çekirdekle hesaplanır), `wpt`'ler nokta olarak; bozuk girdi
+  satır atlanarak tolere edilir.
+- Çekirdeğe `Gpx` (yazıcı + ayrıştırıcı) ve `WaypointNaming`, 9 yeni JVM
+  testiyle (gidiş-dönüş, XML kaçışı, bozuk girdi, boş numara seçimi).
+
 ## [0.6.0] - 2026-08-25
 
 ### Added
