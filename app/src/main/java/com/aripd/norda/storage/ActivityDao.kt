@@ -15,10 +15,15 @@ data class UnfinishedActivity(
 /** Aptal veri erişim katmanı: yalnız okur ve yazar, karar vermez (MVP.md 8.2). */
 class ActivityDao(private val helper: AppDatabase) {
 
-    fun startActivity(type: ActivityType, startTimeMillis: Long): Long =
+    fun startActivity(
+        type: ActivityType,
+        startTimeMillis: Long,
+        startBatteryPct: Int? = null
+    ): Long =
         helper.writableDatabase.insertOrThrow("activity", null, ContentValues().apply {
             put("type", type.name)
             put("start_time", startTimeMillis)
+            if (startBatteryPct != null) put("start_battery", startBatteryPct)
         })
 
     fun appendPoint(activityId: Long, p: TrackPoint, hasAltitude: Boolean) {
@@ -41,6 +46,7 @@ class ActivityDao(private val helper: AppDatabase) {
             put("duration_ms", summary.durationMillis)
             put("elevation_gain_m", summary.elevationGainM)
             put("elevation_loss_m", summary.elevationLossM)
+            if (summary.endBatteryPct != null) put("end_battery", summary.endBatteryPct)
         }, "id = ?", arrayOf(summary.id.toString()))
     }
 
@@ -114,7 +120,8 @@ class ActivityDao(private val helper: AppDatabase) {
             "activity",
             arrayOf(
                 "id", "type", "start_time", "end_time",
-                "distance_m", "duration_ms", "elevation_gain_m", "elevation_loss_m"
+                "distance_m", "duration_ms", "elevation_gain_m", "elevation_loss_m",
+                "start_battery", "end_battery"
             ),
             "end_time IS NOT NULL", null, null, null, "start_time DESC"
         ).use { c ->
@@ -128,7 +135,9 @@ class ActivityDao(private val helper: AppDatabase) {
                     distanceM = c.getDouble(4),
                     durationMillis = c.getLong(5),
                     elevationGainM = c.getDouble(6),
-                    elevationLossM = c.getDouble(7)
+                    elevationLossM = c.getDouble(7),
+                    startBatteryPct = if (c.isNull(8)) null else c.getInt(8),
+                    endBatteryPct = if (c.isNull(9)) null else c.getInt(9)
                 )
             }
             out

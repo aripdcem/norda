@@ -5,6 +5,8 @@
     <string name="section_location">KONUM</string>
     <string name="section_start">BAŞLANGIÇ</string>
     <string name="section_permission">İZİN</string>
+    <string name="section_filter">KAYIT FİLTRESİ</string>
+    <string name="diag_filter_line">kabul %1$d · doğruluk %2$d · titreme %3$d · ışınlama %4$d · zaman %5$d</string>
 
     <string name="heading_degrees">%1$d°</string>
     <string name="sensor_missing">Bu cihazda rotation vector sensörü yok.</string>
@@ -35,6 +37,11 @@
     <string name="history">Geçmiş</string>
     <string name="diagnostics">Sensör tanılama</string>
 
+    <string name="location_disabled">Konum kapalı — açılmadıkça kayıt hiç nokta alamaz.</string>
+    <string name="location_enable">Konumu aç</string>
+    <string name="start_anyway">Yine de başlat</string>
+    <string name="recording_discarded">Hiç nokta kaydedilmedi — kayıt atıldı.</string>
+
     <string name="recording_state_recording">Kayıtta</string>
     <string name="recording_state_paused">Duraklatıldı</string>
     <string name="recording_state_auto">Otomatik duraklatıldı</string>
@@ -54,6 +61,8 @@
 
     <string name="history_row_title">%1$s · %2$s</string>
     <string name="history_row_stats">%1$s · %2$s · ▲ %3$d m</string>
+    <string name="history_row_battery">" · 🔋 %1$d%%"</string>
+    <string name="history_row_battery_rate">" · 🔋 %1$d%% · %2$.1f%%/sa"</string>
     <string name="history_empty">Henüz kayıt yok.</string>
     <string name="delete_confirm">Bu kayıt silinsin mi?</string>
     <string name="delete">Sil</string>

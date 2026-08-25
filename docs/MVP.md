@@ -403,14 +403,16 @@ distance_m REAL               longitude REAL                altitude REAL NULL
 duration_ms INTEGER           altitude REAL                 created_at INTEGER
 elevation_gain_m REAL         accuracy REAL
 elevation_loss_m REAL         speed REAL
-                              bearing REAL
+start_battery INT NULL        bearing REAL
+end_battery INT NULL
 ```
 
 Waypoint'ler kayda bağlı değil, küreseldir. DDL ve göç planı saf
 `core/db/Schema` modülünde yaşar ve JVM testlidir (şema sürümü 1: activity +
-track_point; sürüm 2: + waypoint). Parite testi, göçle gelen kurulumun
-sıfırdan kurulumla aynı şemaya vardığını garanti eder — tablo create'e
-girip göçten unutulamaz.
+track_point; sürüm 2: + waypoint; sürüm 3: activity'ye pil sütunları).
+Sıfırdan kurulum v1 tabanı + göç zinciri olarak üretilir ve parite testi
+iki yolun aynı şemaya vardığını garanti eder — tablo create'e girip
+göçten unutulamaz.
 
 Harita paketleri app.db'de değil, paket başına `.mbtiles` dosyasında (7.3);
 app.db yalnız indirilen paketlerin metadata'sını tutar.
@@ -551,7 +553,7 @@ mapper'lar, waypoint adlandırma.
 | Elevation | Bilinen tırmanış profiliyle karşılaştırma; düz yolda ~0 |
 | Compass | Manyetik parazitli ve temiz ortamlar; cepte/elde |
 | Background | Screen off / başka uygulama / kilit ekranı |
-| Battery | 30 dk / 1 saat / 2 saat tracking |
+| Battery | 30 dk / 1 saat / 2 saat tracking — uygulama kayıt başı/sonu pil yüzdesini saklar, geçmiş satırı tüketimi ve %/saat oranını gösterir |
 | Offline | Uçak modu + indirilen paket; paket yokken Return to Start |
 | Map | Pan / zoom / önbellek / büyük paket |
 | Recovery | Process kill, reboot, servis kesintisi |

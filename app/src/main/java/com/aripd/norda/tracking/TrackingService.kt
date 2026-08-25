@@ -11,9 +11,11 @@ import android.content.pm.PackageManager
 import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
+import android.os.BatteryManager
 import android.os.Bundle
 import android.os.IBinder
 import android.os.SystemClock
+import android.widget.Toast
 import com.aripd.norda.R
 import com.aripd.norda.RecordingActivity
 import com.aripd.norda.core.track.ActivityType
@@ -69,9 +71,15 @@ class TrackingService : Service(), LocationListener {
             startWallMillis = System.currentTimeMillis(),
             startMonotonicMillis = SystemClock.elapsedRealtime()
         )
-        activityId = dao.startActivity(type, s.startWallMillis)
+        activityId = dao.startActivity(type, s.startWallMillis, batteryPercent())
         session = s
     }
+
+    /** Pil yüzdesi; okunamıyorsa null — Battery kuralları uydurma değer yasaklar. */
+    private fun batteryPercent(): Int? =
+        (getSystemService(BATTERY_SERVICE) as BatteryManager)
+            .getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
+            .takeIf { it in 0..100 }
 
     /** Sistem servisi öldürüp geri getirdiyse: diskteki yarım kayda devam et. */
     private fun resumeUnfinishedRecording(): Boolean {
@@ -104,8 +112,11 @@ class TrackingService : Service(), LocationListener {
             stopRecording(discard = false)
             return
         }
-        // Mesafe süzgeci bilerek 0 (docs/MVP.md, 5.3).
-        if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+        // Mesafe süzgeci bilerek 0 (docs/MVP.md, 5.3). Sağlayıcı o an kapalı
+        // olsa da kayıt olunur: kullanıcı konumu sonradan açarsa fix'ler
+        // akmaya başlar; isProviderEnabled'a bağlanmak kaydı sessizce boş
+        // bırakırdı. Var olmayan sağlayıcıya kayıt olmaksa fırlatır — guard o.
+        if (LocationManager.GPS_PROVIDER in locationManager.allProviders) {
             locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000L, 0f, this)
         }
     }
@@ -143,7 +154,17 @@ class TrackingService : Service(), LocationListener {
         if (s != null && !discard) {
             val now = SystemClock.elapsedRealtime()
             s.stop(now)
-            dao.finishActivity(s.summary(activityId, System.currentTimeMillis(), now))
+            if (s.points.isEmpty()) {
+                // Tek nokta bile girmemiş kayıt geçmişte gürültüdür: satır
+                // silinir ve kullanıcıya söylenir (izin/GPS sorununun izi).
+                dao.deleteActivity(activityId)
+                Toast.makeText(this, R.string.recording_discarded, Toast.LENGTH_LONG).show()
+            } else {
+                dao.finishActivity(
+                    s.summary(activityId, System.currentTimeMillis(), now)
+                        .copy(endBatteryPct = batteryPercent())
+                )
+            }
         }
         session = null
         locationManager.removeUpdates(this)

@@ -23,10 +23,13 @@ import android.view.View
 import android.widget.Button
 import android.widget.TextView
 import com.aripd.norda.core.geo.Geo
+import com.aripd.norda.core.track.GpsFilter
+import com.aripd.norda.tracking.TrackingService
 
 /**
  * Faz 1'in sensör tanılama ekranı: ham konum ve yön verisi. Saha
- * doğrulaması için Home'dan erişilir durumda tutulur.
+ * doğrulaması için Home'dan erişilir durumda tutulur. Faz 8'den beri kayıt
+ * sürerken filtre sayaçlarını da gösterir — eşik kalibrasyonunun ham verisi.
  */
 class DiagnosticsActivity : Activity(), LocationListener, SensorEventListener {
 
@@ -39,6 +42,8 @@ class DiagnosticsActivity : Activity(), LocationListener, SensorEventListener {
     private lateinit var sensorStatus: TextView
     private lateinit var locationText: TextView
     private lateinit var startText: TextView
+    private lateinit var filterLabel: TextView
+    private lateinit var filterText: TextView
     private lateinit var permissionText: TextView
     private lateinit var permissionButton: Button
 
@@ -54,6 +59,7 @@ class DiagnosticsActivity : Activity(), LocationListener, SensorEventListener {
     private val ageTicker = object : Runnable {
         override fun run() {
             renderLocation()
+            renderFilter()
             handler.postDelayed(this, 1000L)
         }
     }
@@ -68,6 +74,8 @@ class DiagnosticsActivity : Activity(), LocationListener, SensorEventListener {
         sensorStatus = findViewById(R.id.sensorStatus)
         locationText = findViewById(R.id.locationText)
         startText = findViewById(R.id.startText)
+        filterLabel = findViewById(R.id.filterLabel)
+        filterText = findViewById(R.id.filterText)
         permissionText = findViewById(R.id.permissionText)
         permissionButton = findViewById(R.id.permissionButton)
 
@@ -105,6 +113,7 @@ class DiagnosticsActivity : Activity(), LocationListener, SensorEventListener {
         renderPermission()
         renderLocation()
         renderStart()
+        renderFilter()
         handler.post(ageTicker)
     }
 
@@ -218,6 +227,24 @@ class DiagnosticsActivity : Activity(), LocationListener, SensorEventListener {
             getString(R.string.location_speed, speedKmh),
             getString(R.string.location_meta, fix.provider ?: "?", ageSec)
         ).joinToString("\n")
+    }
+
+    /** Kayıt sürerken filtre sayaçları — kalibrasyonun ham verisi (Faz 8). */
+    private fun renderFilter() {
+        val s = TrackingService.session
+        val visibility = if (s == null) View.GONE else View.VISIBLE
+        filterLabel.visibility = visibility
+        filterText.visibility = visibility
+        if (s != null) {
+            filterText.text = getString(
+                R.string.diag_filter_line,
+                s.filterCount(GpsFilter.Verdict.ACCEPT),
+                s.filterCount(GpsFilter.Verdict.BAD_ACCURACY),
+                s.filterCount(GpsFilter.Verdict.JITTER),
+                s.filterCount(GpsFilter.Verdict.TELEPORT),
+                s.filterCount(GpsFilter.Verdict.NON_MONOTONIC)
+            )
+        }
     }
 
     private fun renderStart() {

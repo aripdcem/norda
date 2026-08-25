@@ -5,6 +5,8 @@
     <string name="section_location">LOCATION</string>
     <string name="section_start">START POINT</string>
     <string name="section_permission">PERMISSION</string>
+    <string name="section_filter">RECORDING FILTER</string>
+    <string name="diag_filter_line">accepted %1$d · accuracy %2$d · jitter %3$d · teleport %4$d · time %5$d</string>
 
     <string name="heading_degrees">%1$d°</string>
     <string name="sensor_missing">No rotation vector sensor on this device.</string>
@@ -35,6 +37,11 @@
     <string name="history">History</string>
     <string name="diagnostics">Sensor diagnostics</string>
 
+    <string name="location_disabled">Location is off — the recording won\'t receive any fixes until it\'s turned on.</string>
+    <string name="location_enable">Turn on location</string>
+    <string name="start_anyway">Start anyway</string>
+    <string name="recording_discarded">No points were recorded — the activity was discarded.</string>
+
     <string name="recording_state_recording">Recording</string>
     <string name="recording_state_paused">Paused</string>
     <string name="recording_state_auto">Auto-paused</string>
@@ -54,6 +61,8 @@
 
     <string name="history_row_title">%1$s · %2$s</string>
     <string name="history_row_stats">%1$s · %2$s · ▲ %3$d m</string>
+    <string name="history_row_battery">" · 🔋 %1$d%%"</string>
+    <string name="history_row_battery_rate">" · 🔋 %1$d%% · %2$.1f%%/h"</string>
     <string name="history_empty">No activities yet.</string>
     <string name="delete_confirm">Delete this activity?</string>
     <string name="delete">Delete</string>

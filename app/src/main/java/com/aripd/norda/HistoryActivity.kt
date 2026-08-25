@@ -14,6 +14,7 @@ import android.widget.Toast
 import com.aripd.norda.core.io.Gpx
 import com.aripd.norda.core.nav.WaypointNaming
 import com.aripd.norda.core.track.ActivitySummary
+import com.aripd.norda.core.track.Battery
 import com.aripd.norda.core.track.ActivityType
 import com.aripd.norda.core.track.ElevationTracker
 import com.aripd.norda.core.track.Format
@@ -49,10 +50,22 @@ class HistoryActivity : Activity() {
             val distance =
                 if (a.distanceM < 1000) getString(R.string.distance_m, a.distanceM.toInt())
                 else getString(R.string.distance_km, a.distanceM / 1000.0)
-            row.findViewById<TextView>(R.id.rowStats).text = getString(
-                R.string.history_row_stats,
-                distance, Format.duration(a.durationMillis), a.elevationGainM.toInt()
+            val stats = StringBuilder(
+                getString(
+                    R.string.history_row_stats,
+                    distance, Format.duration(a.durationMillis), a.elevationGainM.toInt()
+                )
             )
+            // Pil ölçüm kültürü (Faz 8): tüketim ancak temiz ölçüldüyse yazılır.
+            val drain = Battery.drainPercent(a.startBatteryPct, a.endBatteryPct)
+            if (drain != null) {
+                val rate = Battery.drainPerHour(drain, a.durationMillis)
+                stats.append(
+                    if (rate != null) getString(R.string.history_row_battery_rate, drain, rate)
+                    else getString(R.string.history_row_battery, drain)
+                )
+            }
+            row.findViewById<TextView>(R.id.rowStats).text = stats
             return row
         }
     }

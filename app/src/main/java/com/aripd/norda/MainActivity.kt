@@ -2,10 +2,14 @@ package com.aripd.norda
 
 import android.Manifest
 import android.app.Activity
+import android.app.AlertDialog
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.location.LocationManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import android.view.View
 import android.widget.Button
 import android.widget.RadioButton
@@ -21,6 +25,10 @@ import com.aripd.norda.tracking.TrackingService
 /**
  * Home (docs/MVP.md, 3.1): olabildiğince boş — tip seç, START'a bas.
  * Açılışta yarım kalmış kayıt varsa (süreç ölümü) geçmişe kurtarılır.
+ *
+ * İzin UX (Faz 8): ret sonrası neden ekranda kalır; kalıcı ret Ayarlar'a
+ * götüren diyalog açar. Konum servisi kapalıysa START bunu kayıt boş
+ * kaldıktan sonra değil, baştan söyler.
  */
 class MainActivity : Activity() {
 
@@ -57,12 +65,28 @@ class MainActivity : Activity() {
     override fun onResume() {
         super.onResume()
         recoverUnfinished()
-        permissionHint.visibility =
-            if (hasLocationPermission()) View.GONE else View.VISIBLE
+        renderPermissionHint()
     }
 
     private fun onStartTapped() {
         if (!hasLocationPermission()) {
+            if (permissionDeniedForever()) {
+                // requestPermissions burada sessizce reddedilir; tek çıkış
+                // sistem ayarları. Kullanıcıya döngü değil, kapı gösterilir.
+                AlertDialog.Builder(this)
+                    .setMessage(R.string.permission_denied_forever)
+                    .setPositiveButton(R.string.open_settings) { _, _ ->
+                        startActivity(
+                            Intent(
+                                Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                                Uri.fromParts("package", packageName, null)
+                            )
+                        )
+                    }
+                    .setNegativeButton(R.string.cancel, null)
+                    .show()
+                return
+            }
             // Bildirim izni (13+) konumla birlikte istenir: foreground
             // service'in kalıcı bildirimi kaydın görünür yüzüdür. Reddi
             // kaydı engellemez, yalnız bildirim gizli kalır.
@@ -73,9 +97,29 @@ class MainActivity : Activity() {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 permissions += Manifest.permission.POST_NOTIFICATIONS
             }
+            prefs().edit().putBoolean(KEY_LOCATION_ASKED, true).apply()
             requestPermissions(permissions.toTypedArray(), REQUEST_LOCATION)
             return
         }
+
+        val locationManager = getSystemService(LOCATION_SERVICE) as LocationManager
+        if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+            // Konum kapalıyken başlayan kayıt sessizce boş kalır; kullanıcı
+            // bunu yürüyüşün sonunda değil, başında öğrenmeli. "Yine de
+            // başlat" açık kalır: servis kayıtlı bekler, konum açılınca akar.
+            AlertDialog.Builder(this)
+                .setMessage(R.string.location_disabled)
+                .setPositiveButton(R.string.location_enable) { _, _ ->
+                    startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
+                }
+                .setNegativeButton(R.string.start_anyway) { _, _ -> startRecording() }
+                .show()
+            return
+        }
+        startRecording()
+    }
+
+    private fun startRecording() {
         val type = if (runButton.isChecked) ActivityType.RUN else ActivityType.WALK
         startActivity(
             Intent(this, RecordingActivity::class.java)
@@ -89,15 +133,37 @@ class MainActivity : Activity() {
         grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == REQUEST_LOCATION && hasLocationPermission()) {
+        if (requestCode != REQUEST_LOCATION) return
+        if (hasLocationPermission()) {
             permissionHint.visibility = View.GONE
             onStartTapped()
+        } else {
+            renderPermissionHint()
         }
     }
 
     private fun hasLocationPermission(): Boolean =
         checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) ==
             PackageManager.PERMISSION_GRANTED
+
+    /** Sorulmuş + gerekçe artık gösterilmiyor = kullanıcı "bir daha sorma" dedi. */
+    private fun permissionDeniedForever(): Boolean =
+        prefs().getBoolean(KEY_LOCATION_ASKED, false) &&
+            !shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION)
+
+    private fun renderPermissionHint() {
+        if (hasLocationPermission()) {
+            permissionHint.visibility = View.GONE
+            return
+        }
+        permissionHint.setText(
+            if (permissionDeniedForever()) R.string.permission_denied_forever
+            else R.string.permission_needed
+        )
+        permissionHint.visibility = View.VISIBLE
+    }
+
+    private fun prefs() = getSharedPreferences("ui", MODE_PRIVATE)
 
     /**
      * Süreç ölümüyle yarım kalan kayıt (end_time NULL) diskteki noktalardan
@@ -109,6 +175,12 @@ class MainActivity : Activity() {
         if (TrackingService.isRecording) return
         val unfinished = dao.unfinishedActivity() ?: return
         val points = dao.pointsFor(unfinished.id)
+        if (points.isEmpty()) {
+            // Tek nokta bile girmemiş yarım kayıt: geçmişe gürültü olarak
+            // kurtarılmaz, sessizce silinir.
+            dao.deleteActivity(unfinished.id)
+            return
+        }
         val distance = Stats.totalDistanceMeters(points)
         val elevation = ElevationTracker()
         dao.altitudesFor(unfinished.id).forEach { elevation.onAltitude(it) }
@@ -130,5 +202,6 @@ class MainActivity : Activity() {
 
     private companion object {
         const val REQUEST_LOCATION = 1
+        const val KEY_LOCATION_ASKED = "location_asked"
     }
 }
