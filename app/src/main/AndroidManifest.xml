@@ -44,6 +44,14 @@
             android:name=".DiagnosticsActivity"
             android:exported="false" />
 
+        <activity
+            android:name=".MapsActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".MapActivity"
+            android:exported="false" />
+
         <!-- Kayıt bu servisin malı: ekran kapansa da sürer (MVP.md 5.6).
              Kullanıcı başlatır, kalıcı bildirimle görünür. -->
         <service

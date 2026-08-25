@@ -59,6 +59,15 @@
     <string name="delete">Sil</string>
     <string name="recovered_toast">Yarım kalan kayıt geçmişe kaydedildi.</string>
 
+    <string name="maps">Haritalar</string>
+    <string name="map_import">Paket içe aktar</string>
+    <string name="maps_empty">Henüz harita paketi yok. Bir .mbtiles dosyası içe aktar — kayıt ve izler paketsiz de çalışır.</string>
+    <string name="map_row_size">%1$.1f MB</string>
+    <string name="map_imported">Paket eklendi.</string>
+    <string name="map_import_failed">Paket içe aktarılamadı.</string>
+    <string name="map_delete_confirm">%1$s silinsin mi?</string>
+    <string name="attribution_osm">© OpenStreetMap contributors</string>
+
     <string name="notif_channel_name">Kayıt</string>
     <string name="notif_channel_desc">Aktivite kaydı sürerken görünen kalıcı bildirim.</string>
     <string name="notif_text">%1$s · %2$s · %3$s</string>

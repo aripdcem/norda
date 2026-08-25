@@ -58,6 +58,12 @@ class HistoryActivity : Activity() {
         listView = findViewById(R.id.historyList)
         listView.emptyView = findViewById(R.id.emptyText)
         listView.adapter = adapter
+        listView.setOnItemClickListener { _, _, position, _ ->
+            startActivity(
+                android.content.Intent(this, MapActivity::class.java)
+                    .putExtra(MapActivity.EXTRA_ACTIVITY_ID, items[position].id)
+            )
+        }
         listView.setOnItemLongClickListener { _, _, position, _ ->
             confirmDelete(items[position])
             true

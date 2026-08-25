@@ -11,6 +11,8 @@ import android.widget.Button
 import android.widget.TextView
 import com.aripd.norda.core.track.Format
 import com.aripd.norda.core.track.RecordingSession
+import com.aripd.norda.map.MapPackages
+import com.aripd.norda.map.MapView
 import com.aripd.norda.tracking.TrackingService
 
 /**
@@ -27,6 +29,8 @@ class RecordingActivity : Activity() {
     private lateinit var elevationText: TextView
     private lateinit var pauseButton: Button
     private lateinit var stopButton: Button
+    private lateinit var liveMap: MapView
+    private var mapStoreLoaded = false
 
     private val handler = Handler(Looper.getMainLooper())
     private val ticker = object : Runnable {
@@ -48,6 +52,9 @@ class RecordingActivity : Activity() {
         elevationText = findViewById(R.id.elevationText)
         pauseButton = findViewById(R.id.pauseButton)
         stopButton = findViewById(R.id.stopButton)
+        liveMap = findViewById(R.id.liveMap)
+        liveMap.follow = true
+        liveMap.interactive = false
 
         // Servis zaten kayıttaysa (bildirimden ya da Home'dan dönüş) yeni
         // kayıt açılmaz; yalnızca gösterilir.
@@ -86,6 +93,16 @@ class RecordingActivity : Activity() {
             return
         }
         val now = SystemClock.elapsedRealtime()
+        val points = session.points
+        liveMap.setTrack(points)
+        points.lastOrNull()?.let { last ->
+            if (!mapStoreLoaded) {
+                // İlk konumla birlikte, o konumu kapsayan paket seçilir.
+                mapStoreLoaded = true
+                liveMap.setStore(MapPackages.openBest(this, last.latitude, last.longitude))
+            }
+            liveMap.setCurrentLocation(last.latitude, last.longitude)
+        }
         durationText.text = Format.duration(session.durationMillis(now))
         val d = session.distanceM
         distanceText.text =

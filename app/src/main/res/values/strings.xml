@@ -59,6 +59,15 @@
     <string name="delete">Delete</string>
     <string name="recovered_toast">Unfinished recording was saved to history.</string>
 
+    <string name="maps">Maps</string>
+    <string name="map_import">Import package</string>
+    <string name="maps_empty">No map packages yet. Import an .mbtiles file — recording and tracks work without one too.</string>
+    <string name="map_row_size">%1$.1f MB</string>
+    <string name="map_imported">Package imported.</string>
+    <string name="map_import_failed">Could not import the package.</string>
+    <string name="map_delete_confirm">Delete %1$s?</string>
+    <string name="attribution_osm">© OpenStreetMap contributors</string>
+
     <string name="notif_channel_name">Recording</string>
     <string name="notif_channel_desc">Persistent notification while an activity is being recorded.</string>
     <string name="notif_text">%1$s · %2$s · %3$s</string>

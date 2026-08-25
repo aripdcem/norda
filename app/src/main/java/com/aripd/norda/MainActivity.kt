@@ -43,6 +43,9 @@ class MainActivity : Activity() {
         findViewById<Button>(R.id.historyButton).setOnClickListener {
             startActivity(Intent(this, HistoryActivity::class.java))
         }
+        findViewById<Button>(R.id.mapsButton).setOnClickListener {
+            startActivity(Intent(this, MapsActivity::class.java))
+        }
         findViewById<TextView>(R.id.diagnosticsLink).setOnClickListener {
             startActivity(Intent(this, DiagnosticsActivity::class.java))
         }
