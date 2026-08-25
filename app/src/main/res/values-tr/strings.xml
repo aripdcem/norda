@@ -59,6 +59,18 @@
     <string name="delete">Sil</string>
     <string name="recovered_toast">Yarım kalan kayıt geçmişe kaydedildi.</string>
 
+    <string name="compass">Pusula</string>
+    <string name="heading_label_true">Gerçek kuzey</string>
+    <string name="heading_label_magnetic">Manyetik</string>
+    <string name="status_disturbance">Manyetik bozulma: alan %1$d µT, beklenen %2$d µT — telefonu metalden uzaklaştır.</string>
+    <string name="rts_line">Start %1$d° · %2$s</string>
+    <string name="rts_eta">" · ~%1$s"</string>
+    <string name="rts_on_course">yön tutuyor</string>
+    <string name="rts_turn_right">%1$d° sağa</string>
+    <string name="rts_turn_left">%1$d° sola</string>
+    <string name="rts_no_start">Henüz başlangıç noktası yok — bir kayıt başlat.</string>
+    <string name="rts_waiting_fix">Fix bekleniyor…</string>
+
     <string name="maps">Haritalar</string>
     <string name="map_import">Paket içe aktar</string>
     <string name="maps_empty">Henüz harita paketi yok. Bir .mbtiles dosyası içe aktar — kayıt ve izler paketsiz de çalışır.</string>

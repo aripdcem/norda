@@ -40,6 +40,9 @@ class MainActivity : Activity() {
         permissionHint = findViewById(R.id.permissionHint)
 
         findViewById<Button>(R.id.startButton).setOnClickListener { onStartTapped() }
+        findViewById<Button>(R.id.compassButton).setOnClickListener {
+            startActivity(Intent(this, CompassActivity::class.java))
+        }
         findViewById<Button>(R.id.historyButton).setOnClickListener {
             startActivity(Intent(this, HistoryActivity::class.java))
         }

@@ -115,6 +115,14 @@
             android:orientation="horizontal">
 
             <Button
+                android:id="@+id/compassButton"
+                android:layout_width="0dp"
+                android:layout_height="56dp"
+                android:layout_marginEnd="8dp"
+                android:layout_weight="1"
+                android:text="@string/compass" />
+
+            <Button
                 android:id="@+id/pauseButton"
                 android:layout_width="0dp"
                 android:layout_height="56dp"
@@ -126,7 +134,6 @@
                 android:id="@+id/stopButton"
                 android:layout_width="0dp"
                 android:layout_height="56dp"
-                android:layout_marginStart="8dp"
                 android:layout_weight="1"
                 android:text="@string/stop" />
         </LinearLayout>

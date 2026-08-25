@@ -73,6 +73,9 @@ class RecordingActivity : Activity() {
             render()
         }
         stopButton.setOnClickListener { confirmStop() }
+        findViewById<Button>(R.id.compassButton).setOnClickListener {
+            startActivity(android.content.Intent(this, CompassActivity::class.java))
+        }
     }
 
     override fun onStart() {

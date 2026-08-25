@@ -59,6 +59,18 @@
     <string name="delete">Delete</string>
     <string name="recovered_toast">Unfinished recording was saved to history.</string>
 
+    <string name="compass">Compass</string>
+    <string name="heading_label_true">True north</string>
+    <string name="heading_label_magnetic">Magnetic</string>
+    <string name="status_disturbance">Magnetic disturbance: field %1$d µT, expected %2$d µT — move away from metal.</string>
+    <string name="rts_line">Start %1$d° · %2$s</string>
+    <string name="rts_eta">" · ~%1$s"</string>
+    <string name="rts_on_course">on course</string>
+    <string name="rts_turn_right">%1$d° right</string>
+    <string name="rts_turn_left">%1$d° left</string>
+    <string name="rts_no_start">No start point yet — start a recording.</string>
+    <string name="rts_waiting_fix">Waiting for a fix…</string>
+
     <string name="maps">Maps</string>
     <string name="map_import">Import package</string>
     <string name="maps_empty">No map packages yet. Import an .mbtiles file — recording and tracks work without one too.</string>

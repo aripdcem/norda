@@ -60,10 +60,18 @@
         android:visibility="gone" />
 
     <Button
-        android:id="@+id/historyButton"
+        android:id="@+id/compassButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
+        android:minHeight="48dp"
+        android:text="@string/compass" />
+
+    <Button
+        android:id="@+id/historyButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
         android:minHeight="48dp"
         android:text="@string/history" />
 
