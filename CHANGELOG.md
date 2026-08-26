@@ -3,6 +3,17 @@
 Biçim [Keep a Changelog](https://keepachangelog.com/), sürümleme
 [SemVer](https://semver.org/) — kurallar için `docs/MVP.md` 15. bölüm.
 
+## [0.9.5] - 2026-08-25
+
+### Fixed
+
+- F-5 (kort denemesinin ikinci yarısı: güç tasarrufu açıktı): birçok cihaz
+  bu modda GPS'i kısar; uygulama bunu görüyor ama söylemiyordu. GPS
+  oturmamışken durum satırına "· güç tasarrufu açık" eklenir; boş kaydın
+  atılma mesajı "Güç tasarrufu açıktı — GPS'i kısıtlamış olabilir."
+  notunu taşır. Mod engellenmez — saha matrisindeki güç-tasarrufu
+  senaryosu desteklenmeye devam eder, yalnızca görünür kılınır.
+
 ## [0.9.4] - 2026-08-25
 
 ### Fixed
