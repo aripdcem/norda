@@ -3,6 +3,19 @@
 Biçim [Keep a Changelog](https://keepachangelog.com/), sürümleme
 [SemVer](https://semver.org/) — kurallar için `docs/MVP.md` 15. bölüm.
 
+## [0.9.4] - 2026-08-25
+
+### Fixed
+
+- F-4 (saha denemesi: kort içinde 2 dk koşu, hiç nokta kabul edilmedi):
+  GPS oturmadan geçen süre ekranda görünmüyordu — kayıt sessizce boş kalıp
+  atılıyor, neden anlaşılamıyordu. Kayda nokta girmemişken durum satırı
+  artık canlı GPS kalitesini gösterir: "Fix bekleniyor…" ya da
+  "GPS ± X m". Boş kaydın atılma mesajı da nedenli: "GPS hiç fix vermedi"
+  ↔ "doğruluk hiç 30 m eşiğinin altına inmedi (en iyi ± X m)". Filtre
+  eşiği bilinçli olarak değişmedi. Çekirdeğe 2 yeni JVM testi
+  (kabul öncesi kalite gözlemi; bilinmeyen doğruluk kaliteye sayılmaz).
+
 ## [0.9.3] - 2026-08-25
 
 ### Added
