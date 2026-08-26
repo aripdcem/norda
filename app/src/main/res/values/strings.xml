@@ -41,7 +41,9 @@
     <string name="location_disabled">Location is off — the recording won\'t receive any fixes until it\'s turned on.</string>
     <string name="location_enable">Turn on location</string>
     <string name="start_anyway">Start anyway</string>
-    <string name="recording_discarded">No points were recorded — the activity was discarded.</string>
+    <string name="discarded_no_fix">GPS never delivered a fix — the recording was discarded. Try in the open, waiting for a lock.</string>
+    <string name="discarded_poor_accuracy">GPS accuracy never got under the %2$d m threshold (best ± %1$d m) — the recording was discarded.</string>
+    <string name="gps_accuracy_live">GPS ± %1$d m</string>
 
     <string name="recording_state_recording">Recording</string>
     <string name="recording_state_paused">Paused</string>

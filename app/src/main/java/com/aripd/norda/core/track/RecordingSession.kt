@@ -45,6 +45,16 @@ class RecordingSession(
 
     fun filterCount(verdict: GpsFilter.Verdict): Int = filterCounts[verdict.ordinal]
 
+    fun evaluatedFixCount(): Int = filterCounts.sum()
+
+    // GPS oturana dek geçen süre ekranda görünür olmalı (F-4): kayda nokta
+    // girmemişken son/en iyi doğruluk buradan okunur. 0 = cihaz doğruluk
+    // bildirmiyor, kaliteye sayılmaz.
+    var latestAccuracyM: Float? = null
+        private set
+    var bestAccuracyM: Float? = null
+        private set
+
     /**
      * Ham fix işlenir; kayda giren nokta döner (çağıran kalıcılaştırır),
      * girmeyen için null. [hasAltitude] yalnız geçerli rakımlarda true olmalı.
@@ -63,6 +73,11 @@ class RecordingSession(
             val verdict = GpsFilter.evaluate(previous, fix)
             filterCounts[verdict.ordinal]++
             accepted = verdict == GpsFilter.Verdict.ACCEPT
+            if (fix.accuracyM > 0f) {
+                latestAccuracyM = fix.accuracyM
+                val best = bestAccuracyM
+                if (best == null || fix.accuracyM < best) bestAccuracyM = fix.accuracyM
+            }
         }
 
         when (autoPause.onFix(fix, accepted)) {

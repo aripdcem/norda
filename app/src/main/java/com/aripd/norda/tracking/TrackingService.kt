@@ -158,9 +158,18 @@ class TrackingService : Service(), LocationListener {
             s.stop(now)
             if (s.points.isEmpty()) {
                 // Tek nokta bile girmemiş kayıt geçmişte gürültüdür: satır
-                // silinir ve kullanıcıya söylenir (izin/GPS sorununun izi).
+                // silinir ve NEDENİYLE söylenir (F-4): hiç fix mi gelmedi,
+                // yoksa doğruluk mu hiç eşiğin altına inmedi?
                 dao.deleteActivity(activityId)
-                Toast.makeText(this, R.string.recording_discarded, Toast.LENGTH_LONG).show()
+                val best = s.bestAccuracyM
+                val message =
+                    if (s.evaluatedFixCount() == 0 || best == null)
+                        getString(R.string.discarded_no_fix)
+                    else getString(
+                        R.string.discarded_poor_accuracy,
+                        best.toInt(), GpsFilter.MAX_ACCURACY_M.toInt()
+                    )
+                Toast.makeText(this, message, Toast.LENGTH_LONG).show()
             } else {
                 dao.finishActivity(
                     s.summary(activityId, System.currentTimeMillis(), now)

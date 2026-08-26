@@ -41,7 +41,9 @@
     <string name="location_disabled">Konum kapalı — açılmadıkça kayıt hiç nokta alamaz.</string>
     <string name="location_enable">Konumu aç</string>
     <string name="start_anyway">Yine de başlat</string>
-    <string name="recording_discarded">Hiç nokta kaydedilmedi — kayıt atıldı.</string>
+    <string name="discarded_no_fix">GPS hiç fix vermedi — kayıt atıldı. Açık alanda, kilitlenmesini bekleyerek dene.</string>
+    <string name="discarded_poor_accuracy">GPS doğruluğu hiç %2$d m eşiğinin altına inmedi (en iyi ± %1$d m) — kayıt atıldı.</string>
+    <string name="gps_accuracy_live">GPS ± %1$d m</string>
 
     <string name="recording_state_recording">Kayıtta</string>
     <string name="recording_state_paused">Duraklatıldı</string>

@@ -143,14 +143,21 @@ class RecordingActivity : Activity() {
             R.string.elevation_line,
             session.elevationGainM.toInt(), session.elevationLossM.toInt()
         )
-        stateText.text = getString(
-            when (session.state) {
-                RecordingSession.State.RECORDING -> R.string.recording_state_recording
-                RecordingSession.State.PAUSED -> R.string.recording_state_paused
-                RecordingSession.State.AUTO_PAUSED -> R.string.recording_state_auto
-                RecordingSession.State.STOPPED -> R.string.recording_state_stopped
-            }
-        )
+        stateText.text =
+            if (session.state == RecordingSession.State.RECORDING && points.isEmpty()) {
+                // GPS henüz oturmadı (F-4): durum yerine canlı GPS kalitesi —
+                // "2 dakikalık tur neden boş kaldı" ekranda görünür olsun.
+                val acc = session.latestAccuracyM
+                if (acc == null) getString(R.string.location_waiting)
+                else getString(R.string.gps_accuracy_live, acc.toInt())
+            } else getString(
+                when (session.state) {
+                    RecordingSession.State.RECORDING -> R.string.recording_state_recording
+                    RecordingSession.State.PAUSED -> R.string.recording_state_paused
+                    RecordingSession.State.AUTO_PAUSED -> R.string.recording_state_auto
+                    RecordingSession.State.STOPPED -> R.string.recording_state_stopped
+                }
+            )
         pauseButton.text = getString(
             if (session.state == RecordingSession.State.PAUSED) R.string.resume
             else R.string.pause

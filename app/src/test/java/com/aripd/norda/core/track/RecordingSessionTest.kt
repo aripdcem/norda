@@ -37,6 +37,32 @@ class RecordingSessionTest {
         assertEquals(0, s.filterCount(GpsFilter.Verdict.NON_MONOTONIC))
     }
 
+    // F-4 (tenis kortu denemesi): GPS oturmadan geçen süre ekranda görünür
+    // olmalı — kayda nokta girmemişken son/en iyi doğruluk gözlemlenebilir.
+    @Test
+    fun gpsQualityIsObservableBeforeFirstAccept() {
+        val s = session()
+        assertNull(s.latestAccuracyM)
+        assertNull(s.bestAccuracyM)
+        assertEquals(0, s.evaluatedFixCount())
+        s.onFix(fix(0, 0.0, acc = 48f), false, 0)          // kötü doğruluk
+        s.onFix(fix(1_000, 0.0, acc = 35f), false, 1_000)  // hâlâ kötü
+        assertEquals(35f, s.latestAccuracyM)
+        assertEquals(35f, s.bestAccuracyM)
+        assertEquals(2, s.evaluatedFixCount())
+        assertEquals(0, s.points.size)
+    }
+
+    @Test
+    fun unknownAccuracyDoesNotPolluteGpsQuality() {
+        val s = session()
+        s.onFix(fix(0, 0.0, acc = 0f), false, 0)   // doğruluk bilinmiyor → kabul
+        assertNull(s.bestAccuracyM)
+        assertNull(s.latestAccuracyM)
+        assertEquals(1, s.evaluatedFixCount())
+        assertEquals(1, s.points.size)
+    }
+
     @Test
     fun manualPauseDoesNotPolluteFilterCounts() {
         val s = session()

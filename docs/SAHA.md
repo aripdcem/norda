@@ -12,6 +12,10 @@ yerine değil (13.1/6).
 2. Bir harita paketi indir (Haritalar ekranı) ya da içe aktar.
 3. Pil %100'e yakın, güç tasarrufu **kapalı** başlanır (ilk turlarda;
    sonraki turlarda bilerek açık denenir).
+4. **GPS'in oturmasını bekle**: START'tan sonra ekrandaki "Fix bekleniyor… /
+   GPS ± X m" yazısı kaybolup süre-mesafe akmaya başlayana dek dur. Kapalı
+   alan ve 2–3 dk'lık denemeler GPS ısınmasına yetmez; hiç nokta girmezse
+   kayıt nedeniyle birlikte atılır.
 
 ## Tur adımları
 
@@ -69,7 +73,8 @@ tur o sürümle tekrarlanır. Üç temiz tur = v1.0.0 kapısı.
 | Tur | Tarih | Sürüm | Sonuç |
 |---|---|---|---|
 | 1 | 2026-08-25 | v0.9.0 | **Temiz** — sorun yok. Ölçümler: 2,98 km · 28:16 aktif (42:46 duvar) · ▲135 m · 🔋 %2. GPX dışa aktarımı çekirdekle yeniden hesaplandı: 962 nokta + 1 wpt; mesafe ✓ (ham 3513,7 − duraklatma sıçramaları 531,2 ≈ 2982,5), yükseklik ✓ (tam 135,0), süre ✓. Analiz bulgusu **F-1** → v0.9.1 |
-| 2 | — | — | Bekliyor. Öneri: güç tasarrufu **açık** ve/veya farklı ortam (dar sokak/orman); v0.9.1 ile |
+| — | 2026-08-25 | v0.9.3 | *Geçersiz deneme* (tur sayılmaz): tenis kortu içinde 2 dk koşu — GPS ısınmadan hiç nokta kabul edilmedi, kayıt tasarım gereği atıldı. Bulgu **F-4** → v0.9.4: GPS durumu artık kayıt ekranında canlı, atılma mesajı nedenli |
+| 2 | — | — | Bekliyor. Öneri: güç tasarrufu **açık** ve/veya farklı ortam (dar sokak/orman); v0.9.4 ile, GPS oturduktan sonra |
 | 3 | — | — | Bekliyor |
 
 Kapı durumu: **1/3 temiz tur.**
@@ -91,3 +96,9 @@ Kapı durumu: **1/3 temiz tur.**
   elle not etmeye gerek kalmasın diye telemetri GPX'in içinde gider:
   uygulama özeti + pil + filtre sayaçları `extensions`/`norda:report`
   bloğuna gömülür. GPX'i paylaşmak = tur raporunu paylaşmak.
+- **F-4** (kort denemesi, giderildi → v0.9.4): GPS oturmadan geçen süre
+  ekranda görünmüyordu — 2 dk'lık deneme sessizce boş kalıp atıldı ve
+  neden anlaşılamadı. Kayda nokta girmemişken durum satırı canlı GPS
+  kalitesini gösterir ("Fix bekleniyor…" / "GPS ± X m"); atılma mesajı
+  nedenli: "hiç fix gelmedi" ↔ "doğruluk hiç eşiğin altına inmedi
+  (en iyi ± X m)". Filtre eşiği değişmedi — 30 m kalite kapısı bilinçli.
