@@ -162,13 +162,18 @@ class TrackingService : Service(), LocationListener {
                 // yoksa doğruluk mu hiç eşiğin altına inmedi?
                 dao.deleteActivity(activityId)
                 val best = s.bestAccuracyM
-                val message =
+                var message =
                     if (s.evaluatedFixCount() == 0 || best == null)
                         getString(R.string.discarded_no_fix)
                     else getString(
                         R.string.discarded_poor_accuracy,
                         best.toInt(), GpsFilter.MAX_ACCURACY_M.toInt()
                     )
+                // Güç tasarrufu birçok cihazda GPS'i kısar (F-5): boş kaydın
+                // olası nedeni olarak açıkça söylenir.
+                if ((getSystemService(POWER_SERVICE) as android.os.PowerManager).isPowerSaveMode) {
+                    message += " " + getString(R.string.power_save_hint)
+                }
                 Toast.makeText(this, message, Toast.LENGTH_LONG).show()
             } else {
                 dao.finishActivity(

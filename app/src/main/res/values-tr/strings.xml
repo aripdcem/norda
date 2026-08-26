@@ -44,6 +44,8 @@
     <string name="discarded_no_fix">GPS hiç fix vermedi — kayıt atıldı. Açık alanda, kilitlenmesini bekleyerek dene.</string>
     <string name="discarded_poor_accuracy">GPS doğruluğu hiç %2$d m eşiğinin altına inmedi (en iyi ± %1$d m) — kayıt atıldı.</string>
     <string name="gps_accuracy_live">GPS ± %1$d m</string>
+    <string name="with_power_save">%1$s · güç tasarrufu açık</string>
+    <string name="power_save_hint">Güç tasarrufu açıktı — GPS\'i kısıtlamış olabilir.</string>
 
     <string name="recording_state_recording">Kayıtta</string>
     <string name="recording_state_paused">Duraklatıldı</string>

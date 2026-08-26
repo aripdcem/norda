@@ -44,6 +44,8 @@
     <string name="discarded_no_fix">GPS never delivered a fix — the recording was discarded. Try in the open, waiting for a lock.</string>
     <string name="discarded_poor_accuracy">GPS accuracy never got under the %2$d m threshold (best ± %1$d m) — the recording was discarded.</string>
     <string name="gps_accuracy_live">GPS ± %1$d m</string>
+    <string name="with_power_save">%1$s · battery saver on</string>
+    <string name="power_save_hint">Battery saver was on — it can restrict GPS.</string>
 
     <string name="recording_state_recording">Recording</string>
     <string name="recording_state_paused">Paused</string>

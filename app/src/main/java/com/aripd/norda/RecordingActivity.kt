@@ -147,9 +147,14 @@ class RecordingActivity : Activity() {
             if (session.state == RecordingSession.State.RECORDING && points.isEmpty()) {
                 // GPS henüz oturmadı (F-4): durum yerine canlı GPS kalitesi —
                 // "2 dakikalık tur neden boş kaldı" ekranda görünür olsun.
+                // Güç tasarrufu GPS'i kısabilir (F-5); açıksa o da söylenir.
                 val acc = session.latestAccuracyM
-                if (acc == null) getString(R.string.location_waiting)
-                else getString(R.string.gps_accuracy_live, acc.toInt())
+                val base =
+                    if (acc == null) getString(R.string.location_waiting)
+                    else getString(R.string.gps_accuracy_live, acc.toInt())
+                if ((getSystemService(POWER_SERVICE) as android.os.PowerManager).isPowerSaveMode)
+                    getString(R.string.with_power_save, base)
+                else base
             } else getString(
                 when (session.state) {
                     RecordingSession.State.RECORDING -> R.string.recording_state_recording

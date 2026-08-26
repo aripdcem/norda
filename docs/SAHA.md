@@ -73,7 +73,7 @@ tur o sürümle tekrarlanır. Üç temiz tur = v1.0.0 kapısı.
 | Tur | Tarih | Sürüm | Sonuç |
 |---|---|---|---|
 | 1 | 2026-08-25 | v0.9.0 | **Temiz** — sorun yok. Ölçümler: 2,98 km · 28:16 aktif (42:46 duvar) · ▲135 m · 🔋 %2. GPX dışa aktarımı çekirdekle yeniden hesaplandı: 962 nokta + 1 wpt; mesafe ✓ (ham 3513,7 − duraklatma sıçramaları 531,2 ≈ 2982,5), yükseklik ✓ (tam 135,0), süre ✓. Analiz bulgusu **F-1** → v0.9.1 |
-| — | 2026-08-25 | v0.9.3 | *Geçersiz deneme* (tur sayılmaz): tenis kortu içinde 2 dk koşu — GPS ısınmadan hiç nokta kabul edilmedi, kayıt tasarım gereği atıldı. Bulgu **F-4** → v0.9.4: GPS durumu artık kayıt ekranında canlı, atılma mesajı nedenli |
+| — | 2026-08-25 | v0.9.3 | *Geçersiz deneme* (tur sayılmaz): tenis kortu içinde 2 dk koşu, **güç tasarrufu AÇIK**. Kök neden F-2 sayaçlarıyla kanıtlı: **hepsi 0** — GPS uygulamaya hiç fix iletmedi (doğruluk sorunu değil); boş kayıt tasarım gereği atıldı. Bulgular **F-4** → v0.9.4 (GPS durumu ekranda canlı, atılma mesajı nedenli) ve **F-5** → v0.9.5 (güç tasarrufu açıkken bu, durum satırında ve atılma mesajında söylenir) |
 | 2 | — | — | Bekliyor. Öneri: güç tasarrufu **açık** ve/veya farklı ortam (dar sokak/orman); v0.9.4 ile, GPS oturduktan sonra |
 | 3 | — | — | Bekliyor |
 
@@ -102,3 +102,10 @@ Kapı durumu: **1/3 temiz tur.**
   kalitesini gösterir ("Fix bekleniyor…" / "GPS ± X m"); atılma mesajı
   nedenli: "hiç fix gelmedi" ↔ "doğruluk hiç eşiğin altına inmedi
   (en iyi ± X m)". Filtre eşiği değişmedi — 30 m kalite kapısı bilinçli.
+- **F-5** (aynı deneme, giderildi → v0.9.5): denemede güç tasarrufu da
+  açıktı ve birçok cihaz bu modda GPS'i kısar — uygulama bunu görüyor
+  (`isPowerSaveMode`) ama söylemiyordu. Artık GPS oturmamışken durum
+  satırına "· güç tasarrufu açık" eklenir; boş kaydın atılma mesajı da
+  "Güç tasarrufu açıktı — GPS'i kısıtlamış olabilir." notunu taşır.
+  Mod engellenmez: matristeki 20. adım (güç tasarrufu açıkken kayıt)
+  desteklenen bir senaryodur, yalnızca görünür kılınır.
