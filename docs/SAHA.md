@@ -111,6 +111,15 @@ Kapı durumu: **1/3 temiz tur.**
   "Güç tasarrufu açıktı — GPS'i kısıtlamış olabilir." notunu taşır.
   Mod engellenmez: matristeki 20. adım (güç tasarrufu açıkken kayıt)
   desteklenen bir senaryodur, yalnızca görünür kılınır.
+- **F-7** (saha kullanımı, giderildi → v0.9.7): yüklü sürüm ekranda hiçbir
+  yerde görünmüyordu — "hangi sürümdesin" sorusu Ayarlar'a gidiyordu.
+  Home'un altında artık "v0.9.7" yazar; GPX raporundaki `app` özniteliğiyle
+  birlikte sürüm hem ekranda hem dosyada.
+- **F-8** (saha kullanımı, giderildi → v0.9.7): kayıt sürerken Home'a
+  dönünce düğme hâlâ "BAŞLAT" diyordu — yeni kayıt başlatılıyormuş gibi
+  algılanıyordu (teknikte yeni kayıt açılmıyordu, servis korumalı). Düğme
+  kayıt sürerken "KAYDA DÖN" olur, tip seçimi kilitlenir, dokunuş izin/konum
+  diyaloglarına girmeden doğrudan kayda döner.
 - **F-6** (Tur 2, giderildi → v0.9.6): GPS çipi ancak biri istediğinde
   aramaya başlar; Home'da beklerken kimse istemiyordu → START sonrası 1+
   dk kör bekleyiş, uygulama yeniden başlatmaları etkisiz (çip tarafı).

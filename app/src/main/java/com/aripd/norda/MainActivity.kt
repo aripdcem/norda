@@ -43,6 +43,7 @@ class MainActivity : Activity(), LocationListener {
     private lateinit var dao: ActivityDao
     private lateinit var walkButton: RadioButton
     private lateinit var runButton: RadioButton
+    private lateinit var startButton: Button
     private lateinit var permissionHint: TextView
     private lateinit var gpsHint: TextView
 
@@ -57,7 +58,13 @@ class MainActivity : Activity(), LocationListener {
         permissionHint = findViewById(R.id.permissionHint)
         gpsHint = findViewById(R.id.gpsHint)
 
-        findViewById<Button>(R.id.startButton).setOnClickListener { onStartTapped() }
+        // Yüklü sürüm ekranda görünür (F-7): "hangi sürümdeyim" sorusu
+        // telefona değil ekrana sorulur.
+        findViewById<TextView>(R.id.versionText).text =
+            getString(R.string.version_label, BuildConfig.VERSION_NAME)
+
+        startButton = findViewById(R.id.startButton)
+        startButton.setOnClickListener { onStartTapped() }
         findViewById<Button>(R.id.compassButton).setOnClickListener {
             startActivity(Intent(this, CompassActivity::class.java))
         }
@@ -76,7 +83,21 @@ class MainActivity : Activity(), LocationListener {
         super.onResume()
         recoverUnfinished()
         renderPermissionHint()
+        renderStartButton()
         startGpsWarmup()
+    }
+
+    /**
+     * Kayıt sürerken düğme "yeni kayıt" gibi okunmasın (F-8): BAŞLAT →
+     * KAYDA DÖN olur, tip seçimi kilitlenir. Zaten teknik olarak da yeni
+     * kayıt açılmıyordu (servis korumalı); artık ekran da bunu söylüyor.
+     */
+    private fun renderStartButton() {
+        val recording = TrackingService.isRecording
+        startButton.text =
+            getString(if (recording) R.string.return_to_recording else R.string.start)
+        walkButton.isEnabled = !recording
+        runButton.isEnabled = !recording
     }
 
     override fun onPause() {
@@ -117,6 +138,11 @@ class MainActivity : Activity(), LocationListener {
     override fun onProviderDisabled(provider: String) = Unit
 
     private fun onStartTapped() {
+        if (TrackingService.isRecording) {
+            // Süren kayda dönüş: izin/konum diyaloglarına gerek yok.
+            startActivity(Intent(this, RecordingActivity::class.java))
+            return
+        }
         if (!hasLocationPermission()) {
             if (permissionDeniedForever()) {
                 // requestPermissions burada sessizce reddedilir; tek çıkış

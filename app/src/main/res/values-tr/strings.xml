@@ -35,6 +35,8 @@
     <string name="walk">Yürüyüş</string>
     <string name="run">Koşu</string>
     <string name="start">BAŞLAT</string>
+    <string name="return_to_recording">KAYDA DÖN</string>
+    <string name="version_label">v%1$s</string>
     <string name="history">Geçmiş</string>
     <string name="diagnostics">Sensör tanılama</string>
 

@@ -35,6 +35,8 @@
     <string name="walk">Walk</string>
     <string name="run">Run</string>
     <string name="start">START</string>
+    <string name="return_to_recording">BACK TO RECORDING</string>
+    <string name="version_label">v%1$s</string>
     <string name="history">History</string>
     <string name="diagnostics">Sensor diagnostics</string>
 
