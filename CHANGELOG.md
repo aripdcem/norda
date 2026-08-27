@@ -3,6 +3,18 @@
 Biçim [Keep a Changelog](https://keepachangelog.com/), sürümleme
 [SemVer](https://semver.org/) — kurallar için `docs/MVP.md` 15. bölüm.
 
+## [0.9.7] - 2026-08-27
+
+### Fixed
+
+- F-7: yüklü sürüm ekranda görünmüyordu — Home'un altında artık "v0.9.7"
+  yazar (GPX'teki `app` özniteliğiyle birlikte sürüm hem ekranda hem
+  dosyada).
+- F-8: kayıt sürerken Home'daki düğme "BAŞLAT" diyor, yeni kayıt
+  başlatılıyormuş gibi algılanıyordu (teknikte açılmıyordu — servis
+  korumalı). Düğme kayıt sürerken "KAYDA DÖN" olur, tip seçimi kilitlenir
+  ve dokunuş izin/konum diyaloglarına girmeden doğrudan kayda döner.
+
 ## [0.9.6] - 2026-08-27
 
 ### Fixed
