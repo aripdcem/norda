@@ -87,7 +87,13 @@ class MainActivity : Activity(), LocationListener {
     /** GPS ön-ısıtma (F-6): fix'ler kayda girmez, yalnız hazırlık göstergesini besler. */
     private fun startGpsWarmup() {
         gpsHint.visibility = View.GONE
-        if (!hasLocationPermission() || TrackingService.isRecording) return
+        // İzin kontrolü bilerek satır içi: lint'in MissingPermission akış
+        // analizi yardımcı fonksiyonun içini göremiyor (depodaki desen bu).
+        if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) !=
+            PackageManager.PERMISSION_GRANTED || TrackingService.isRecording
+        ) {
+            return
+        }
         val locationManager = getSystemService(LOCATION_SERVICE) as LocationManager
         if (LocationManager.GPS_PROVIDER !in locationManager.allProviders) return
         gpsHint.text = getString(R.string.gps_searching)
