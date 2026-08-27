@@ -5,12 +5,15 @@ import android.app.Activity
 import android.app.AlertDialog
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.location.GnssStatus
 import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.provider.Settings
 import android.view.View
 import android.widget.Button
@@ -102,8 +105,18 @@ class MainActivity : Activity(), LocationListener {
 
     override fun onPause() {
         super.onPause()
-        (getSystemService(LOCATION_SERVICE) as LocationManager).removeUpdates(this)
+        val locationManager = getSystemService(LOCATION_SERVICE) as LocationManager
+        locationManager.removeUpdates(this)
+        gnssCallback?.let { locationManager.unregisterGnssStatusCallback(it) }
+        gnssCallback = null
     }
+
+    // Uydu görünürlüğü (F-9): "GPS aranıyor" tek başına neden söylemez —
+    // uydu 0/0 = gökyüzü yok, uydu 7/0 = gökyüzü var ama kilit yok.
+    private var gnssCallback: GnssStatus.Callback? = null
+    private var satsSeen = 0
+    private var satsUsed = 0
+    private var hasGpsFix = false
 
     /** GPS ön-ısıtma (F-6): fix'ler kayda girmez, yalnız hazırlık göstergesini besler. */
     private fun startGpsWarmup() {
@@ -117,12 +130,41 @@ class MainActivity : Activity(), LocationListener {
         }
         val locationManager = getSystemService(LOCATION_SERVICE) as LocationManager
         if (LocationManager.GPS_PROVIDER !in locationManager.allProviders) return
-        gpsHint.text = getString(R.string.gps_searching)
+        hasGpsFix = false
+        satsSeen = 0
+        satsUsed = 0
+        renderSearchingHint()
         gpsHint.visibility = View.VISIBLE
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000L, 0f, this)
+        val callback = object : GnssStatus.Callback() {
+            override fun onSatelliteStatusChanged(status: GnssStatus) {
+                satsSeen = status.satelliteCount
+                var used = 0
+                for (i in 0 until status.satelliteCount) {
+                    if (status.usedInFix(i)) used++
+                }
+                satsUsed = used
+                if (!hasGpsFix) renderSearchingHint()
+            }
+        }
+        gnssCallback = callback
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            locationManager.registerGnssStatusCallback(mainExecutor, callback)
+        } else {
+            @Suppress("DEPRECATION")
+            locationManager.registerGnssStatusCallback(callback, Handler(Looper.getMainLooper()))
+        }
+    }
+
+    /** Fix yokken: aranıyor + uydu sayısı (0/0 = gökyüzü yok; 7/0 = kilit yok). */
+    private fun renderSearchingHint() {
+        gpsHint.text =
+            if (satsSeen > 0) getString(R.string.gps_searching_sats, satsUsed, satsSeen)
+            else getString(R.string.gps_searching)
     }
 
     override fun onLocationChanged(location: Location) {
+        hasGpsFix = true
         val acc = if (location.hasAccuracy()) location.accuracy else 0f
         gpsHint.text = when {
             acc > 0f && acc <= GpsFilter.MAX_ACCURACY_M ->

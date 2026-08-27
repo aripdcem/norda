@@ -8,6 +8,7 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import android.location.GnssStatus
 import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
@@ -54,6 +55,11 @@ class DiagnosticsActivity : Activity(), LocationListener, SensorEventListener {
     private var lastFix: Location? = null
     private var lastFixElapsedMs = 0L
     private var startFix: Location? = null
+
+    // Uydu görünürlüğü (F-9): fix yokken bile çipin ne gördüğü belli olsun.
+    private var gnssCallback: GnssStatus.Callback? = null
+    private var satsSeen = 0
+    private var satsUsed = 0
 
     private val handler = Handler(Looper.getMainLooper())
     private val ageTicker = object : Runnable {
@@ -122,6 +128,8 @@ class DiagnosticsActivity : Activity(), LocationListener, SensorEventListener {
         super.onPause()
         sensorManager.unregisterListener(this)
         locationManager.removeUpdates(this)
+        gnssCallback?.let { locationManager.unregisterGnssStatusCallback(it) }
+        gnssCallback = null
         handler.removeCallbacks(ageTicker)
     }
 
@@ -191,6 +199,24 @@ class DiagnosticsActivity : Activity(), LocationListener, SensorEventListener {
         if (LocationManager.NETWORK_PROVIDER in locationManager.allProviders) {
             locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 5000L, 0f, this)
         }
+        val callback = object : GnssStatus.Callback() {
+            override fun onSatelliteStatusChanged(status: GnssStatus) {
+                satsSeen = status.satelliteCount
+                var used = 0
+                for (i in 0 until status.satelliteCount) {
+                    if (status.usedInFix(i)) used++
+                }
+                satsUsed = used
+                renderLocation()
+            }
+        }
+        gnssCallback = callback
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            locationManager.registerGnssStatusCallback(mainExecutor, callback)
+        } else {
+            @Suppress("DEPRECATION")
+            locationManager.registerGnssStatusCallback(callback, handler)
+        }
     }
 
     override fun onLocationChanged(location: Location) {
@@ -216,8 +242,11 @@ class DiagnosticsActivity : Activity(), LocationListener, SensorEventListener {
             locationText.text = getString(R.string.location_needs_permission)
             return
         }
+        // Uydu satırı fix'ten bağımsız: çipin ne gördüğü her durumda görünür
+        // (F-9). 0/0 = gökyüzü yok; N görülüp 0 kullanılıyorsa kilit yok.
+        val satellites = getString(R.string.diag_satellites, satsUsed, satsSeen)
         if (fix == null) {
-            locationText.text = getString(R.string.location_waiting)
+            locationText.text = getString(R.string.location_waiting) + "\n" + satellites
             return
         }
         val ageSec = ((SystemClock.elapsedRealtime() - lastFixElapsedMs) / 1000L).toInt()
@@ -227,7 +256,8 @@ class DiagnosticsActivity : Activity(), LocationListener, SensorEventListener {
             getString(R.string.location_accuracy, fix.accuracy.toInt()),
             getString(R.string.location_altitude, fix.altitude.toInt()),
             getString(R.string.location_speed, speedKmh),
-            getString(R.string.location_meta, fix.provider ?: "?", ageSec)
+            getString(R.string.location_meta, fix.provider ?: "?", ageSec),
+            satellites
         ).joinToString("\n")
     }
 

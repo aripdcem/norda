@@ -111,6 +111,15 @@ Kapı durumu: **1/3 temiz tur.**
   "Güç tasarrufu açıktı — GPS'i kısıtlamış olabilir." notunu taşır.
   Mod engellenmez: matristeki 20. adım (güç tasarrufu açıkken kayıt)
   desteklenen bir senaryodur, yalnızca görünür kılınır.
+- **F-9** (0.9.7 sonrası "sürekli GPS arıyor" raporu → v0.9.8): "GPS
+  aranıyor…" tek başına nedeni söylemiyordu — gökyüzü mü yok, kilit mi
+  gelmiyor, cihaz mı arızalı ayırt edilemiyordu. Uydu görünürlüğü eklendi
+  (`GnssStatus`): Home satırı "GPS aranıyor… · uydu 0/7" der, Tanılama'nın
+  konum bölümü "uydu: 0 fix'te / 7 görülen" satırı taşır. Okuma: görülen 0
+  = gökyüzü/anten yok (kapalı alan); görülen çok–fix'te 0 = kilitlenemiyor
+  (bekle ya da cihaz aGPS'i bayat); fix'te ≥4 = fix an meselesi. Not:
+  Tanılama'daki hızlı "fix" ağ sağlayıcısındandır, kayda giremez — kayıt
+  yalnız gerçek GPS ister.
 - **F-7** (saha kullanımı, giderildi → v0.9.7): yüklü sürüm ekranda hiçbir
   yerde görünmüyordu — "hangi sürümdesin" sorusu Ayarlar'a gidiyordu.
   Home'un altında artık "v0.9.7" yazar; GPX raporundaki `app` özniteliğiyle
