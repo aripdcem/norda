@@ -5,6 +5,8 @@ import android.app.Activity
 import android.app.AlertDialog
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.location.Location
+import android.location.LocationListener
 import android.location.LocationManager
 import android.net.Uri
 import android.os.Build
@@ -17,6 +19,7 @@ import android.widget.TextView
 import android.widget.Toast
 import com.aripd.norda.core.track.ActivityType
 import com.aripd.norda.core.track.ElevationTracker
+import com.aripd.norda.core.track.GpsFilter
 import com.aripd.norda.core.track.Stats
 import com.aripd.norda.storage.ActivityDao
 import com.aripd.norda.storage.AppDatabase
@@ -29,13 +32,19 @@ import com.aripd.norda.tracking.TrackingService
  * İzin UX (Faz 8): ret sonrası neden ekranda kalır; kalıcı ret Ayarlar'a
  * götüren diyalog açar. Konum servisi kapalıysa START bunu kayıt boş
  * kaldıktan sonra değil, baştan söyler.
+ *
+ * GPS ön-ısıtma (F-6): çip ancak biri GPS istediğinde aramaya başlar; Home
+ * açıkken dinlemeye başlanır ki kullanıcı tip seçerken kilitlensin, START'a
+ * kör bekleyişle değil "GPS hazır" satırını görerek basılsın. Ekrandan
+ * ayrılınca bırakılır (pil kuralı, MVP 14); kayıt sürerken servis dinliyor.
  */
-class MainActivity : Activity() {
+class MainActivity : Activity(), LocationListener {
 
     private lateinit var dao: ActivityDao
     private lateinit var walkButton: RadioButton
     private lateinit var runButton: RadioButton
     private lateinit var permissionHint: TextView
+    private lateinit var gpsHint: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -46,6 +55,7 @@ class MainActivity : Activity() {
         walkButton = findViewById(R.id.typeWalk)
         runButton = findViewById(R.id.typeRun)
         permissionHint = findViewById(R.id.permissionHint)
+        gpsHint = findViewById(R.id.gpsHint)
 
         findViewById<Button>(R.id.startButton).setOnClickListener { onStartTapped() }
         findViewById<Button>(R.id.compassButton).setOnClickListener {
@@ -66,7 +76,39 @@ class MainActivity : Activity() {
         super.onResume()
         recoverUnfinished()
         renderPermissionHint()
+        startGpsWarmup()
     }
+
+    override fun onPause() {
+        super.onPause()
+        (getSystemService(LOCATION_SERVICE) as LocationManager).removeUpdates(this)
+    }
+
+    /** GPS ön-ısıtma (F-6): fix'ler kayda girmez, yalnız hazırlık göstergesini besler. */
+    private fun startGpsWarmup() {
+        gpsHint.visibility = View.GONE
+        if (!hasLocationPermission() || TrackingService.isRecording) return
+        val locationManager = getSystemService(LOCATION_SERVICE) as LocationManager
+        if (LocationManager.GPS_PROVIDER !in locationManager.allProviders) return
+        gpsHint.text = getString(R.string.gps_searching)
+        gpsHint.visibility = View.VISIBLE
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000L, 0f, this)
+    }
+
+    override fun onLocationChanged(location: Location) {
+        val acc = if (location.hasAccuracy()) location.accuracy else 0f
+        gpsHint.text = when {
+            acc > 0f && acc <= GpsFilter.MAX_ACCURACY_M ->
+                getString(R.string.gps_ready, acc.toInt())
+            acc > 0f -> getString(R.string.gps_accuracy_live, acc.toInt())
+            else -> getString(R.string.gps_searching)
+        }
+    }
+
+    @Deprecated("Framework çağırmaya devam ediyor; API 29 öncesi için gerekli")
+    override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) = Unit
+    override fun onProviderEnabled(provider: String) = Unit
+    override fun onProviderDisabled(provider: String) = Unit
 
     private fun onStartTapped() {
         if (!hasLocationPermission()) {
@@ -136,6 +178,7 @@ class MainActivity : Activity() {
         if (requestCode != REQUEST_LOCATION) return
         if (hasLocationPermission()) {
             permissionHint.visibility = View.GONE
+            startGpsWarmup()
             onStartTapped()
         } else {
             renderPermissionHint()

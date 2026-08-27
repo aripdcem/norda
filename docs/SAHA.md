@@ -12,8 +12,10 @@ yerine değil (13.1/6).
 2. Bir harita paketi indir (Haritalar ekranı) ya da içe aktar.
 3. Pil %100'e yakın, güç tasarrufu **kapalı** başlanır (ilk turlarda;
    sonraki turlarda bilerek açık denenir).
-4. **GPS'in oturmasını bekle**: START'tan sonra ekrandaki "Fix bekleniyor… /
-   GPS ± X m" yazısı kaybolup süre-mesafe akmaya başlayana dek dur. Kapalı
+4. **GPS'in oturmasını bekle** (v0.9.6'dan beri Home'da): uygulama Home
+   açıkken GPS'i ısıtmaya başlar; START'ın üstündeki satır "GPS aranıyor…"
+   → "GPS hazır · ± X m" olunca başla. Uygulamayı kapatıp açmak çipi
+   etkilemez — kilitlenme çip tarafındadır, beklemek tek çözümdür. Kapalı
    alan ve 2–3 dk'lık denemeler GPS ısınmasına yetmez; hiç nokta girmezse
    kayıt nedeniyle birlikte atılır.
 
@@ -74,7 +76,7 @@ tur o sürümle tekrarlanır. Üç temiz tur = v1.0.0 kapısı.
 |---|---|---|---|
 | 1 | 2026-08-25 | v0.9.0 | **Temiz** — sorun yok. Ölçümler: 2,98 km · 28:16 aktif (42:46 duvar) · ▲135 m · 🔋 %2. GPX dışa aktarımı çekirdekle yeniden hesaplandı: 962 nokta + 1 wpt; mesafe ✓ (ham 3513,7 − duraklatma sıçramaları 531,2 ≈ 2982,5), yükseklik ✓ (tam 135,0), süre ✓. Analiz bulgusu **F-1** → v0.9.1 |
 | — | 2026-08-25 | v0.9.3 | *Geçersiz deneme* (tur sayılmaz): tenis kortu içinde 2 dk koşu, **güç tasarrufu AÇIK**. Kök neden F-2 sayaçlarıyla kanıtlı: **hepsi 0** — GPS uygulamaya hiç fix iletmedi (doğruluk sorunu değil); boş kayıt tasarım gereği atıldı. Bulgular **F-4** → v0.9.4 (GPS durumu ekranda canlı, atılma mesajı nedenli) ve **F-5** → v0.9.5 (güç tasarrufu açıkken bu, durum satırında ve atılma mesajında söylenir) |
-| 2 | — | — | Bekliyor. Öneri: güç tasarrufu **açık** ve/veya farklı ortam (dar sokak/orman); v0.9.4 ile, GPS oturduktan sonra |
+| 2 | 2026-08-27 | v0.9.x | *Bulgulu* (tekrar gerekli): kayıt hattı kusursuz — çapraz doğrulama birebir: mesafe 3513,2 ↔ 3513,2 m (duraklatma sıçraması 13,5 m doğru dışlandı), ▲123/▼144 birebir, 1086 nokta = kabul sayacı, doğruluk/ışınlama reti 0. Beyan veriyle tutarlı: gidiş 1677 m · 7:54/km koşu, dönüş 1850 m · 9:42/km yürüyüş. 🔋 %6 (~11 %/sa, ekran açık — Tur 1'in 4 katı; ekran maliyeti matrisle ayrışacak). Bulgu **F-6**: GPS edinimi — START sonrası 1+ dk kör bekleyiş, uygulama yeniden başlatmaları etkisiz → v0.9.6 ile tekrar |
 | 3 | — | — | Bekliyor |
 
 Kapı durumu: **1/3 temiz tur.**
@@ -109,3 +111,11 @@ Kapı durumu: **1/3 temiz tur.**
   "Güç tasarrufu açıktı — GPS'i kısıtlamış olabilir." notunu taşır.
   Mod engellenmez: matristeki 20. adım (güç tasarrufu açıkken kayıt)
   desteklenen bir senaryodur, yalnızca görünür kılınır.
+- **F-6** (Tur 2, giderildi → v0.9.6): GPS çipi ancak biri istediğinde
+  aramaya başlar; Home'da beklerken kimse istemiyordu → START sonrası 1+
+  dk kör bekleyiş, uygulama yeniden başlatmaları etkisiz (çip tarafı).
+  Tanılama'daki "fix" ağ sağlayıcısından geldiği için yanıltıcıydı.
+  Düzeltme: Home açıkken GPS ön-ısıtılır (ekrandan ayrılınca bırakılır) ve
+  START'ın üstünde hazırlık satırı görünür: "GPS aranıyor…" → "GPS hazır ·
+  ± X m". GPX raporuna `app` sürümü de eklendi — dosya artık hangi sürümle
+  yazıldığını söyler.

@@ -50,7 +50,9 @@ object Gpx {
         val distanceM: Double,
         val activeMillis: Long,
         val gainM: Double,
-        val lossM: Double
+        val lossM: Double,
+        /** Kaydı yazan uygulama sürümü (F-6): dosya kendini tanıtır. */
+        val appVersion: String? = null
     )
 
     private const val NORDA_NS = "https://github.com/aripdcem/norda/gpx/1"
@@ -92,7 +94,9 @@ object Gpx {
         if (report != null) {
             // GPX 1.1 şemasında extensions gpx'in SON çocuğudur.
             sb.append("<extensions>\n<norda:report xmlns:norda=\"")
-                .append(NORDA_NS).append("\">\n")
+                .append(NORDA_NS).append("\"")
+            report.appVersion?.let { sb.append(" app=\"").append(escape(it)).append("\"") }
+            sb.append(">\n")
             sb.append("<norda:summary distanceM=\"").append(report.distanceM)
                 .append("\" activeMillis=\"").append(report.activeMillis)
                 .append("\" gainM=\"").append(report.gainM)
@@ -183,7 +187,8 @@ object Gpx {
             distanceM = summary.getAttribute("distanceM").toDoubleOrNull() ?: return null,
             activeMillis = summary.getAttribute("activeMillis").toLongOrNull() ?: return null,
             gainM = summary.getAttribute("gainM").toDoubleOrNull() ?: return null,
-            lossM = summary.getAttribute("lossM").toDoubleOrNull() ?: return null
+            lossM = summary.getAttribute("lossM").toDoubleOrNull() ?: return null,
+            appVersion = el.getAttribute("app").takeIf { it.isNotEmpty() }
         )
     }
 

@@ -161,7 +161,8 @@ class MapActivity : Activity() {
             distanceM = s.distanceM,
             activeMillis = s.durationMillis,
             gainM = s.elevationGainM,
-            lossM = s.elevationLossM
+            lossM = s.elevationLossM,
+            appVersion = BuildConfig.VERSION_NAME
         )
     }
 

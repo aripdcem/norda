@@ -88,11 +88,13 @@ class GpxTest {
                 filter = Gpx.FilterCounts(950, 3, 41, 1, 0),
                 startBatteryPct = 93, endBatteryPct = 91,
                 distanceM = 2980.5, activeMillis = 1_696_000,
-                gainM = 135.0, lossM = 142.0
+                gainM = 135.0, lossM = 142.0,
+                appVersion = "0.9.6"
             )
         )
         assertTrue(xml.contains("<extensions>"))
         val r = Gpx.parse(xml).report!!
+        assertEquals("0.9.6", r.appVersion)
         val f = r.filter!!
         assertEquals(950, f.accept)
         assertEquals(3, f.badAccuracy)
@@ -125,6 +127,7 @@ class GpxTest {
         val r = Gpx.parse(xml).report!!
         assertEquals(null, r.filter)
         assertEquals(null, r.startBatteryPct)
+        assertEquals(null, r.appVersion)
         assertEquals(1000.0, r.distanceM, 1e-9)
     }
 
