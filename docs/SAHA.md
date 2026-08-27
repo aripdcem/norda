@@ -83,10 +83,11 @@ tur o sürümle tekrarlanır. Üç temiz tur = v1.0.0 kapısı.
 |---|---|---|---|
 | 1 | 2026-08-25 | v0.9.0 | **Temiz** — sorun yok. Ölçümler: 2,98 km · 28:16 aktif (42:46 duvar) · ▲135 m · 🔋 %2. GPX dışa aktarımı çekirdekle yeniden hesaplandı: 962 nokta + 1 wpt; mesafe ✓ (ham 3513,7 − duraklatma sıçramaları 531,2 ≈ 2982,5), yükseklik ✓ (tam 135,0), süre ✓. Analiz bulgusu **F-1** → v0.9.1 |
 | — | 2026-08-25 | v0.9.3 | *Geçersiz deneme* (tur sayılmaz): tenis kortu içinde 2 dk koşu, **güç tasarrufu AÇIK**. Kök neden F-2 sayaçlarıyla kanıtlı: **hepsi 0** — GPS uygulamaya hiç fix iletmedi (doğruluk sorunu değil); boş kayıt tasarım gereği atıldı. Bulgular **F-4** → v0.9.4 (GPS durumu ekranda canlı, atılma mesajı nedenli) ve **F-5** → v0.9.5 (güç tasarrufu açıkken bu, durum satırında ve atılma mesajında söylenir) |
-| 2 | 2026-08-27 | v0.9.x | *Bulgulu* (tekrar gerekli): kayıt hattı kusursuz — çapraz doğrulama birebir: mesafe 3513,2 ↔ 3513,2 m (duraklatma sıçraması 13,5 m doğru dışlandı), ▲123/▼144 birebir, 1086 nokta = kabul sayacı, doğruluk/ışınlama reti 0. Beyan veriyle tutarlı: gidiş 1677 m · 7:54/km koşu, dönüş 1850 m · 9:42/km yürüyüş. 🔋 %6 (~11 %/sa, ekran açık — Tur 1'in 4 katı; ekran maliyeti matrisle ayrışacak). Bulgu **F-6**: GPS edinimi — START sonrası 1+ dk kör bekleyiş, uygulama yeniden başlatmaları etkisiz → v0.9.6 ile tekrar |
-| 3 | — | — | Bekliyor |
+| 2 | 2026-08-27 | v0.9.5 | *Bulgulu* (tekrar gerekli): kayıt hattı kusursuz — çapraz doğrulama birebir: mesafe 3513,2 ↔ 3513,2 m (duraklatma sıçraması 13,5 m doğru dışlandı), ▲123/▼144 birebir, 1086 nokta = kabul sayacı, doğruluk/ışınlama reti 0. Beyan veriyle tutarlı: gidiş 1677 m · 7:54/km koşu, dönüş 1850 m · 9:42/km yürüyüş. 🔋 %6 (~11 %/sa, ekran açık — Tur 1'in 4 katı; ekran maliyeti matrisle ayrışacak). Bulgu **F-6**: GPS edinimi — START sonrası 1+ dk kör bekleyiş, uygulama yeniden başlatmaları etkisiz → v0.9.6 ile tekrar |
+| 2t | 2026-08-27 | **v0.9.8** | **Temiz** — çapraz doğrulama 0,1 m hassas: ham 1692,9 − elle-duraklatma sıçraması 22,6 = 1670,3 ↔ uygulama 1670,4 m; ▲141/▼92 birebir; 532 nokta = kabul sayacı. 23,5 dk'lık elle mola doğru dışlandı; iki ~35 sn'lik oto-duraklatma tasarım gereği mesafeye dahil. Doğruluk reti 1, ışınlama 0. 🔋 %3 (~4,0 %/sa). Rapor `app="0.9.8"` taşıdı (F-3+F-6 sahada ✓). Not: GPS kilidi Haritalar açıldıktan sonra geldi — nedensellik doğrulanamadı; uydu satırı (F-9) sonraki turlarda cevabı verecek. İlk fix'in 2. saniyesinde 12,7 m/s'lik tek oturma sıçraması filtre tavanının altında kaldı (etki ~13 m, gözlem olarak not edildi) |
+| 3 | — | — | Bekliyor. Öneri: farklı koşul — uzun tur (30+ dk) ekran kapalı/cepte; matris 20 (güç tasarrufu açık) ayrıca denenebilir |
 
-Kapı durumu: **1/3 temiz tur.**
+Kapı durumu: **2/3 temiz tur.**
 
 ### Bulgular
 
