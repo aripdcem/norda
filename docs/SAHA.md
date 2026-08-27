@@ -18,6 +18,13 @@ yerine değil (13.1/6).
    etkilemez — kilitlenme çip tarafındadır, beklemek tek çözümdür. Kapalı
    alan ve 2–3 dk'lık denemeler GPS ısınmasına yetmez; hiç nokta girmezse
    kayıt nedeniyle birlikte atılır.
+5. **Arama açık havada da uzarsa** (v0.9.8'den beri uydu sayısı ekranda —
+   "uydu 0/9" = görülen çok, kilit yok): Norda yardım verisi (aGPS)
+   enjekte etmez (Play Services yok); yardım bayatsa ham GPS almanağı
+   uydudan indirir, bu 2–15 dk sürebilir. Kestirme: Google Haritalar'ı
+   açıp mavi nokta hassaslaşınca Norda'ya dön — sistemin GNSS yardımı
+   tazelenir, kilit genelde saniyeler içinde gelir. "Uydu 0/0" açık havada
+   sürüyorsa sorun cihazın GNSS/anteni demektir.
 
 ## Tur adımları
 
