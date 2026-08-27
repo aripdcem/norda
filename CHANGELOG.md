@@ -3,6 +3,16 @@
 Biçim [Keep a Changelog](https://keepachangelog.com/), sürümleme
 [SemVer](https://semver.org/) — kurallar için `docs/MVP.md` 15. bölüm.
 
+## [0.9.8] - 2026-08-27
+
+### Added
+
+- F-9 ("sürekli GPS arıyor" raporu): uydu görünürlüğü. Home'daki hazırlık
+  satırı fix yokken "GPS aranıyor… · uydu 0/7" (fix'te/görülen) der;
+  Tanılama'nın konum bölümü fix olsun olmasın "uydu: X fix'te / Y görülen"
+  satırı taşır. Görülen 0 = gökyüzü yok (kapalı alan); görülen çok ama
+  fix'te 0 = kilitlenemiyor. GPS'in NEDEN oturmadığı artık ekrandan okunur.
+
 ## [0.9.7] - 2026-08-27
 
 ### Fixed
