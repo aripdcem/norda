@@ -3,6 +3,22 @@
 Biçim [Keep a Changelog](https://keepachangelog.com/), sürümleme
 [SemVer](https://semver.org/) — kurallar için `docs/MVP.md` 15. bölüm.
 
+## [0.9.6] - 2026-08-27
+
+### Fixed
+
+- F-6 (Saha Turu 2): GPS çipi ancak biri istediğinde aramaya başlar; Home'da
+  beklerken kimse istemediği için START sonrası 1+ dakikalık kör bekleyiş
+  yaşanıyordu (uygulamayı yeniden başlatmak çipi etkilemez). Home açıkken
+  GPS artık ön-ısıtılır — kullanıcı tip seçerken kilitlenir — ve START'ın
+  üstünde hazırlık satırı görünür: "GPS aranıyor…" → "GPS ± X m" →
+  "GPS hazır · ± X m". Ekrandan ayrılınca dinleme bırakılır (pil kuralı);
+  kayıt sürerken servis zaten dinler.
+
+### Added
+
+- GPX raporuna `app` özniteliği: dosya hangi sürümle yazıldığını taşır.
+
 ## [0.9.5] - 2026-08-25
 
 ### Fixed
