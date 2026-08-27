@@ -89,6 +89,12 @@ android {
         }
     }
 
+    buildFeatures {
+        // AGP 8'de BuildConfig üretimi varsayılan kapalı; yalnız sürüm adını
+        // GPX raporuna yazmak için açıldı (F-6, MapActivity.buildReport).
+        buildConfig = true
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
