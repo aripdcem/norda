@@ -489,6 +489,15 @@ navigasyon ve GPX internetsiz çalışır. Bu cümle README'de yazar — "izin
 listesi = doğrulanabilir gizlilik" duruşunun karşılığıdır. Konum verisi
 varsayılan olarak cihazda kalır; hiçbir telemetri yoktur.
 
+**Temiz iz duruşu (ürün özelliği):** kayda yalnız kalite kapısından (5.2)
+geçen **gerçek GNSS noktaları** girer; ağ/WiFi konumu hiçbir zaman izin
+parçası olmaz. "Anında başlıyor" görünmek için iz, sonradan düzeltilecek
+kaba noktalarla doldurulmaz — asistanlı uygulamaların yaptığı budur.
+Bedeli, cihaz kilitlenene dek görünür bir bekleyiştir (Home'daki GPS
+hazırlık satırı ve uydu sayısı bunu yönetir); karşılığı, izin her
+noktasının gerçek olmasıdır. Saha turlarındaki sıfır-fark mesafe
+doğrulamalarının kaynağı bu kapıdır (`docs/SAHA.md` günlüğü).
+
 ## 12. Geliştirme yol haritası
 
 Her faz tamamlandığında minor sürüm etiketi atılır; faz içindeki her

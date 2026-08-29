@@ -14,6 +14,12 @@ Start" navigasyonuyla birleştirir.
 indirme). Tracking, pusula, navigasyon ve GPX internetsiz çalışır; konum
 verisi cihazda kalır, telemetri yoktur. Ayrıntı: [docs/PRIVACY.md](docs/PRIVACY.md).
 
+**Temiz iz duruşu:** kayda yalnız kalite kapısından geçen **gerçek GNSS
+noktaları** girer; ağ/WiFi konumu asla ize karışmaz. "Hazır" demesi
+asistanlı uygulamalardan geç olabilir — ekrandaki GPS hazırlık satırı ve
+uydu sayısı bekleyişi görünür kılar; karşılığı, izin her noktasının gerçek
+olmasıdır (saha günlüğündeki sıfır-fark doğrulamaları: `docs/SAHA.md`).
+
 Saha turu protokolü (Faz 9 · RC): [docs/SAHA.md](docs/SAHA.md).
 
 ## Testler diş geçiriyor mu?
