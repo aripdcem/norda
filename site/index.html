@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#F6F7F3" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#151A15" media="(prefers-color-scheme: dark)">
+<title>Norda — Yürü. Koş. Keşfet. Yolunu kaybetme.</title>
+<meta name="description" content="Norda: minimalist, offline-first outdoor navigasyon uygulaması (Android). Yürüyüş/koşu kaydı, offline harita, pusula, Return to Start, waypoint ve GPX — konumun cihazında kalır.">
+<meta property="og:title" content="Norda — offline-first outdoor navigasyon">
+<meta property="og:description" content="Yürü. Koş. Keşfet. Yolunu kaybetme. Konumun cihazında kalır; sıfır bağımlılık, ~110 KB imzalı APK.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%232F6B4C'/%3E%3Cpath d='M32 10 L39 32 L32 54 L25 32 Z' fill='%23F6F7F3'/%3E%3Cpath d='M32 10 L39 32 L25 32 Z' fill='%23E8C468'/%3E%3C/svg%3E">
+<style>
+  :root {
+    --bg: #F6F7F3;
+    --surface: #FDFDFB;
+    --ink: #212A20;
+    --muted: #5A675C;
+    --line: #D9DFD3;
+    --line-soft: #E6EAE1;
+    --accent: #2F6B4C;
+    --accent-ink: #F6F7F3;
+    --accent-soft: #E7EFE8;
+    --gold: #8F6412;
+    --shadow: 0 1px 2px rgba(33, 42, 32, 0.06);
+  }
+  /* Işık/koyu: buton yok, sistem ayarı seçer. */
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #151A15;
+      --surface: #1B221C;
+      --ink: #E4EAE1;
+      --muted: #9BA89D;
+      --line: #2D372E;
+      --line-soft: #242D25;
+      --accent: #82BB97;
+      --accent-ink: #10150F;
+      --accent-soft: #222F26;
+      --gold: #D3A751;
+      --shadow: none;
+    }
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: system-ui, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    font-size: 1.0625rem;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 60rem; margin: 0 auto; padding: 0 1.25rem; }
+
+  a { color: var(--accent); text-underline-offset: 3px; }
+  a:focus-visible, .btn:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+
+  header.top {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1.1rem 0;
+  }
+  .brand { display: inline-flex; align-items: center; gap: 0.55rem; font-weight: 800; font-size: 1.15rem; color: var(--ink); text-decoration: none; }
+  .brand svg { display: block; }
+  nav.top-nav { display: flex; gap: 1.3rem; font-size: 0.95rem; }
+  nav.top-nav a { text-decoration: none; color: var(--muted); font-weight: 600; }
+  nav.top-nav a:hover { color: var(--accent); }
+
+  .hero { padding: 4.2rem 0 3rem; text-align: left; }
+  .hero h1 {
+    margin: 0;
+    font-size: clamp(2.4rem, 6vw, 3.6rem);
+    font-weight: 800;
+    line-height: 1.06;
+    letter-spacing: -0.015em;
+    max-width: 24ch;
+  }
+  .hero h1 .go { color: var(--accent); }
+  .hero p.sub {
+    margin: 1.2rem 0 0;
+    font-size: 1.2rem;
+    color: var(--muted);
+    max-width: 44ch;
+  }
+  .hero p.sub strong { color: var(--ink); }
+  .cta { margin-top: 2rem; display: flex; flex-wrap: wrap; gap: 0.8rem; align-items: center; }
+  .btn {
+    display: inline-block;
+    padding: 0.78rem 1.5rem;
+    border-radius: 10px;
+    font-weight: 700;
+    text-decoration: none;
+    border: 1.5px solid transparent;
+  }
+  .btn.primary { background: var(--accent); color: var(--accent-ink); }
+  .btn.primary:hover { filter: brightness(1.07); }
+  .btn.ghost { border-color: var(--line); color: var(--ink); background: var(--surface); }
+  .btn.ghost:hover { border-color: var(--accent); color: var(--accent); }
+  .fineprint { margin-top: 0.9rem; font-size: 0.88rem; color: var(--muted); }
+  .fineprint code {
+    font-family: ui-monospace, "Cascadia Mono", Menlo, Consolas, monospace;
+    font-size: 0.85em; background: var(--accent-soft); padding: 0.1em 0.4em; border-radius: 4px;
+  }
+
+  .routeline { width: 100%; height: auto; display: block; margin: 2.2rem 0 0; }
+
+  section { padding: 3.2rem 0 0; }
+  section:last-of-type { padding-bottom: 3rem; }
+  h2 {
+    margin: 0 0 1.4rem;
+    font-size: 1.55rem;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    border-bottom: 2px solid var(--ink);
+    padding-bottom: 0.55rem;
+  }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+  @media (max-width: 820px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 540px) { .grid { grid-template-columns: 1fr; } }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 1.15rem 1.25rem 1.25rem;
+    box-shadow: var(--shadow);
+  }
+  .card h3 { margin: 0 0 0.35rem; font-size: 1.02rem; font-weight: 800; }
+  .card p { margin: 0; font-size: 0.95rem; color: var(--muted); }
+  .card .k { color: var(--gold); font-weight: 700; }
+
+  .pillars { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+  @media (max-width: 700px) { .pillars { grid-template-columns: 1fr; } }
+  .pillar {
+    border-left: 4px solid var(--accent);
+    background: var(--accent-soft);
+    border-radius: 8px;
+    padding: 1rem 1.15rem;
+  }
+  .pillar h3 { margin: 0 0 0.3rem; font-size: 1rem; font-weight: 800; color: var(--accent); }
+  .pillar p { margin: 0; font-size: 0.94rem; color: var(--muted); }
+  .pillar p strong { color: var(--ink); }
+
+  .maps p { max-width: 62ch; color: var(--muted); margin: 0; }
+  .maps p strong { color: var(--ink); }
+
+  footer {
+    margin-top: 3.4rem;
+    border-top: 1px solid var(--line);
+    padding: 1.6rem 0 2.4rem;
+    font-size: 0.9rem;
+    color: var(--muted);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.6rem;
+    align-items: center;
+  }
+  footer a { color: var(--muted); }
+  footer a:hover { color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <a class="brand" href="#">
+      <svg width="26" height="26" viewBox="0 0 64 64" aria-hidden="true">
+        <circle cx="32" cy="32" r="30" fill="var(--accent)"/>
+        <path d="M32 10 L39 32 L32 54 L25 32 Z" fill="var(--bg)"/>
+        <path d="M32 10 L39 32 L25 32 Z" fill="var(--gold)"/>
+      </svg>
+      Norda
+    </a>
+    <nav class="top-nav" aria-label="Sayfa içi">
+      <a href="#ozellikler">Özellikler</a>
+      <a href="#durus">Duruş</a>
+      <a href="https://github.com/aripdcem/norda">GitHub</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero" aria-label="Tanıtım">
+      <h1>Yürü. Koş. Keşfet.<br><span class="go">Yolunu kaybetme.</span></h1>
+      <p class="sub"><strong>Norda</strong>, minimalist ve offline-first bir
+        outdoor navigasyon uygulamasıdır: yürüyüş/koşu kaydı, offline harita,
+        pusula, Return to Start, waypoint ve GPX — hepsi internetsiz,
+        hepsi cihazında.</p>
+      <div class="cta">
+        <a class="btn primary" href="https://github.com/aripdcem/norda/releases/latest">APK indir <span class="ver"></span></a>
+        <a class="btn ghost" href="https://github.com/aripdcem/norda">Kaynak kodu</a>
+      </div>
+      <p class="fineprint">İmzalı APK · Android 8.0+ · tamamı <code>≈110 KB</code> · sıfır çalışma zamanı bağımlılığı</p>
+
+      <svg class="routeline" viewBox="0 0 720 64" role="img" aria-label="Başlangıçtan hedefe, ara noktalardan geçen bir rota çizimi" fill="none">
+        <path d="M8 46 C 90 20, 150 58, 232 40 S 380 10, 470 34 S 620 54, 704 22" stroke="var(--line)" stroke-width="2" stroke-dasharray="1 7" stroke-linecap="round"/>
+        <path d="M8 46 C 90 20, 150 58, 232 40 S 380 10, 470 34 S 560 48, 620 42" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round"/>
+        <circle cx="8" cy="46" r="5" fill="var(--accent)"/>
+        <rect x="226" y="34" width="12" height="12" transform="rotate(45 232 40)" fill="var(--gold)"/>
+        <rect x="464" y="28" width="12" height="12" transform="rotate(45 470 34)" fill="var(--gold)"/>
+        <circle cx="704" cy="22" r="6" stroke="var(--ink)" stroke-width="2.5"/>
+      </svg>
+    </section>
+
+    <section id="ozellikler" aria-label="Özellikler">
+      <h2>Özellikler</h2>
+      <div class="grid">
+        <div class="card">
+          <h3>Yürüyüş &amp; koşu kaydı</h3>
+          <p>Filtreli GPS, <span class="k">otomatik duraklatma</span>, canlı tempo
+             ve histerezisli yükseklik kazanımı. Ekran kapansa da kayıt sürer;
+             süreç kesintisinde veri kurtarılır.</p>
+        </div>
+        <div class="card">
+          <h3>Offline harita</h3>
+          <p>Kendi hattında üretilen <span class="k">MBTiles bölge paketleri</span>:
+             indir, uçak modunda gez. Paket yokken bile iz ve konum çizilir.</p>
+        </div>
+        <div class="card">
+          <h3>Pusula + Return to Start</h3>
+          <p><span class="k">Gerçek kuzey</span>, manyetik bozulma uyarısı ve
+             başlangıca dönüş: kerteriz, mesafe, tahmini süre, yön düzeltmesi.</p>
+        </div>
+        <div class="card">
+          <h3>Waypoint &amp; GPX</h3>
+          <p>Tek dokunuşla nokta bırak; izini <span class="k">GPX</span> olarak al —
+             özet, pil ve filtre telemetrisi dosyanın içinde gider. İçe aktarma da var.</p>
+        </div>
+        <div class="card">
+          <h3>GPS'i ekranda gör</h3>
+          <p>Başlamadan önce <span class="k">"GPS hazır · ± X m"</span> satırı ve
+             uydu sayısı: kör bekleyiş yok, kaydın neden beklediği hep görünür.</p>
+        </div>
+        <div class="card">
+          <h3>Pil ölçümü</h3>
+          <p>Her aktivitede başlangıç/bitiş pil yüzdesi ve <span class="k">%/saat</span>
+             oranı geçmişte — tüketimi tahminle değil veriyle konuş.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="durus" aria-label="Duruş">
+      <h2>Duruş</h2>
+      <div class="pillars">
+        <div class="pillar">
+          <h3>Temiz iz</h3>
+          <p>Kayda yalnız kalite kapısından geçen <strong>gerçek GNSS noktaları</strong>
+             girer; ağ/WiFi konumu asla ize karışmaz. "Hazır" demesi biraz sürebilir —
+             karşılığı, her noktası gerçek bir izdir.</p>
+        </div>
+        <div class="pillar">
+          <h3>Cihazında kalır</h3>
+          <p>Konum verisi telefonundan çıkmaz; <strong>telemetri yok, hesap yok,
+             bulut yok</strong>. Ağa dokunan tek şey harita paketi indiricisidir.</p>
+        </div>
+        <div class="pillar">
+          <h3>Sıfır bağımlılık</h3>
+          <p>Yalnız Android SDK + Kotlin. Reklam SDK'sı, analitik, Play Services
+             yok — <strong>≈110 KB</strong> imzalı APK, okunabilir tek depo.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="maps" aria-label="Harita paketleri">
+      <h2>Harita paketleri</h2>
+      <p>Bölge paketleri bu deponun kendi <strong>GitHub Actions hattında</strong>
+         üretilir, sürümlenir ve SHA-256 ile doğrulanarak indirilir. Paket listesi
+         uygulamanın Haritalar ekranındadır; <a href="https://github.com/aripdcem/norda/releases">Releases</a>
+         üzerinden elle de alınabilir. Harita verisi © OpenStreetMap contributors.</p>
+    </section>
+  </main>
+
+  <footer>
+    <span>© 2026 Norda · <a href="https://github.com/aripdcem/norda/blob/main/LICENSE">MIT</a></span>
+    <a href="https://github.com/aripdcem/norda/blob/main/docs/PRIVACY.md">Gizlilik</a>
+    <a href="https://github.com/aripdcem/norda/releases">Sürümler</a>
+    <a href="https://github.com/aripdcem/norda/blob/main/docs/MVP.md">MVP belgesi</a>
+    <span>Harita verisi © OpenStreetMap contributors (ODbL)</span>
+  </footer>
+
+</div>
+<script>
+  // Tek ağ isteği: son sürüm etiketi (başarısızsa sessizce düğme sade kalır).
+  fetch("https://api.github.com/repos/aripdcem/norda/releases/latest")
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (d) {
+      if (d && d.tag_name) {
+        document.querySelectorAll(".ver").forEach(function (el) {
+          el.textContent = "· " + d.tag_name;
+        });
+      }
+    })
+    .catch(function () {});
+</script>
+</body>
+</html>
