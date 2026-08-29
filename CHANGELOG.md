@@ -3,6 +3,23 @@
 Biçim [Keep a Changelog](https://keepachangelog.com/), sürümleme
 [SemVer](https://semver.org/) — kurallar için `docs/MVP.md` 15. bölüm.
 
+## [1.0.0] - 2026-08-29
+
+### MVP tamam — "Yürü. Koş. Keşfet. Yolunu kaybetme."
+
+- Üç temiz saha turu tamamlandı (`docs/SAHA.md` günlüğü): belgedeki kapsam
+  sahada doğrulandı. Kapı turunda mesafe çapraz doğrulaması **sıfır fark**
+  verdi (5613,7 ↔ 5613,7 m), yükseklik birebir, 1738 nokta = kabul sayacı.
+- Kapsam: Walk/Run kaydı (filtreli GPS, otomatik duraklatma, histerezisli
+  yükseklik), foreground kayıt + çökme kurtarması, elle çizilen offline
+  harita (kendi MBTiles paket hattıyla), pusula (gerçek kuzey + manyetik
+  bozulma uyarısı), Return to Start, waypoint'ler, GPX içe/dışa (gömülü
+  telemetri raporuyla), aktivite başına pil ölçümü, GPS hazırlık ve uydu
+  görünürlüğü.
+- Duruş: sıfır çalışma zamanı bağımlılığı; konum cihazda kalır, telemetri
+  yok; ağa dokunan tek sınıf harita paketi indiricisi. 102 JVM testi;
+  dokuz saha bulgusunun dokuzu da tur döngüsü içinde kapatıldı (F-1…F-9).
+
 ## [0.9.8] - 2026-08-27
 
 ### Added
