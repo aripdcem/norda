@@ -3,6 +3,24 @@
 Biçim [Keep a Changelog](https://keepachangelog.com/), sürümleme
 [SemVer](https://semver.org/) — kurallar için `docs/MVP.md` 15. bölüm.
 
+## [1.0.2] - 2026-08-30
+
+### Fixed
+
+- F-11 (iki saha kanıtı — 2t: 12,7 m/s, gece turu: 12,85 m/s): ilk fix
+  "oturma" sırasında 13–26 m sapık gelebiliyor ve çapa yapıldığı için
+  hayalet mesafe, sıçrayan nokta reddedilse bile bir sonraki noktayla
+  yine sayılıyordu. İki parça çözüm: (1) hız tavanı sahayla 10 m/s'ye
+  kalibre edildi (MVP 5.2'nin öngördüğü kalibrasyon — yürüyüş/koşu
+  ürününde 36 km/h üstü hareket koşu değildir); (2) oturma kapısı: ilk
+  fix çapa değil adaydır, ikinci fix'le fiziksel tutarlılık doğrulanana
+  dek kayda girmez; çift ışınlama verirse suçlu ilk fix'tir ve aday
+  değiştirilir. Gece verisinde beklenen etki: 25,7 m'lik hayalet
+  başlangıç hiç doğmazdı. Bedel tek fix'lik gecikme (~1–2 sn).
+- `RecordingSession.onFix` artık bu çağrıda kayda giren noktaları
+  (kalıcılaştırma bayraklarıyla) liste olarak döndürür: doğrulanan aday +
+  fix aynı çağrıda dönebilir; rakım bayrağı noktaya aittir.
+
 ## [1.0.1] - 2026-08-30
 
 ### Fixed
