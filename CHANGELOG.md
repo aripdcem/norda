@@ -3,6 +3,18 @@
 Biçim [Keep a Changelog](https://keepachangelog.com/), sürümleme
 [SemVer](https://semver.org/) — kurallar için `docs/MVP.md` 15. bölüm.
 
+## [1.0.1] - 2026-08-30
+
+### Fixed
+
+- F-10 (saha: "Pusulaya girip çıkınca kilit anında geldi"): pusulanın
+  ağ-sağlayıcı isteği, birçok cihazda GNSS motoruna kaba konum tohumlayıp
+  kilidi dakikalardan saniyelere indiriyor. Aynı tohumlama artık bilinçli:
+  Home ısıtması ve kayıt servisi ağ sağlayıcısını YALNIZ tohum olarak
+  dinler — ağ fix'i sağlayıcı süzgeciyle ne göstergeye ne ize girebilir
+  (temiz iz duruşu aynen korunur) ve ilk gerçek GPS fix'iyle bırakılır
+  (pil kuralı). MVP.md 11'e duruş cümlesi eklendi.
+
 ## [1.0.0] - 2026-08-29
 
 ### MVP tamam — "Yürü. Koş. Keşfet. Yolunu kaybetme."

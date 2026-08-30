@@ -16,8 +16,8 @@ android {
         // pencere boşluklarını uygulama kendisi bırakıyor (MainActivity.applyInsets).
         targetSdk = 35
         // versionCode = MAJOR×10000 + MINOR×100 + PATCH (docs/MVP.md, 15.1)
-        versionCode = 10000
-        versionName = "1.0.0"
+        versionCode = 10001
+        versionName = "1.0.1"
     }
 
     /**
