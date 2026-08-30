@@ -136,6 +136,13 @@ class MainActivity : Activity(), LocationListener {
         renderSearchingHint()
         gpsHint.visibility = View.VISIBLE
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000L, 0f, this)
+        // Ağ-tohumlu ısıtma (F-10): ağ sağlayıcısını istemek birçok cihazda
+        // GNSS motoruna kaba konum tohumlar, kilidi dakikalardan saniyelere
+        // indirir (saha kanıtı: Pusula/Haritalar ziyaretleri). Ağ fix'i
+        // göstergeye ve kayda ASLA girmez — onLocationChanged sağlayıcıyı süzer.
+        if (LocationManager.NETWORK_PROVIDER in locationManager.allProviders) {
+            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 5000L, 0f, this)
+        }
         val callback = object : GnssStatus.Callback() {
             override fun onSatelliteStatusChanged(status: GnssStatus) {
                 satsSeen = status.satelliteCount
@@ -164,6 +171,8 @@ class MainActivity : Activity(), LocationListener {
     }
 
     override fun onLocationChanged(location: Location) {
+        // Yalnız gerçek GPS göstergeyi ilerletir; ağ fix'i sadece tohumdur.
+        if (location.provider != LocationManager.GPS_PROVIDER) return
         hasGpsFix = true
         val acc = if (location.hasAccuracy()) location.accuracy else 0f
         gpsHint.text = when {

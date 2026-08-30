@@ -497,6 +497,9 @@ Bedeli, cihaz kilitlenene dek görünür bir bekleyiştir (Home'daki GPS
 hazırlık satırı ve uydu sayısı bunu yönetir); karşılığı, izin her
 noktasının gerçek olmasıdır. Saha turlarındaki sıfır-fark mesafe
 doğrulamalarının kaynağı bu kapıdır (`docs/SAHA.md` günlüğü).
+Isıtma sırasında ağ sağlayıcısı yalnız GNSS motorunu tohumlamak için
+dinlenebilir (F-10): ağ fix'i ne göstergeye ne ize girer ve ilk gerçek
+GPS fix'iyle bırakılır.
 
 ## 12. Geliştirme yol haritası
 

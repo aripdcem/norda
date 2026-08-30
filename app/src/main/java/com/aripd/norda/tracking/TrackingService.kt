@@ -120,9 +120,38 @@ class TrackingService : Service(), LocationListener {
         if (LocationManager.GPS_PROVIDER in locationManager.allProviders) {
             locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000L, 0f, this)
         }
+        // Ağ-tohumlu ısıtma (F-10): ağ isteği GNSS'e kaba konum tohumlar ve
+        // kilidi hızlandırır. Fix'leri hiçbir yerde KULLANILMAZ (temiz iz);
+        // ilk gerçek GPS fix'i gelince bırakılır (pil kuralı).
+        if (LocationManager.NETWORK_PROVIDER in locationManager.allProviders) {
+            locationManager.requestLocationUpdates(
+                LocationManager.NETWORK_PROVIDER, 5000L, 0f, networkSeed
+            )
+            networkSeedActive = true
+        }
+    }
+
+    /** Tohum dinleyicisi: hiçbir fix'i işlemez, varlığı yeter. */
+    private val networkSeed = object : LocationListener {
+        override fun onLocationChanged(location: Location) = Unit
+        @Deprecated("Framework çağırmaya devam ediyor; API 29 öncesi için gerekli")
+        override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) = Unit
+        override fun onProviderEnabled(provider: String) = Unit
+        override fun onProviderDisabled(provider: String) = Unit
+    }
+    private var networkSeedActive = false
+
+    private fun dropNetworkSeed() {
+        if (networkSeedActive) {
+            locationManager.removeUpdates(networkSeed)
+            networkSeedActive = false
+        }
     }
 
     override fun onLocationChanged(location: Location) {
+        // İze girebilecek tek yol gerçek GPS'tir (temiz iz duruşu, MVP 11).
+        if (location.provider != LocationManager.GPS_PROVIDER) return
+        dropNetworkSeed()
         val s = session ?: return
         val stateBefore = s.state
         val point = TrackPoint(
@@ -184,6 +213,7 @@ class TrackingService : Service(), LocationListener {
         }
         session = null
         locationManager.removeUpdates(this)
+        dropNetworkSeed()
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
     }
@@ -208,6 +238,7 @@ class TrackingService : Service(), LocationListener {
 
     override fun onDestroy() {
         locationManager.removeUpdates(this)
+        dropNetworkSeed()
         instance = null
         super.onDestroy()
     }

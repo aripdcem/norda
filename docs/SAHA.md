@@ -87,7 +87,9 @@ tur o sürümle tekrarlanır. Üç temiz tur = v1.0.0 kapısı.
 | 2t | 2026-08-27 | **v0.9.8** | **Temiz** — çapraz doğrulama 0,1 m hassas: ham 1692,9 − elle-duraklatma sıçraması 22,6 = 1670,3 ↔ uygulama 1670,4 m; ▲141/▼92 birebir; 532 nokta = kabul sayacı. 23,5 dk'lık elle mola doğru dışlandı; iki ~35 sn'lik oto-duraklatma tasarım gereği mesafeye dahil. Doğruluk reti 1, ışınlama 0. 🔋 %3 (~4,0 %/sa). Rapor `app="0.9.8"` taşıdı (F-3+F-6 sahada ✓). Not: GPS kilidi Haritalar açıldıktan sonra geldi — nedensellik doğrulanamadı; uydu satırı (F-9) sonraki turlarda cevabı verecek. İlk fix'in 2. saniyesinde 12,7 m/s'lik tek oturma sıçraması filtre tavanının altında kaldı (etki ~13 m, gözlem olarak not edildi) |
 | 3 | 2026-08-29 | v0.9.8 | **Temiz** — 57:17, güç tasarrufu kapalı. Çapraz doğrulama **SIFIR fark**: 5613,7 ↔ 5613,7 m (elle mola yok; 4 mikro boşluk ≤7 sn); ▲202/▼189 birebir; 1738 nokta = kabul sayacı; doğruluk/ışınlama/zaman reti 0. 🔋 %9 (~9,4 %/sa, **Norda tek başına, ekran çoğunlukla KAPALI** — yalnız 4-5 kısa saat bakışı; Strava paralel koşmadı. Ekran-kapalı için yüksekçe → **izlemede (B-1)**: olası katkılar uzun edinim dönemi [GNSS kilide dek tam güçte], aGPS'siz çip eforu, %99 üst bandı doğrusuzluğu. Güç-tasarrufu turu + bir normal tur üçgenler; 9-10 bandında kalırsa v1.0.x'te örnekleme iyileştirmesi tartışılır). Edinim: uydu satırı sahada ilk görevini yaptı — kullanıcı "GPS 3/22"yi (fix'te/görülen) izleyip kilitle başladı; 22 uydu görülmesi gökyüzünün mükemmel, edinimin aGPS'siz karakterden yavaş olduğunu kesinleştirdi. Kilit öncesi yüründüğü bölüm tasarım gereği kayıtsız (yalnız kaliteli gerçek GPS yazılır; Strava aynı aralığı ağ noktasıyla doldurur). **Strava çapraz doğrulaması:** aynı GPX Strava'da 5,62 km · 56:36 — Norda 5,61 km, nokta aralığı 56:36 → üç kaynak mutabık ✓ |
 
-Kapı durumu: **3/3 temiz tur — v1.0.0 kapısı AÇIK.**
+| + | 2026-08-30 | v1.0.0 | *1.0 sonrası doğrulama turu, temiz*: SIFIR fark 4621,3 ↔ 4621,3 m; ▲124/▼159 birebir; 1421 nokta = kabul; ret 0/0/0. 🔋 %3 (~4,0 %/sa; ekran çoğunlukla kapalı, tek uygulama, güç tasarrufu kapalı) → **B-1 güncellendi:** normal bant ~4 %/sa (2,8 · 4,0 · 4,0); Tur 3'ün 9,4'ü aykırı değer (uzun edinim + ekran şüpheli). Bulgu **F-10**: 2:30 kilit beklenirken Pusula'ya girip çıkmak kilidi ANINDA getirdi — pusulanın ağ-sağlayıcı isteği GNSS'i tohumluyor (Haritalar kestirmesiyle aynı mekanizma, ikinci saha kanıtı; edinim boşluğu aktif−nokta aralığı = 2:25 ile beyan birebir) → v1.0.1 |
+
+Kapı durumu: **3/3 temiz tur — v1.0.0 KESİLDİ (29 Ağu).**
 
 > Matris 20 (güç tasarrufu açık, uzun tur) v1.0.0 sonrası tamamlanacak;
 > bulgu çıkarsa v1.0.x olarak akar. Temiz pil ölçümü için Strava'sız tur
@@ -123,6 +125,15 @@ Kapı durumu: **3/3 temiz tur — v1.0.0 kapısı AÇIK.**
   "Güç tasarrufu açıktı — GPS'i kısıtlamış olabilir." notunu taşır.
   Mod engellenmez: matristeki 20. adım (güç tasarrufu açıkken kayıt)
   desteklenen bir senaryodur, yalnızca görünür kılınır.
+- **F-10** (1.0 sonrası tur, giderildi → v1.0.1): kilit beklerken Pusula
+  ekranına girip çıkmak kilidi anında getirdi — pusula, sapma için ağ
+  sağlayıcısını da dinler ve bu istek birçok cihazda GNSS motoruna kaba
+  konum tohumlayıp kilidi dakikalardan saniyelere indirir (Haritalar
+  kestirmesiyle aynı mekanizma; iki bağımsız saha kanıtı). Aynı tohumlama
+  artık bilinçli: Home ısıtması ve kayıt servisi ağı YALNIZ tohum olarak
+  dinler — ağ fix'i sağlayıcı süzgeciyle ne göstergeye ne ize girebilir
+  (temiz iz duruşu korunur) ve ilk gerçek GPS fix'iyle bırakılır (pil
+  kuralı).
 - **F-9** (0.9.7 sonrası "sürekli GPS arıyor" raporu → v0.9.8): "GPS
   aranıyor…" tek başına nedeni söylemiyordu — gökyüzü mü yok, kilit mi
   gelmiyor, cihaz mı arızalı ayırt edilemiyordu. Uydu görünürlüğü eklendi
