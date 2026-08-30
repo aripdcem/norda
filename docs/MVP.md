@@ -252,13 +252,20 @@ saf model, Android bağımlılığı yok.
 | Filtre | Değer | Gerekçe |
 |---|---|---|
 | Doğruluk tavanı | 30 m | Daha kötü fix kaydedilmez; `accuracy ≤ 0` (bildirmeyen cihaz) kabul edilir |
-| Hız tavanı | 15 m/s | Fiziksel olarak anlamsız sıçrama ("ışınlanma") atılır |
+| Hız tavanı | 10 m/s | Fiziksel olarak anlamsız sıçrama ("ışınlanma") atılır. Başlangıç 15 idi; iki turda ilk-fix oturma sıçraması (12,7 · 12,85 m/s) tavan altından geçince sahayla kalibre edildi (F-11) — yürüyüş/koşu ürününde 36 km/h üstü hareket koşu değildir |
 | Kıpırdama eşiği | 2 m | Durağan GPS titremesi mesafe saymaz |
 
 Bunlar sabit kural değil **başlangıç değerleridir**; 13. bölümdeki saha
 matrisi (orman, dar sokak, sinyal kaybı, yavaş dik tırmanış) ile kalibre
 edilir. Duraklatmadayken (elle ya da otomatik) nokta üretimi ve mesafe birikimi
 durur. İstatistikler her zaman filtrelenmiş veriyle hesaplanır.
+
+**Oturma kapısı (F-11):** ilk fix çapa değil adaydır. İki turda ilk fix
+13–26 m sapık geldi ve çapa yapıldığı için hayalet mesafe — sıçrayan nokta
+reddedilse bile — bir sonraki noktayla yine sayıldı. Aday, ikinci fix'le
+fiziksel tutarlılık doğrulanana dek kayda girmez; çift ışınlama verirse
+suçlu ilk fix'tir ve aday değiştirilir. Bedeli tek fix'lik gecikme (~1–2 sn),
+karşılığı temiz başlangıç.
 
 ### 5.3 Örnekleme
 

@@ -12,8 +12,13 @@ object GpsFilter {
     /** Bundan kötü yatay doğruluk bildiren fix'ler atılır. */
     const val MAX_ACCURACY_M = 30f
 
-    /** Bundan hızlı görünen hareket (elit sprint ~12 m/s) ışınlanmadır. */
-    const val MAX_SPEED_MPS = 15.0
+    /**
+     * Bundan hızlı görünen hareket ışınlanmadır. Başlangıç değeri 15 idi;
+     * iki turda ilk-fix oturma sıçraması (12,7 ve 12,85 m/s) tavanın hemen
+     * altından geçince sahayla 10'a kalibre edildi (F-11, MVP 5.2):
+     * yürüyüş/koşu ürününde 36 km/h üstü hareket koşu değildir.
+     */
+    const val MAX_SPEED_MPS = 10.0
 
     /** Bunun altındaki kıpırdama yol değil, durağan titremedir. */
     const val MIN_DISTANCE_M = 2.0

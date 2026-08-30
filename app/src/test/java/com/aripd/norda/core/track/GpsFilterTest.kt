@@ -47,8 +47,27 @@ class GpsFilterTest {
 
     @Test
     fun teleportIsRejected() {
-        // 5 saniyede ~100 m → 20 m/s > 15 m/s tavanı
+        // 5 saniyede ~100 m → 20 m/s > 10 m/s tavanı
         assertFalse(GpsFilter.accept(p(0), p(5_000, lat = 41.0 + step10m * 10)))
+    }
+
+    // F-11 kalibrasyonu (MVP 5.2 "başlangıç değerleri sahayla kalibre
+    // edilir"): iki turda ilk-fix oturma sıçraması (12,7 ve 12,85 m/s) eski
+    // 15 m/s tavanının hemen altından geçti. Yürüyüş/koşu ürününde 10 m/s
+    // (36 km/h) üstü hareket koşu değil sıçramadır.
+    @Test
+    fun settlingSpikeFromFieldIsRejected() {
+        // saha verisi: 2 sn'de ~25,7 m = 12,85 m/s
+        assertEquals(
+            GpsFilter.Verdict.TELEPORT,
+            GpsFilter.evaluate(p(0), p(2_000, lat = 41.0 + step10m * 2.57))
+        )
+    }
+
+    @Test
+    fun fastDownhillRunStaysAccepted() {
+        // 3 sn'de ~27 m = 9 m/s — hızlı iniş koşusu tavanın altında kalmalı
+        assertTrue(GpsFilter.accept(p(0), p(3_000, lat = 41.0 + step10m * 2.7)))
     }
 
     @Test

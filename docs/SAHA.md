@@ -89,6 +89,8 @@ tur o sürümle tekrarlanır. Üç temiz tur = v1.0.0 kapısı.
 
 | + | 2026-08-30 | v1.0.0 | *1.0 sonrası doğrulama turu, temiz*: SIFIR fark 4621,3 ↔ 4621,3 m; ▲124/▼159 birebir; 1421 nokta = kabul; ret 0/0/0. 🔋 %3 (~4,0 %/sa; ekran çoğunlukla kapalı, tek uygulama, güç tasarrufu kapalı) → **B-1 güncellendi:** normal bant ~4 %/sa (2,8 · 4,0 · 4,0); Tur 3'ün 9,4'ü aykırı değer (uzun edinim + ekran şüpheli). Bulgu **F-10**: 2:30 kilit beklenirken Pusula'ya girip çıkmak kilidi ANINDA getirdi — pusulanın ağ-sağlayıcı isteği GNSS'i tohumluyor (Haritalar kestirmesiyle aynı mekanizma, ikinci saha kanıtı; edinim boşluğu aktif−nokta aralığı = 2:25 ile beyan birebir) → v1.0.1 |
 
+| + | 2026-08-30 | v1.0.1 | *Gece turu (4:45 ısınma yürüyüşü + 30:05 koşu), temiz — **F-10 sahada onaylandı:** kilit beklemesi 2:30'dan saniyelere indi (kullanıcı beyanı; tohumlama kendiliğinden, kestirmesiz). Çapraz doğrulama yine SIFIR fark: 4776,2 ↔ 4776,2 m; ▲174/▼182 birebir; 1372 nokta = kabul; titreme 344 (~1 sn kadansta yürüyüş/duruş doğal), ışınlama 1, doğruluk/zaman 0. 🔋 %3 / 36:02 ≈ 5,0 %/sa (B-1 bandı ~4–5'te tutuyor; kısa turda yüzde kabalığı ±1). **İkinci cihaz karşılaştırması (ilk kez):** birlikte koşulan arkadaşın Strava kaydı yalnız koşuyu tuttu — koşu segmanı Norda 4281,2 ↔ Strava 4379,7 m (fark −%2,25; Strava'nın filtresiz ham toplamı hafif şişer, yön beklenen), rota mutabakatı medyan 2,1 m / p90 6,4 m. Bulgu **F-11**: oturma sıçraması İKİNCİ kez (ilk fix'in 2. sn'sinde 12,85 m/s, 25,7 m; 2t'de 12,7 m/s) → v1.0.2. İzleme **Y-1**: yükseklik ilk kez bağımsız referansla karşılaştırıldı — Norda ham GPS koşu bölümünde ~35 m bant görürken Strava'nın DEM-düzeltmeli izi ~17 m bant veriyor; ham GPS dikey gürültüsü kazanımı yüksek okur, DEM/baro düzeltmesi post-MVP adayı; turlarla veri toplanacak* |
+
 Kapı durumu: **3/3 temiz tur — v1.0.0 KESİLDİ (29 Ağu).**
 
 > Matris 20 (güç tasarrufu açık, uzun tur) v1.0.0 sonrası tamamlanacak;
@@ -133,7 +135,18 @@ Kapı durumu: **3/3 temiz tur — v1.0.0 KESİLDİ (29 Ağu).**
   artık bilinçli: Home ısıtması ve kayıt servisi ağı YALNIZ tohum olarak
   dinler — ağ fix'i sağlayıcı süzgeciyle ne göstergeye ne ize girebilir
   (temiz iz duruşu korunur) ve ilk gerçek GPS fix'iyle bırakılır (pil
-  kuralı).
+  kuralı). Gece turunda sahada onaylandı: kilit 2:30 yerine saniyelerde.
+- **F-11** (2t + gece turu, giderildi → v1.0.2): ilk fix "oturma" sırasında
+  iki turda 13–26 m sapık geldi (12,7 ve 12,85 m/s — eski 15 m/s tavanının
+  hemen altı) ve çapa yapıldığı için hayalet mesafe, sıçrayan nokta
+  reddedilse bile bir sonraki noktayla yine sayılıyordu. İki parça çözüm:
+  hız tavanı sahayla 10 m/s'ye kalibre edildi (MVP 5.2'nin öngördüğü
+  kalibrasyon; yürüyüş/koşu ürününde 36 km/h üstü hareket koşu değildir)
+  ve ilk fix artık çapa değil ADAY — ikinci fix'le fiziksel tutarlılık
+  doğrulanana dek kayda girmez, çift ışınlama verirse suçlu ilk fix'tir ve
+  aday değiştirilir. Gece verisiyle beklenen etki: 4776,2 → 4750,5 m
+  (25,7 m'lik hayalet başlangıç hiç doğmazdı). Bedel tek fix'lik gecikme
+  (~1–2 sn).
 - **F-9** (0.9.7 sonrası "sürekli GPS arıyor" raporu → v0.9.8): "GPS
   aranıyor…" tek başına nedeni söylemiyordu — gökyüzü mü yok, kilit mi
   gelmiyor, cihaz mı arızalı ayırt edilemiyordu. Uydu görünürlüğü eklendi

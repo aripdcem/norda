@@ -163,9 +163,11 @@ class TrackingService : Service(), LocationListener {
             speedMps = if (location.hasSpeed()) location.speed else 0f,
             bearingDeg = if (location.hasBearing()) location.bearing else 0f
         )
-        val accepted = s.onFix(point, location.hasAltitude(), SystemClock.elapsedRealtime())
-        if (accepted != null) {
-            dao.appendPoint(activityId, accepted, location.hasAltitude())
+        // Oturma kapısı (F-11) yüzünden tek fix birden fazla nokta
+        // kalıcılaştırabilir: doğrulanan aday + fix'in kendisi. Bayrak
+        // noktaya aittir — adayınki bu fix'inkinden farklı olabilir.
+        for (accepted in s.onFix(point, location.hasAltitude(), SystemClock.elapsedRealtime())) {
+            dao.appendPoint(activityId, accepted.point, accepted.hasAltitude)
         }
         // Bildirim her fix'te değil: durum değişince hemen, yoksa en az 10 sn arayla.
         val now = SystemClock.elapsedRealtime()

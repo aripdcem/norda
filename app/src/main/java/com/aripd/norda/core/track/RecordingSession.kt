@@ -40,12 +40,23 @@ class RecordingSession(
 
     // Filtre kalibrasyonunun ham verisi (Faz 8): karar başına sayaç. Yalnız
     // RECORDING durumunda değerlendirilen fix'ler sayılır — duraklatmada
-    // gelenler kalibrasyon verisi değildir.
+    // gelenler kalibrasyon verisi değildir. Oturma kapısındaki adayın kararı
+    // ikinci fix'le kesinleşir; hiç kesinleşmeyen aday sayılmaz.
     private val filterCounts = IntArray(GpsFilter.Verdict.entries.size)
 
     fun filterCount(verdict: GpsFilter.Verdict): Int = filterCounts[verdict.ordinal]
 
     fun evaluatedFixCount(): Int = filterCounts.sum()
+
+    /** Bu çağrıda kayda giren nokta + kalıcılaştırma bayrağı (çağıran DB'ye yazar). */
+    data class Accepted(val point: TrackPoint, val hasAltitude: Boolean)
+
+    // Oturma kapısı (F-11): iki turda ilk fix 13–26 m sapık geldi ve çapa
+    // yapıldığı için hayalet mesafe — sıçrayan nokta reddedilse bile — bir
+    // sonraki noktayla yine sayıldı. İlk fix bu yüzden çapa değil ADAYdır:
+    // ikinci fix'le fiziksel tutarlılık doğrulanana dek kayda girmez;
+    // ışınlama çıkarsa suçlu ilk fix'tir — aday değiştirilir.
+    private var tentative: Accepted? = null
 
     // GPS oturana dek geçen süre ekranda görünür olmalı (F-4): kayda nokta
     // girmemişken son/en iyi doğruluk buradan okunur. 0 = cihaz doğruluk
@@ -56,23 +67,60 @@ class RecordingSession(
         private set
 
     /**
-     * Ham fix işlenir; kayda giren nokta döner (çağıran kalıcılaştırır),
-     * girmeyen için null. [hasAltitude] yalnız geçerli rakımlarda true olmalı.
+     * Ham fix işlenir; bu çağrıda kayda GİREN noktalar döner (çağıran
+     * kalıcılaştırır): boş, tek nokta ya da — aday ikinci fix'le
+     * doğrulandığında — aday + fix birlikte. [hasAltitude] yalnız geçerli
+     * rakımlarda true olmalı.
      */
-    fun onFix(fix: TrackPoint, hasAltitude: Boolean, nowMonotonicMillis: Long): TrackPoint? {
-        if (state == State.STOPPED || state == State.PAUSED) return null
+    fun onFix(fix: TrackPoint, hasAltitude: Boolean, nowMonotonicMillis: Long): List<Accepted> {
+        if (state == State.STOPPED || state == State.PAUSED) return emptyList()
 
         if (pendingDetectorReset) {
             autoPause.reset(fix)
             pendingDetectorReset = false
         }
 
-        val previous = recorded.lastOrNull()
+        // Kapı yalnız kayıt boşken işler; kurtarmada (prime) devralınan son
+        // nokta kayda konduğundan orada oturma sınaması yeniden yapılmaz.
+        val gate = recorded.isEmpty()
+        val previous = if (gate) tentative?.point else recorded.lastOrNull()
+        // accepted: oto-duraklatma dedektörünün gördüğü bayrak (aday da kaliteli
+        // harekettir); commitFix: fix'in kendisinin bu çağrıda kayda girmesi.
         var accepted = false
+        var commitFix = false
+        var confirmTentative = false
         if (state == State.RECORDING) {
             val verdict = GpsFilter.evaluate(previous, fix)
-            filterCounts[verdict.ordinal]++
-            accepted = verdict == GpsFilter.Verdict.ACCEPT
+            if (!gate) {
+                filterCounts[verdict.ordinal]++
+                accepted = verdict == GpsFilter.Verdict.ACCEPT
+                commitFix = accepted
+            } else when (verdict) {
+                GpsFilter.Verdict.ACCEPT -> {
+                    accepted = true
+                    if (previous == null) {
+                        // İlk kaliteli fix: aday olur, kabul sayımı ve kayıt
+                        // ikinci fix'le kesinleşir.
+                        tentative = Accepted(fix, hasAltitude)
+                    } else {
+                        confirmTentative = true
+                        commitFix = true
+                    }
+                }
+                GpsFilter.Verdict.JITTER -> {
+                    // Aday yakınında kıpırdama: çift tutarlı → aday kesinleşir,
+                    // fix'in kendisi her zamanki gibi titreme olarak elenir.
+                    filterCounts[verdict.ordinal]++
+                    confirmTentative = true
+                }
+                GpsFilter.Verdict.TELEPORT -> {
+                    // Çift fiziksel olarak tutarsız; saha kanıtına göre sapık
+                    // olan İLK fix'tir. Sayaç düşen adayı anlatır.
+                    filterCounts[verdict.ordinal]++
+                    tentative = Accepted(fix, hasAltitude)
+                }
+                else -> filterCounts[verdict.ordinal]++
+            }
             if (fix.accuracyM > 0f) {
                 latestAccuracyM = fix.accuracyM
                 val best = bestAccuracyM
@@ -84,27 +132,44 @@ class RecordingSession(
             AutoPauseDetector.Decision.PAUSE -> {
                 state = State.AUTO_PAUSED
                 stopwatch.pause(nowMonotonicMillis)
-                return null
+                return if (confirmTentative) listOf(commitTentative()) else emptyList()
             }
             AutoPauseDetector.Decision.RESUME -> {
                 state = State.RECORDING
                 stopwatch.resume(nowMonotonicMillis)
-                return null
+                return if (confirmTentative) listOf(commitTentative()) else emptyList()
             }
             AutoPauseDetector.Decision.NONE -> Unit
         }
 
-        if (state != State.RECORDING || !accepted) return null
+        if (state != State.RECORDING) return emptyList()
 
-        if (previous != null && !breakSegment) {
+        val out = mutableListOf<Accepted>()
+        if (confirmTentative) out += commitTentative()
+        if (!commitFix) return out
+
+        val prev = recorded.lastOrNull()
+        if (prev != null && !breakSegment) {
             distanceM += Geo.distanceMeters(
-                previous.latitude, previous.longitude, fix.latitude, fix.longitude
+                prev.latitude, prev.longitude, fix.latitude, fix.longitude
             )
         }
         breakSegment = false
+        // Kapı dışındaki kabul yukarıda sayıldı; kapıdaki burada kesinleşir.
+        if (gate) filterCounts[GpsFilter.Verdict.ACCEPT.ordinal]++
         recorded += fix
         if (hasAltitude) elevation.onAltitude(fix.altitude)
-        return fix
+        out += Accepted(fix, hasAltitude)
+        return out
+    }
+
+    private fun commitTentative(): Accepted {
+        val t = tentative!!
+        tentative = null
+        filterCounts[GpsFilter.Verdict.ACCEPT.ordinal]++
+        recorded += t.point
+        if (t.hasAltitude) elevation.onAltitude(t.point.altitude)
+        return t
     }
 
     /**
