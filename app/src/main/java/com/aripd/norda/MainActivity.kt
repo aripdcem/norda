@@ -14,6 +14,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.os.PowerManager
 import android.provider.Settings
 import android.view.View
 import android.widget.Button
@@ -236,6 +237,22 @@ class MainActivity : Activity(), LocationListener {
                 .setMessage(R.string.location_disabled)
                 .setPositiveButton(R.string.location_enable) { _, _ ->
                     startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
+                }
+                .setNegativeButton(R.string.start_anyway) { _, _ -> startRecording() }
+                .show()
+            return
+        }
+        val powerManager = getSystemService(POWER_SERVICE) as PowerManager
+        if (powerManager.isPowerSaveMode) {
+            // Saha kanıtı (F-12, matris 20): güç tasarrufunda sistem ekran
+            // kapalıyken konumu durdurabiliyor — 33 dk'lık turda fix'ler
+            // yalnız cihaz uyanıkken aktı (61 nokta kaldı). Durum satırı
+            // (F-5) bunu kayıt sırasında söylüyordu; kullanıcı yürüyüşün
+            // başında da bilmeli. Mod desteklenmeye devam eder.
+            AlertDialog.Builder(this)
+                .setMessage(R.string.power_save_warning)
+                .setPositiveButton(R.string.power_save_settings) { _, _ ->
+                    startActivity(Intent(Settings.ACTION_BATTERY_SAVER_SETTINGS))
                 }
                 .setNegativeButton(R.string.start_anyway) { _, _ -> startRecording() }
                 .show()

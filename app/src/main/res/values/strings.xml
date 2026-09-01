@@ -52,6 +52,8 @@
     <string name="gps_ready">GPS ready · ± %1$d m</string>
     <string name="with_power_save">%1$s · battery saver on</string>
     <string name="power_save_hint">Battery saver was on — it can restrict GPS.</string>
+    <string name="power_save_warning">Battery saver is on. While the screen is off the system can stop GPS — the track may come out sparse.</string>
+    <string name="power_save_settings">Battery settings</string>
 
     <string name="recording_state_recording">Recording</string>
     <string name="recording_state_paused">Paused</string>

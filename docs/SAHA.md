@@ -91,11 +91,12 @@ tur o sürümle tekrarlanır. Üç temiz tur = v1.0.0 kapısı.
 
 | + | 2026-08-30 | v1.0.1 | *Gece turu (4:45 ısınma yürüyüşü + 30:05 koşu), temiz — **F-10 sahada onaylandı:** kilit beklemesi 2:30'dan saniyelere indi (kullanıcı beyanı; tohumlama kendiliğinden, kestirmesiz). Çapraz doğrulama yine SIFIR fark: 4776,2 ↔ 4776,2 m; ▲174/▼182 birebir; 1372 nokta = kabul; titreme 344 (~1 sn kadansta yürüyüş/duruş doğal), ışınlama 1, doğruluk/zaman 0. 🔋 %3 / 36:02 ≈ 5,0 %/sa (B-1 bandı ~4–5'te tutuyor; kısa turda yüzde kabalığı ±1). **İkinci cihaz karşılaştırması (ilk kez):** birlikte koşulan arkadaşın Strava kaydı yalnız koşuyu tuttu — koşu segmanı Norda 4281,2 ↔ Strava 4379,7 m (fark −%2,25; Strava'nın filtresiz ham toplamı hafif şişer, yön beklenen), rota mutabakatı medyan 2,1 m / p90 6,4 m. Bulgu **F-11**: oturma sıçraması İKİNCİ kez (ilk fix'in 2. sn'sinde 12,85 m/s, 25,7 m; 2t'de 12,7 m/s) → v1.0.2. İzleme **Y-1**: yükseklik ilk kez bağımsız referansla karşılaştırıldı — Norda ham GPS koşu bölümünde ~35 m bant görürken Strava'nın DEM-düzeltmeli izi ~17 m bant veriyor; ham GPS dikey gürültüsü kazanımı yüksek okur, DEM/baro düzeltmesi post-MVP adayı; turlarla veri toplanacak* |
 
+| + | 2026-09-01 | v1.0.2 | *Matris 20 (güç tasarrufu AÇIK, 33 dk açık-hava yürüyüşü) — adım tamamlandı, bulgu **F-12**: sistem ekran kapalıyken konumu DURDURDU. 33:28'lik turda 61 nokta kaldı (normal kadansta ~1300 olurdu); >5 sn 6 boşluk toplam 31:39, en uzunu **20:28**. Fix'ler yalnız cihaz uyanıkken aktı: Başlat anı, ekran bakışları ve 13:12'deki 1:24'lük telefon görüşmesi — beyanla birebir örtüşen 54 noktalık küme, "uyanık CPU = akan GPS" kanıtının kendisi. GPS kilidi hızlı (F-10 üçüncü kez ✓); ilk fix temiz, oturma sıçraması yok (F-11 kapısının ilk saha turu). Çapraz doğrulama yine SIFIR fark: 2074,7 ↔ 2074,7 m — ama mesafenin %91'i boşluk bacaklarının hava çizgisi: kayıtlı 2,07 km, gerçek yolun (~2,6–3 km) alt sınırı. 🔋 %2 / 33:31 ≈ 3,6 %/sa (güç tasarrufuyla pil kazancı marjinal, veri kaybı ağır). **Y-1 kanıt topladı:** düz sahil yürüyüşünde ▲132/▼133 — 12:51'deki tek fix'in ele=115 m saçmalığı (çevresi 40 m) dahil; seyrek+kalitesiz fix'lerde dikey gürültü kazanımı domine ediyor. → v1.0.3* |
+
 Kapı durumu: **3/3 temiz tur — v1.0.0 KESİLDİ (29 Ağu).**
 
-> Matris 20 (güç tasarrufu açık, uzun tur) v1.0.0 sonrası tamamlanacak;
-> bulgu çıkarsa v1.0.x olarak akar. Temiz pil ölçümü için Strava'sız tur
-> önerilir.
+> Matris 1 Eylül'de tamamlandı: son adım 20 (güç tasarrufu açık) F-12'yi
+> çıkardı ve v1.0.3'le kapandı — 20 adımın tamamı sahada koşuldu.
 
 ### Bulgular
 
@@ -147,6 +148,18 @@ Kapı durumu: **3/3 temiz tur — v1.0.0 KESİLDİ (29 Ağu).**
   aday değiştirilir. Gece verisiyle beklenen etki: 4776,2 → 4750,5 m
   (25,7 m'lik hayalet başlangıç hiç doğmazdı). Bedel tek fix'lik gecikme
   (~1–2 sn).
+- **F-12** (matris 20 turu, giderildi → v1.0.3): güç tasarrufunda sistem
+  (Android 9+ belgeli davranış) ekran kapalıyken konum servisini
+  durdurabiliyor: 33 dk'lık turda fix'ler yalnız cihaz uyanıkken aktı —
+  61 nokta, 20:28'lik tek boşluk; 1:24'lük telefon görüşmesi 54 noktalık
+  kümeyle birebir örtüştü (uyanık CPU = akan GPS). F-5 bunu durum
+  satırında söylüyordu; artık Başlat'a basınca güç tasarrufu açıksa
+  konum-kapalı diyaloğunun ikizi çıkar: "Güç tasarrufu açık. Ekran
+  kapalıyken sistem GPS'i durdurabilir — iz seyrek kaydolabilir." →
+  Pil ayarları / Yine de başlat. Mod desteklenmeye devam eder (matris
+  20 senaryosu); veri kaybı artık sürpriz değil, bilinçli seçim. Boşluk
+  bacakları mesafede hava çizgisi olarak sayılmaya devam eder — gerçek
+  yolun dürüst alt sınırı.
 - **F-9** (0.9.7 sonrası "sürekli GPS arıyor" raporu → v0.9.8): "GPS
   aranıyor…" tek başına nedeni söylemiyordu — gökyüzü mü yok, kilit mi
   gelmiyor, cihaz mı arızalı ayırt edilemiyordu. Uydu görünürlüğü eklendi

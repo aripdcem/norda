@@ -52,6 +52,8 @@
     <string name="gps_ready">GPS hazır · ± %1$d m</string>
     <string name="with_power_save">%1$s · güç tasarrufu açık</string>
     <string name="power_save_hint">Güç tasarrufu açıktı — GPS\'i kısıtlamış olabilir.</string>
+    <string name="power_save_warning">Güç tasarrufu açık. Ekran kapalıyken sistem GPS\'i durdurabilir — iz seyrek kaydolabilir.</string>
+    <string name="power_save_settings">Pil ayarları</string>
 
     <string name="recording_state_recording">Kayıtta</string>
     <string name="recording_state_paused">Duraklatıldı</string>
