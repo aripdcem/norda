@@ -3,6 +3,20 @@
 Biçim [Keep a Changelog](https://keepachangelog.com/), sürümleme
 [SemVer](https://semver.org/) — kurallar için `docs/MVP.md` 15. bölüm.
 
+## [1.0.3] - 2026-09-01
+
+### Fixed
+
+- F-12 (matris 20 turu: güç tasarrufu açık, 33 dk — 61 nokta, 20:28'lik
+  boşluk; fix'ler yalnız cihaz uyanıkken aktı, 1:24'lük telefon görüşmesi
+  54 noktalık kümeyle birebir): güç tasarrufunda sistem ekran kapalıyken
+  konumu durdurabiliyor ve kullanıcı bunu yürüyüşün sonunda öğreniyordu.
+  Başlat'a basınca güç tasarrufu açıksa artık konum-kapalı diyaloğunun
+  ikizi çıkar: "Güç tasarrufu açık. Ekran kapalıyken sistem GPS'i
+  durdurabilir — iz seyrek kaydolabilir." → Pil ayarları / Yine de
+  başlat. Mod desteklenmeye devam eder; F-5'in kayıt-sırası görünürlüğü
+  başlangıç anına da taşındı.
+
 ## [1.0.2] - 2026-08-30
 
 ### Fixed
