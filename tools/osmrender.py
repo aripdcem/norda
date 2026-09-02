@@ -639,6 +639,10 @@ def parse_overpass(js):
 # Overpass fetch
 
 DEFAULT_ENDPOINT = "https://overpass-api.de/api/interpreter"
+# Tried in turn when the primary keeps answering 429/504; both serve the
+# same data. Polite pacing between requests keeps us under the rate limits.
+MIRRORS = ["https://overpass.kumi.systems/api/interpreter"]
+REQUEST_PAUSE_S = 3
 USER_AGENT = "norda-map-pack/1.0 (+https://github.com/aripdcem/norda)"
 
 _MAJOR = "motorway|motorway_link|trunk|trunk_link|primary|primary_link|secondary|secondary_link|tertiary|tertiary_link"
@@ -683,22 +687,28 @@ def split_cells(bbox, max_deg=0.2):
     return cells
 
 
-def fetch(endpoint, query, retries=4, log=print):
-    delays = [15, 45, 90, 180]
+def fetch(endpoint, query, retries=5, log=print):
+    """POSTs the query; on 429/5xx or network errors it backs off and, from the
+    second retry on, alternates with the mirrors."""
+    delays = [10, 20, 40, 60, 90]
+    endpoints = [endpoint] + [m for m in MIRRORS if m != endpoint]
     for attempt in range(retries + 1):
+        target = endpoints[attempt % len(endpoints)] if attempt >= 2 else endpoint
         req = urllib.request.Request(
-            endpoint, data=urllib.parse.urlencode({"data": query}).encode(),
+            target, data=urllib.parse.urlencode({"data": query}).encode(),
             headers={"User-Agent": USER_AGENT})
         try:
             with urllib.request.urlopen(req, timeout=300) as resp:
-                return json.loads(resp.read().decode("utf-8"))
+                js = json.loads(resp.read().decode("utf-8"))
+            time.sleep(REQUEST_PAUSE_S)
+            return js
         except urllib.error.HTTPError as e:
-            if e.code in (429, 502, 503, 504) and attempt < retries:
-                log(f"overpass: HTTP {e.code}, retrying in {delays[attempt]} s")
+            if e.code in (429, 500, 502, 503, 504) and attempt < retries:
+                log(f"overpass: HTTP {e.code} from {target}, retrying in {delays[attempt]} s")
                 time.sleep(delays[attempt])
                 continue
             raise
-        except (urllib.error.URLError, TimeoutError) as e:
+        except (urllib.error.URLError, TimeoutError, ValueError) as e:
             if attempt < retries:
                 log(f"overpass: {e}, retrying in {delays[attempt]} s")
                 time.sleep(delays[attempt])
@@ -719,7 +729,7 @@ def fetch_region(bbox, coast_bbox, endpoint=DEFAULT_ENDPOINT, minor=True, log=pr
                 seen.add(key)
                 elements.append(el)
 
-    for cell in split_cells(coast_bbox, 0.5):
+    for cell in split_cells(coast_bbox, 1.0):      # coastline is light: big cells
         log(f"overpass: coastline {cell}")
         take(fetch(endpoint, overpass_query(cell, "coast"), log=log))
     groups = ["base"] + (["minor"] if minor else [])
