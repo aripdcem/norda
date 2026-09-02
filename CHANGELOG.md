@@ -1,368 +1,417 @@
 # Changelog
 
-Biçim [Keep a Changelog](https://keepachangelog.com/), sürümleme
-[SemVer](https://semver.org/) — kurallar için `docs/MVP.md` 15. bölüm.
+Format follows [Keep a Changelog](https://keepachangelog.com/), versioning
+follows [SemVer](https://semver.org/) — see `docs/MVP.md` section 15 for
+the rules.
 
 ## [1.0.3] - 2026-09-01
 
 ### Fixed
 
-- F-12 (matris 20 turu: güç tasarrufu açık, 33 dk — 61 nokta, 20:28'lik
-  boşluk; fix'ler yalnız cihaz uyanıkken aktı, 1:24'lük telefon görüşmesi
-  54 noktalık kümeyle birebir): güç tasarrufunda sistem ekran kapalıyken
-  konumu durdurabiliyor ve kullanıcı bunu yürüyüşün sonunda öğreniyordu.
-  Başlat'a basınca güç tasarrufu açıksa artık konum-kapalı diyaloğunun
-  ikizi çıkar: "Güç tasarrufu açık. Ekran kapalıyken sistem GPS'i
-  durdurabilir — iz seyrek kaydolabilir." → Pil ayarları / Yine de
-  başlat. Mod desteklenmeye devam eder; F-5'in kayıt-sırası görünürlüğü
-  başlangıç anına da taşındı.
+- F-12 (matrix step 20 tour: battery saver on, 33 min — 61 points, a 20:28
+  gap; fixes flowed only while the device was awake, a 1:24 phone call
+  matched a 54-point cluster exactly): with battery saver on, the system
+  can stop location while the screen is off, and the user only found out
+  at the end of the walk. Pressing START with battery saver on now brings
+  up a twin of the location-off dialog: "Battery saver is on. While the
+  screen is off the system can stop GPS — the track may come out sparse."
+  → Battery settings / Start anyway. The mode remains supported; F-5's
+  during-recording visibility now extends to the moment of starting as
+  well.
 
 ## [1.0.2] - 2026-08-30
 
 ### Fixed
 
-- F-11 (iki saha kanıtı — 2t: 12,7 m/s, gece turu: 12,85 m/s): ilk fix
-  "oturma" sırasında 13–26 m sapık gelebiliyor ve çapa yapıldığı için
-  hayalet mesafe, sıçrayan nokta reddedilse bile bir sonraki noktayla
-  yine sayılıyordu. İki parça çözüm: (1) hız tavanı sahayla 10 m/s'ye
-  kalibre edildi (MVP 5.2'nin öngördüğü kalibrasyon — yürüyüş/koşu
-  ürününde 36 km/h üstü hareket koşu değildir); (2) oturma kapısı: ilk
-  fix çapa değil adaydır, ikinci fix'le fiziksel tutarlılık doğrulanana
-  dek kayda girmez; çift ışınlama verirse suçlu ilk fix'tir ve aday
-  değiştirilir. Gece verisinde beklenen etki: 25,7 m'lik hayalet
-  başlangıç hiç doğmazdı. Bedel tek fix'lik gecikme (~1–2 sn).
-- `RecordingSession.onFix` artık bu çağrıda kayda giren noktaları
-  (kalıcılaştırma bayraklarıyla) liste olarak döndürür: doğrulanan aday +
-  fix aynı çağrıda dönebilir; rakım bayrağı noktaya aittir.
+- F-11 (two field proofs — Tour 2 (repeat): 12.7 m/s, night tour:
+  12.85 m/s): the first fix could land 13–26 m off while "settling", and
+  because it was used as the anchor, the phantom distance was still
+  counted against the next point even when the jumping point itself was
+  rejected. Two-part fix: (1) the speed cap was calibrated against the
+  field to 10 m/s (the calibration MVP 5.2 anticipated — in a walk/run
+  product, movement above 36 km/h is not running); (2) settling gate: the
+  first fix is a candidate, not an anchor, and does not enter the
+  recording until the second fix confirms physical consistency; if that
+  yields a double teleport, the first fix is the culprit and the candidate
+  is replaced. Expected effect on the night data: the 25.7 m phantom start
+  would never have been born. The cost is a one-fix delay (~1–2 s).
+- `RecordingSession.onFix` now returns the points that entered the
+  recording in this call (with their persistence flags) as a list: a
+  confirmed candidate + the fix can come back in the same call; the
+  altitude flag belongs to the point.
 
 ## [1.0.1] - 2026-08-30
 
 ### Fixed
 
-- F-10 (saha: "Pusulaya girip çıkınca kilit anında geldi"): pusulanın
-  ağ-sağlayıcı isteği, birçok cihazda GNSS motoruna kaba konum tohumlayıp
-  kilidi dakikalardan saniyelere indiriyor. Aynı tohumlama artık bilinçli:
-  Home ısıtması ve kayıt servisi ağ sağlayıcısını YALNIZ tohum olarak
-  dinler — ağ fix'i sağlayıcı süzgeciyle ne göstergeye ne ize girebilir
-  (temiz iz duruşu aynen korunur) ve ilk gerçek GPS fix'iyle bırakılır
-  (pil kuralı). MVP.md 11'e duruş cümlesi eklendi.
+- F-10 (field: "Going into the Compass and back out brought the GPS lock
+  instantly"): the compass's network-provider request seeds the GNSS
+  engine with a coarse position on many devices, cutting the GPS lock from
+  minutes to seconds. The same seeding is now deliberate: the Home warm-up
+  and the recording service listen to the network provider ONLY as a
+  seed — thanks to the provider filter, a network fix can enter neither
+  the display nor the track (the clean-track stance is preserved
+  unchanged), and it is released with the first real GPS fix (battery
+  rule). A stance sentence was added to MVP.md 11.
 
 ## [1.0.0] - 2026-08-29
 
-### MVP tamam — "Yürü. Koş. Keşfet. Yolunu kaybetme."
+### MVP complete — "Walk. Run. Explore. Don't lose your way."
 
-- Üç temiz saha turu tamamlandı (`docs/SAHA.md` günlüğü): belgedeki kapsam
-  sahada doğrulandı. Kapı turunda mesafe çapraz doğrulaması **sıfır fark**
-  verdi (5613,7 ↔ 5613,7 m), yükseklik birebir, 1738 nokta = kabul sayacı.
-- Kapsam: Walk/Run kaydı (filtreli GPS, otomatik duraklatma, histerezisli
-  yükseklik), foreground kayıt + çökme kurtarması, elle çizilen offline
-  harita (kendi MBTiles paket hattıyla), pusula (gerçek kuzey + manyetik
-  bozulma uyarısı), Return to Start, waypoint'ler, GPX içe/dışa (gömülü
-  telemetri raporuyla), aktivite başına pil ölçümü, GPS hazırlık ve uydu
-  görünürlüğü.
-- Duruş: sıfır çalışma zamanı bağımlılığı; konum cihazda kalır, telemetri
-  yok; ağa dokunan tek sınıf harita paketi indiricisi. 102 JVM testi;
-  dokuz saha bulgusunun dokuzu da tur döngüsü içinde kapatıldı (F-1…F-9).
+- Three clean field tours completed (`docs/SAHA.md` log): the scope in the
+  document was verified in the field. On the gate tour the distance
+  cross-validation gave **zero difference** (5613.7 ↔ 5613.7 m), elevation
+  matched exactly, 1738 points = the accepted counter.
+- Scope: Walk/Run recording (filtered GPS, auto-pause, elevation with
+  hysteresis), foreground recording + crash recovery, hand-drawn offline
+  map (with its own MBTiles pack pipeline), compass (true north + magnetic
+  disturbance warning), Return to Start, waypoints, GPX import/export
+  (with an embedded telemetry report), per-activity battery measurement,
+  GPS readiness and satellite visibility.
+- Stance: zero runtime dependencies; location stays on the device, no
+  telemetry; the map pack downloader is the only class that touches the
+  network. 102 JVM tests; all nine field findings were closed within the
+  tour loop (F-1…F-9).
 
 ## [0.9.8] - 2026-08-27
 
 ### Added
 
-- F-9 ("sürekli GPS arıyor" raporu): uydu görünürlüğü. Home'daki hazırlık
-  satırı fix yokken "GPS aranıyor… · uydu 0/7" (fix'te/görülen) der;
-  Tanılama'nın konum bölümü fix olsun olmasın "uydu: X fix'te / Y görülen"
-  satırı taşır. Görülen 0 = gökyüzü yok (kapalı alan); görülen çok ama
-  fix'te 0 = kilitlenemiyor. GPS'in NEDEN oturmadığı artık ekrandan okunur.
+- F-9 ("keeps searching for GPS" report): satellite visibility. While
+  there is no fix, the readiness line on Home reads "Searching for GPS… ·
+  satellites 0/7" (in fix/seen); the location section of Diagnostics
+  carries a "satellites: X in fix / Y seen" line whether or not there is
+  a fix. Seen 0 = no sky (indoors); many seen but 0 in fix = cannot lock.
+  WHY GPS is not settling can now be read off the screen.
 
 ## [0.9.7] - 2026-08-27
 
 ### Fixed
 
-- F-7: yüklü sürüm ekranda görünmüyordu — Home'un altında artık "v0.9.7"
-  yazar (GPX'teki `app` özniteliğiyle birlikte sürüm hem ekranda hem
-  dosyada).
-- F-8: kayıt sürerken Home'daki düğme "BAŞLAT" diyor, yeni kayıt
-  başlatılıyormuş gibi algılanıyordu (teknikte açılmıyordu — servis
-  korumalı). Düğme kayıt sürerken "KAYDA DÖN" olur, tip seçimi kilitlenir
-  ve dokunuş izin/konum diyaloglarına girmeden doğrudan kayda döner.
+- F-7: the installed version was not visible on screen — the bottom of
+  Home now reads "v0.9.7" (together with the `app` attribute in the GPX,
+  the version is both on screen and in the file).
+- F-8: while a recording was running, the button on Home said "START",
+  which came across as starting a new recording (technically none was
+  opened — the service is guarded). While a recording is running the
+  button becomes "BACK TO RECORDING", the type selection is locked, and a
+  tap returns straight to the recording without going through the
+  permission/location dialogs.
 
 ## [0.9.6] - 2026-08-27
 
 ### Fixed
 
-- F-6 (Saha Turu 2): GPS çipi ancak biri istediğinde aramaya başlar; Home'da
-  beklerken kimse istemediği için START sonrası 1+ dakikalık kör bekleyiş
-  yaşanıyordu (uygulamayı yeniden başlatmak çipi etkilemez). Home açıkken
-  GPS artık ön-ısıtılır — kullanıcı tip seçerken kilitlenir — ve START'ın
-  üstünde hazırlık satırı görünür: "GPS aranıyor…" → "GPS ± X m" →
-  "GPS hazır · ± X m". Ekrandan ayrılınca dinleme bırakılır (pil kuralı);
-  kayıt sürerken servis zaten dinler.
+- F-6 (Field Tour 2): the GPS chip only starts searching once someone asks
+  for it; nobody was asking while waiting on Home, so there was a blind
+  wait of 1+ minute after START (restarting the app does not affect the
+  chip). GPS is now pre-warmed while Home is open — it acquires its lock
+  while the user picks the type — and a readiness line appears above
+  START: "Searching for GPS…" → "GPS ± X m" → "GPS ready · ± X m".
+  Listening stops when leaving the screen (battery rule); while a
+  recording is running the service is already listening.
 
 ### Added
 
-- GPX raporuna `app` özniteliği: dosya hangi sürümle yazıldığını taşır.
+- `app` attribute in the GPX report: the file carries which version wrote
+  it.
 
 ## [0.9.5] - 2026-08-25
 
 ### Fixed
 
-- F-5 (kort denemesinin ikinci yarısı: güç tasarrufu açıktı): birçok cihaz
-  bu modda GPS'i kısar; uygulama bunu görüyor ama söylemiyordu. GPS
-  oturmamışken durum satırına "· güç tasarrufu açık" eklenir; boş kaydın
-  atılma mesajı "Güç tasarrufu açıktı — GPS'i kısıtlamış olabilir."
-  notunu taşır. Mod engellenmez — saha matrisindeki güç-tasarrufu
-  senaryosu desteklenmeye devam eder, yalnızca görünür kılınır.
+- F-5 (second half of the tennis-court trial: battery saver was on): many
+  devices throttle GPS in this mode; the app could see it but did not say
+  so. While GPS has not settled, "· battery saver on" is appended to the
+  status line; the discard message for an empty recording carries the
+  note "Battery saver was on — it can restrict GPS." The mode is not
+  blocked — the battery-saver scenario in the field matrix remains
+  supported, it is merely made visible.
 
 ## [0.9.4] - 2026-08-25
 
 ### Fixed
 
-- F-4 (saha denemesi: kort içinde 2 dk koşu, hiç nokta kabul edilmedi):
-  GPS oturmadan geçen süre ekranda görünmüyordu — kayıt sessizce boş kalıp
-  atılıyor, neden anlaşılamıyordu. Kayda nokta girmemişken durum satırı
-  artık canlı GPS kalitesini gösterir: "Fix bekleniyor…" ya da
-  "GPS ± X m". Boş kaydın atılma mesajı da nedenli: "GPS hiç fix vermedi"
-  ↔ "doğruluk hiç 30 m eşiğinin altına inmedi (en iyi ± X m)". Filtre
-  eşiği bilinçli olarak değişmedi. Çekirdeğe 2 yeni JVM testi
-  (kabul öncesi kalite gözlemi; bilinmeyen doğruluk kaliteye sayılmaz).
+- F-4 (field trial: a 2 min run inside a tennis court, not a single point
+  accepted): the time spent before GPS settled was not visible on screen —
+  the recording silently stayed empty and was discarded, and the reason
+  could not be understood. While no point has entered the recording, the
+  status line now shows live GPS quality: "Waiting for a fix…" or
+  "GPS ± X m". The discard message for an empty recording now gives the
+  reason too: "GPS never delivered a fix" ↔ "GPS accuracy never got under
+  the 30 m threshold (best ± X m)". The filter threshold was deliberately
+  left unchanged. 2 new JVM tests in the core (quality observation before
+  acceptance; unknown accuracy does not count as quality).
 
 ## [0.9.3] - 2026-08-25
 
 ### Added
 
-- F-3 (saha iş akışı): tur telemetrisi artık GPX'in içinde gider. Dışa
-  aktarılan dosyaya `extensions`/`norda:report` bloğu gömülür: uygulama
-  özeti (mesafe, aktif süre, ▲▼), pil (başı/sonu) ve filtre sayaçları.
-  GPX'i paylaşmak = tur raporunu paylaşmak; elle not gerekmez. Diğer
-  araçlar bloğu yok sayar; filtre sayaçları yalnız son kayıt o aktiviteyse
-  eklenir (eski ize yanlış sayaç gömülmez). İçe aktarmada blok veri
-  sayılmaz — istatistikler noktalardan yeniden hesaplanır. Çekirdekte 3
-  yeni JVM testi (gidiş-dönüş, bloksuz dosya, bilinmeyen pil/sayaç).
+- F-3 (field workflow): tour telemetry now travels inside the GPX. An
+  `extensions`/`norda:report` block is embedded in the exported file: the
+  app summary (distance, active time, ▲▼), battery (start/end) and the
+  filter counters. Sharing the GPX = sharing the tour report; no manual
+  notes needed. Other tools ignore the block; the filter counters are
+  added only if the last recording is that activity (no wrong counters get
+  embedded in an old track). On import the block does not count as data —
+  the statistics are recomputed from the points. 3 new JVM tests in the
+  core (round trip, file without the block, unknown battery/counters).
 
 ## [0.9.2] - 2026-08-25
 
 ### Fixed
 
-- F-2 (Saha Turu 1 kullanışlılık bulgusu): filtre sayaçları yalnız kayıt
-  sürerken okunabiliyordu — sahada bulmak ve not almak zordu. Kayıt bitince
-  son kaydın sayaçları kalıcı saklanır ve Tanılama'da "KAYIT FİLTRESİ
-  (SON KAYIT)" olarak görünmeye devam eder; tur raporu eve dönünce
-  yazılabilir. Boş/atılan kayıtta da saklanır — "kayıt neden boş kaldı"nın
-  cevabı çoğu zaman bu sayaçlardadır.
+- F-2 (Field Tour 1 usability finding): the filter counters could only be
+  read while a recording was running — hard to find and note down in the
+  field. When a recording finishes, the last recording's counters are
+  stored persistently and stay visible in Diagnostics as "RECORDING FILTER
+  (LAST)"; the tour report can be written after getting home. They are
+  stored for empty/discarded recordings too — the answer to "why did the
+  recording stay empty" is most often in these counters.
 
 ## [0.9.1] - 2026-08-25
 
 ### Fixed
 
-- F-1 (Saha Turu 1 analizi): geçmişteki pil oranının paydası aktif kayıt
-  süresiydi; GPS duraklatmada da açık kaldığından pil duvar saatiyle akar
-  ve oran şişiyordu (turda 4,2 %/sa görünen gerçekte 2,8 %/sa). Payda artık
-  kayıt başı→sonu duvar saati. Turun gerçek verisi (%2 / 42:46) çekirdeğe
-  regresyon testi olarak girdi.
+- F-1 (Field Tour 1 analysis): the denominator of the battery rate in
+  History was the active recording time; since GPS stays on during pauses
+  too, the battery drains by wall-clock time and the rate was inflated
+  (the 4.2 %/h shown on the tour was really 2.8 %/h). The denominator is
+  now the wall-clock time from recording start→end. The tour's real data
+  (2% / 42:46) went into the core as a regression test.
 
-### Notlar
+### Notes
 
-- Tur 1 GPX'i üretim kod yollarıyla yeniden hesaplandı: mesafe, süre ve
-  yükseklik (tam 135,0 m) uygulamayla birebir tuttu; elle duraklatmada ara
-  mesafenin sayılmaması (510 m'lik mola yürüyüşü) sahada doğrulandı.
+- The Tour 1 GPX was recomputed through the production code paths:
+  distance, time and elevation (exactly 135.0 m) matched the app exactly;
+  the exclusion of intervening distance during a manual pause (the 510 m
+  break walk) was verified in the field.
 
 ## [0.9.0] - 2026-08-25
 
 ### Added
 
-- Faz 9 — Release Candidate açılışı: saha kanıtı + Play hazırlığı.
-- "Testler diş geçiriyor mu" turu (MVP 13.1/5) ilk kez koşuldu ve README'ye
-  tablo olarak işlendi: 8 kasıtlı hata, 8'i de yakalandı. Turun kendi
-  bulgusu da kapatıldı — şema taban listesine sızan DDL'yi parite testi
-  göremiyordu; sürüm başına ifade sayısını donduran altın-tablo testi
-  eklendi (96 test).
-- `docs/PRIVACY.md` (TR+EN): konum cihazda kalır, ağ yalnız harita paketi
-  indirir — Play'in konum izni için gizlilik politikası şartına hazır.
-- `docs/SAHA.md`: 20 adımlık saha turu protokolü + rapor şablonu; üç temiz
-  tur v1.0.0 kapısıdır.
-- `check-tag` artık versionCode formülünü de doğrular
-  (MAJOR×10000+MINOR×100+PATCH) — 15.1'deki "monotonluğu CI doğrular"
-  sözü yerine geldi; iki ret dalı da yerelde kanıtlı.
+- Phase 9 — Release Candidate opens: field proof + Play preparation.
+- The "do the tests bite" round (MVP 13.1/5) was run for the first time
+  and recorded in the README as a table: 8 deliberate bugs, all 8 caught.
+  The round's own finding was closed too — the parity test could not see
+  DDL leaking into the schema baseline list; a golden-table test that
+  freezes the statement count per version was added (96 tests).
+- `docs/PRIVACY.md` (TR+EN): location stays on the device, the network
+  only downloads map packs — ready for Play's privacy-policy requirement
+  for the location permission.
+- `docs/SAHA.md`: 20-step field tour protocol + report template; three
+  clean tours are the v1.0.0 gate.
+- `check-tag` now also verifies the versionCode formula
+  (MAJOR×10000+MINOR×100+PATCH) — the "CI verifies monotonicity" promise
+  in 15.1 is fulfilled; both rejection branches proven locally.
 
 ### Changed
 
-- Pusula ve tanılama ekranları konum sağlayıcısına kapalıyken de kayıt
-  olur (0.8.0'daki servis düzeltmesiyle aynı desen): ekran açıkken konum
-  açılırsa fix'ler kendiliğinden akmaya başlar.
+- The Compass and Diagnostics screens now register with the location
+  provider even while it is off (same pattern as the 0.8.0 service fix):
+  if location is turned on while the screen is open, fixes start flowing
+  on their own.
 
 ## [0.8.0] - 2026-08-25
 
 ### Added
 
-- Faz 8 — Polish: kalite çıtası her ekranda.
-- Pil ölçümü: kayıt başında ve sonunda pil yüzdesi saklanır (şema sürümü 3,
-  göçlü); geçmiş satırı tüketimi ve süre yeterliyse %/saat oranını gösterir.
-  Ölçüm kirliyse (seviye okunamadı, kayıtta şarj, 5 dk'dan kısa süre) sayı
-  uydurulmaz — hiç gösterilmez. Saf `Battery` modülü, 5 JVM testiyle.
-- Filtre kalibrasyonu: GPS filtresi artık ret NEDENİ üretir (doğruluk /
-  titreme / ışınlama / zaman) ve kayıt bunları sayar; tanılama ekranı kayıt
-  sürerken canlı sayaçları gösterir. Saha verisiyle eşik ayarının ham
-  verisi bu — 4 yeni JVM testi.
-- İzin UX (Home): ret nedeni ekranda kalır; kalıcı ret "Ayarları aç"
-  diyaloğuna götürür (tanılama ekranındaki akışla aynı dil).
+- Phase 8 — Polish: the quality bar on every screen.
+- Battery measurement: the battery percentage is stored at the start and
+  end of a recording (schema version 3, with migration); the History row
+  shows the drain and, if the duration is long enough, the %/h rate. If
+  the measurement is dirty (level unreadable, charging during the
+  recording, duration under 5 min) no number is made up — nothing is
+  shown. Pure `Battery` module, with 5 JVM tests.
+- Filter calibration: the GPS filter now produces a rejection REASON
+  (accuracy / jitter / teleport / time) and the recording counts them; the
+  diagnostics screen shows live counters while a recording is running.
+  This is the raw data for tuning the thresholds with field data — 4 new
+  JVM tests.
+- Permission UX (Home): the denial reason stays on screen; a permanent
+  denial leads to the "Open settings" dialog (same language as the flow
+  on the diagnostics screen).
 
 ### Changed
 
-- Konum kapalıyken START, kaydın boş kalacağını baştan söyler: "Konumu aç"
-  ya da "Yine de başlat". Servis sağlayıcıya artık kapalıyken de kayıt olur —
-  konum sonradan açılırsa fix'ler kendiliğinden akmaya başlar.
-- Hiç nokta girmemiş kayıt geçmişe gürültü olarak yazılmaz: bitirmede ve
-  kurtarmada silinir, kullanıcıya söylenir.
-- Erişilebilirlik: pusula kadranı ve kayıt haritası ekran okuyucuya süs
-  olarak işaretlendi (değerler zaten metinlerde); tüm yazı boyutları sp,
-  dokunma hedefleri ≥ 48 dp doğrulandı.
+- With location off, START says up front that the recording will stay
+  empty: "Turn on location" or "Start anyway". The service now registers
+  with the provider even while it is off — if location is turned on
+  later, fixes start flowing on their own.
+- A recording that never received a point is not written to History as
+  noise: it is deleted on finish and on recovery, and the user is told.
+- Accessibility: the compass dial and the recording map are marked as
+  decorative for the screen reader (the values are already in the text);
+  all font sizes in sp, touch targets ≥ 48 dp verified.
 
 ## [0.7.1] - 2026-08-25
 
 ### Fixed
 
-- 0.7.0 çökmesi: `waypoint` tablosu şemada hiç yaratılmamıştı — DAO'su olan
-  ama `CREATE`'i olmayan tablo. Pusula, kayıt, harita ve nokta ekranları
-  açılır açılmaz "no such table: waypoint" ile kapanıyordu. DDL ve göç planı
-  artık saf `Schema` modülünde (şema sürümü 2): eski kurulum göçle, yeni
-  kurulum sıfırdan aynı şemaya varır; 5 yeni JVM testi — göç zinciri ile
-  sıfırdan kurulumun parite değişmezi dahil — bunu kalıcı korur.
+- 0.7.0 crash: the `waypoint` table was never created in the schema — a
+  table with a DAO but no `CREATE`. The Compass, recording, map and
+  waypoint screens closed with "no such table: waypoint" the moment they
+  opened. The DDL and migration plan now live in the pure `Schema` module
+  (schema version 2): an existing install arrives at the same schema via
+  migration, a fresh install from scratch; 5 new JVM tests — including
+  the parity invariant between the migration chain and a from-scratch
+  install — keep this permanently protected.
 
 ## [0.7.0] - 2026-08-25
 
 ### Added
 
-- Faz 7 — Waypoints + GPX: veri döngüsü kapandı.
-- Waypoint'ler: kayıt sırasında "+ Nokta" (son kabul edilen konuma) ya da
-  haritaya uzun basarak (ad diyaloğuyla); sınırsız sayıda. Haritada altın
-  baklava + ad; pusulada en yakın nokta içi boş baklava, alt satırda en
-  yakın iki noktanın kerteriz + mesafesi. Nokta listesi: dokun → yeniden
-  adlandır, uzun bas → sil. Varsayılan ad "Nokta N" — boş İLK numara,
-  silinen numara yeniden kullanılır.
-- GPX dışa aktarma (iz ekranından, SAF): tek dosyada `trk` + tüm `wpt`'ler;
-  rakım yalnız geçerliyse yazılır (0.0 nöbetçisi sızmaz).
-- GPX içe aktarma (geçmişten): `trkpt`'ler aktivite olarak (mesafe/süre/
-  yükseklik saf çekirdekle hesaplanır), `wpt`'ler nokta olarak; bozuk girdi
-  satır atlanarak tolere edilir.
-- Çekirdeğe `Gpx` (yazıcı + ayrıştırıcı) ve `WaypointNaming`, 9 yeni JVM
-  testiyle (gidiş-dönüş, XML kaçışı, bozuk girdi, boş numara seçimi).
+- Phase 7 — Waypoints + GPX: the data loop is closed.
+- Waypoints: during a recording via "+ Point" (at the last accepted
+  position) or by long-pressing the map (with a name dialog); unlimited in
+  number. On the map a gold diamond + name; on the compass the nearest
+  waypoint as a hollow diamond, with the bearing + distance of the two
+  nearest waypoints on the bottom line. Waypoint list: tap → rename,
+  long-press → delete. Default name "Point N" — the FIRST free number; a
+  deleted number is reused.
+- GPX export (from the track screen, SAF): `trk` + all `wpt`s in a single
+  file; altitude is written only when valid (the 0.0 sentinel does not
+  leak).
+- GPX import (from History): `trkpt`s as an activity (distance/time/
+  elevation computed by the pure core), `wpt`s as waypoints; malformed
+  input is tolerated by skipping the line.
+- `Gpx` (writer + parser) and `WaypointNaming` in the core, with 9 new JVM
+  tests (round trip, XML escaping, malformed input, free-number
+  selection).
 
 ## [0.6.0] - 2026-08-25
 
 ### Added
 
-- Faz 6 — Navigation: Pusula ekranı ve Return to Start. Elle çizilen kadran
-  (gerçek kuzeye göre döner, üst gösterge sabit), başlangıç yönünde altın
-  baklava; alt satırda kerteriz + mesafe + tempo biliniyorsa tahmini süre
-  ve yönlendirme ("12° sağa" / "yön tutuyor", ±5°).
-- Gerçek kuzey: sapma `GeomagneticField`'den, 1 km yol alınmadan yeniden
-  hesaplanmaz ve kalıcı saklanır — sonraki açılışta anında hazır. Sapma
-  bilinmiyorsa etiket "Manyetik" der.
-- Manyetik bozulma uyarısı: ölçülen alan şiddeti beklenenle karşılaştırılır
-  (%25 giriş / kesintisiz 2,5 sn / %15 çıkış histerezisi). Durum önceliği:
-  bozulma > kalibrasyon.
-- Çekirdeğe 3 saf modül, 11 yeni JVM testiyle: `Smoothing` (zaman sabitli,
-  sin/cos üzerinden — 50 Hz ↔ 16 Hz aynı his), `DisturbanceDetector`,
-  `ReturnToStart` (kerteriz + mesafe + ETA + işaretli dönüş açısı).
-- Pusula, Home'dan ve kayıt ekranından tek dokunuş uzaklıkta. Başlangıç
-  noktası: aktif kaydın ilk noktası; kayıt yoksa son aktivitenin başlangıcı.
+- Phase 6 — Navigation: the Compass screen and Return to Start. A
+  hand-drawn dial (rotates relative to true north, the top index stays
+  fixed), a gold diamond in the direction of the start; on the bottom line
+  the bearing + distance + an estimated time if the pace is known, and
+  guidance ("12° right" / "on course", ±5°).
+- True north: declination from `GeomagneticField`, not recomputed until
+  1 km has been travelled, and stored persistently — ready instantly on
+  the next launch. If the declination is unknown the label reads
+  "Magnetic".
+- Magnetic disturbance warning: the measured field strength is compared
+  with the expected one (25% entry / 2.5 s uninterrupted / 15% exit
+  hysteresis). Status priority: disturbance > calibration.
+- 3 pure modules in the core, with 11 new JVM tests: `Smoothing`
+  (time-constant based, via sin/cos — 50 Hz ↔ 16 Hz feel the same),
+  `DisturbanceDetector`, `ReturnToStart` (bearing + distance + ETA +
+  signed turn angle).
+- The Compass is one tap away from Home and from the recording screen.
+  Start point: the first point of the active recording; if there is no
+  recording, the start of the last activity.
 
 ## [0.5.0] - 2026-08-25
 
 ### Added
 
-- Faz 5 — Offline Maps: kendi karo paketleme hattı devrede. `map-pack.yml`
-  elle tetiklenir (id + ad + bbox + zoom), paketi üretir, `maps/<id>-vN`
-  etiketiyle Release'e asar ve `docs/maps/index.json`'u günceller.
-- Haritalar ekranı artık `index.json`'daki paketleri listeler ve indirir:
-  ilerleme yüzdesi, SHA-256 doğrulaması (tutmazsa dosya silinir), yarım
-  indirme asla geçerli paket gibi görünmez (`.part` + adlandırma).
-- `TileDownloader`: ağa dokunan TEK sınıf; `INTERNET` izni yalnız bunun için
-  eklendi. Elle içe aktarma çevrimdışı yedek yol olarak duruyor.
-- `core/io/Digests`: SHA-256, NIST test vektörleriyle doğrulanmış.
-- `tools/make-map-pack.py` (bölge parametreli üretici, eski test üretecinin
-  yerine) + `tools/update-map-index.py`.
+- Phase 5 — Offline Maps: our own tile packaging pipeline is live.
+  `map-pack.yml` is triggered manually (id + name + bbox + zoom), builds
+  the pack, attaches it to a Release under the `maps/<id>-vN` tag and
+  updates `docs/maps/index.json`.
+- The Maps screen now lists and downloads the packs in `index.json`:
+  progress percentage, SHA-256 verification (the file is deleted on
+  mismatch), a half-finished download never looks like a valid pack
+  (`.part` + renaming).
+- `TileDownloader`: the ONLY class that touches the network; the
+  `INTERNET` permission was added solely for it. Manual import remains as
+  the offline fallback path.
+- `core/io/Digests`: SHA-256, verified against the NIST test vectors.
+- `tools/make-map-pack.py` (region-parameterised generator, replacing the
+  old test generator) + `tools/update-map-index.py`.
 
-### Notlar
+### Notes
 
-- Üretim adımı şimdilik prosedürel kartografya kullanır; gerçek OSM
-  kartografyası geldiğinde yalnız map-pack'in "Paketi üret" adımı değişir —
-  paket biçimi, yayın ve indirme zinciri aynı kalır.
+- The build step uses procedural cartography for now; when real OSM
+  cartography arrives, only map-pack's "Build the pack" step changes — the
+  pack format, publishing and download chain stay the same.
 
 ## [0.4.0] - 2026-08-25
 
 ### Added
 
-- Faz 4 — Custom MapView: elle çizilen offline raster harita. Yalnız
-  viewport'u kesen karolar çizilir; MBTiles okuma (TMS çevirmesiyle), LRU
-  bitmap önbelleği, arka planda karo çözme, pan/çift dokunuş/iki parmakla
-  zoom. Paket yokken prosedürel ızgara — iz ve imleç paketsiz de görünür.
-- `core/map/WebMercator`: projeksiyon + karo matematiği, bilinen sabit
-  noktalarla 8 JVM testi (İstanbul z10 karosu, TMS çevirmesi, sınır
-  enleminde kayan nokta sabitlemesi).
-- Kayıt ekranında canlı harita: iz ve konum imleci haritada, otomatik takip.
-- Geçmişte satıra dokunmak izi haritada açar (ekrana sığdırılmış).
-- Haritalar ekranı: `.mbtiles` içe aktarma (SAF), paket listesi, silme,
-  OSM atfı. İndirme + `index.json` Faz 5'te.
-- `tools/make-test-map.py`: yalnız stdlib ile prosedürel test paketi üreteci
-  (İstanbul z8–13, ~324 KB) — hizalama ve TMS hataları ızgarada anında belli
-  olur.
+- Phase 4 — Custom MapView: a hand-drawn offline raster map. Only the
+  tiles intersecting the viewport are drawn; MBTiles reading (with TMS
+  conversion), LRU bitmap cache, background tile decoding, pan/double
+  tap/two-finger zoom. A procedural grid when there is no pack — the track
+  and cursor are visible without a pack too.
+- `core/map/WebMercator`: projection + tile math, 8 JVM tests with known
+  fixed points (Istanbul z10 tile, TMS conversion, floating-point clamping
+  at the boundary latitude).
+- Live map on the recording screen: the track and position cursor on the
+  map, auto-follow.
+- Tapping a row in History opens the track on the map (fitted to the
+  screen).
+- Maps screen: `.mbtiles` import (SAF), pack list, deletion, OSM
+  attribution. Download + `index.json` come in Phase 5.
+- `tools/make-test-map.py`: a stdlib-only procedural test pack generator
+  (Istanbul z8–13, ~324 KB) — alignment and TMS errors show up instantly
+  on the grid.
 
 ## [0.3.0] - 2026-08-25
 
 ### Added
 
-- Faz 3 — Foreground Tracking: kayıt artık `TrackingService`'in malı; ekran
-  kapansa da, başka uygulamaya geçilse de sürer. Kalıcı bildirim durum ·
-  süre · mesafe gösterir ve kayda geri götürür.
-- Sistem servisi öldürüp yeniden başlatırsa (START_STICKY) kayıt diskteki
-  yarım aktiviteden devralınır (`RecordingSession.prime`, testli): mesafe ve
-  süre korunur, yükseklik saklanan rakımlardan aynı histerezisle kurulur.
-- Bildirim izni (Android 13+) konumla birlikte istenir; reddi kaydı
-  engellemez.
+- Phase 3 — Foreground Tracking: the recording now belongs to
+  `TrackingService`; it continues even when the screen turns off or the
+  user switches to another app. The persistent notification shows
+  status · time · distance and leads back to the recording.
+- If the system kills and restarts the service (START_STICKY), the
+  recording is taken over from the half-finished activity on disk
+  (`RecordingSession.prime`, tested): distance and time are preserved,
+  elevation is rebuilt from the stored altitudes with the same hysteresis.
+- The notification permission (Android 13+) is requested together with
+  location; denying it does not block recording.
 
 ### Changed
 
-- Kayıt ekranı artık yalnızca gösterge; geri tuşu kaydı bitirmez, kayıt
-  arka planda sürer. Bitirme yalnız Bitir düğmesiyle.
-- Home, servis kayıttayken kurtarma çalıştırmaz (canlı kayıt "yarım"
-  sanılıp kapatılmaz).
+- The recording screen is now display only; the back button does not
+  finish the recording, the recording continues in the background.
+  Finishing happens only via the Finish button.
+- Home does not run recovery while the service is recording (a live
+  recording is not mistaken for "half-finished" and closed).
 
 ## [0.2.0] - 2026-08-25
 
 ### Added
 
-- Faz 2 — Activity Engine: Walk/Run kaydı. Home (tip seç + BAŞLAT), kayıt
-  ekranı (süre, mesafe, canlı tempo, yükseklik ▲▼, duraklat/devam/bitir) ve
-  geçmiş listesi (uzun basış siler).
-- Kayıt çekirdeği saf Kotlin'de, 37 yeni JVM testiyle: GPS filtresi,
-  duraklatma bilinçli kronometre, otomatik duraklat/devam (20 sn / 8 m),
-  histerezisli yükseklik kazanımı/kaybı (4 m), istatistikler ve kayıt durum
-  makinesi (`RecordingSession`).
-- SQLite kalıcılığı (WAL, ince katman): fix başına tek INSERT; süreç ölümüyle
-  yarım kalan kayıt açılışta geçmişe kurtarılır.
-- Faz 1 tanılama ekranı Home'dan erişilebilir durumda korundu.
+- Phase 2 — Activity Engine: Walk/Run recording. Home (pick a type +
+  START), the recording screen (time, distance, live pace, elevation ▲▼,
+  pause/resume/finish) and the History list (long-press deletes).
+- The recording core in pure Kotlin, with 37 new JVM tests: GPS filter,
+  pause-aware stopwatch, auto-pause/resume (20 s / 8 m), elevation
+  gain/loss with hysteresis (4 m), statistics and the recording state
+  machine (`RecordingSession`).
+- SQLite persistence (WAL, thin layer): a single INSERT per fix; a
+  recording left half-finished by process death is recovered into History
+  on launch.
+- The Phase 1 diagnostics screen is kept reachable from Home.
 
-### Notlar
+### Notes
 
-- Kayıt bu fazda ekran açıkken sürer; arka plan kaydı Faz 3'te foreground
-  service ile geliyor.
+- In this phase the recording runs while the screen is on; background
+  recording comes in Phase 3 with the foreground service.
 
 ## [0.1.1] - 2026-08-25
 
 ### Changed
 
-- Release iş akışı imzalama secret'larını `ANDROID_*` adlarından okur; alias
-  boşsa `norda`, anahtar parolası boşsa depo parolası varsayılır.
-- İlk imzalı APK yayını.
+- The release workflow reads the signing secrets from the `ANDROID_*`
+  names; if the alias is empty `norda` is assumed, if the key password is
+  empty the store password is assumed.
+- First signed APK release.
 
 ## [0.1.0] - 2026-08-25
 
 ### Added
 
-- Faz 1 — Sensor Core: konum ve yön hata ayıklama ekranı (izin akışı, GPS fix
-  bilgileri, rotation-vector yönü, başlangıç noktasına mesafe/kerteriz).
-- `core/geo`: mesafe (haversine) + büyük daire kerterizi + açı aritmetiği,
-  fiziksel sabitlere dayanan JVM testleriyle.
-- CI: her itişte test + lint + debug APK; `v*` etiketinde `check-tag`
-  doğrulamasıyla imzalı release APK + GitHub sürümü.
+- Phase 1 — Sensor Core: a location and heading debugging screen
+  (permission flow, GPS fix details, rotation-vector heading,
+  distance/bearing to the start point).
+- `core/geo`: distance (haversine) + great-circle bearing + angle
+  arithmetic, with JVM tests grounded in physical constants.
+- CI: test + lint + debug APK on every push; on a `v*` tag, a signed
+  release APK + GitHub release after `check-tag` verification.
