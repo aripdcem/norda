@@ -2,7 +2,7 @@
   "packages": [
     {
       "id": "istanbul",
-      "name": "İstanbul",
+      "name": "Istanbul",
       "bbox": [
         28.6,
         40.8,
@@ -11,10 +11,10 @@
       ],
       "minZoom": 8,
       "maxZoom": 13,
-      "sizeBytes": 331776,
-      "sha256": "70c1c0d6b532e5f5bdd3a640046ed9133d084805ee8746ef73577142748cfd88",
-      "url": "https://github.com/aripdcem/norda/releases/download/maps/istanbul-v1/istanbul.mbtiles",
-      "version": 1
+      "sizeBytes": 5718016,
+      "sha256": "3fa88acf82b333c8abc6be1c6a7d06bef80373c2d300f5e4bdb1aba530c8f7a2",
+      "url": "https://github.com/aripdcem/norda/releases/download/maps/istanbul-v2/istanbul.mbtiles",
+      "version": 2
     }
   ]
 }
