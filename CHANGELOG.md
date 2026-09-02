@@ -4,6 +4,18 @@ Format follows [Keep a Changelog](https://keepachangelog.com/), versioning
 follows [SemVer](https://semver.org/) — see `docs/MVP.md` section 15 for
 the rules.
 
+## [1.0.4] - 2026-09-02
+
+### Changed
+
+- The project is going international: every comment and KDoc in the app
+  sources, the developer-facing exception and deprecation messages, and
+  the fallback file name for an imported map pack without a name
+  (`pack-<timestamp>.mbtiles`) are now English. No behavior change; the
+  user interface was already bilingual (English base, Turkish locale) and
+  is untouched. Documentation, tooling, workflows and release notes made
+  the same switch outside the APK.
+
 ## [1.0.3] - 2026-09-01
 
 ### Fixed

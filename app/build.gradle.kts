@@ -11,28 +11,30 @@ android {
 
     defaultConfig {
         applicationId = "com.aripd.norda"
-        minSdk = 26          // Android 8.0 — foreground service gerekleri
-        // Android 15. Bu seviyeden itibaren kenardan kenara çizim zorunlu;
-        // pencere boşluklarını uygulama kendisi bırakıyor (MainActivity.applyInsets).
+        minSdk = 26          // Android 8.0 — foreground service requirements
+        // Android 15. From this level on, edge-to-edge drawing is mandatory;
+        // the app leaves the window insets itself (MainActivity.applyInsets).
         targetSdk = 35
         // versionCode = MAJOR×10000 + MINOR×100 + PATCH (docs/MVP.md, 15.1)
-        versionCode = 10003
-        versionName = "1.0.3"
+        versionCode = 10004
+        versionName = "1.0.4"
     }
 
     /**
-     * İsteğe bağlı: kendi anahtarınızla imzalı release APK.
+     * Optional: a release APK signed with your own key.
      *
-     * Bilgiler iki yerden gelebilir. Yerelde kök dizindeki `keystore.properties`
-     * okunur. CI'da o dosya yoktur (anahtar da parola da depoya girmez), orada
-     * ortam değişkenleri kullanılır. İkisi de yoksa blok sessizce atlanır:
-     * release APK imzasız çıkar, debug APK yine üretilir.
+     * The values can come from two places. Locally, `keystore.properties` in
+     * the root directory is read. In CI that file does not exist (neither the
+     * key nor the passwords go into the repository); environment variables are
+     * used there. If neither exists the block is skipped silently: the release
+     * APK comes out unsigned, the debug APK is still built.
      *
-     * CI'da dosya yerine ortam değişkeni okunmasının sebebi `.properties`
-     * biçiminin kendisi: ters bölü orada kaçış karakteridir ve iki nokta ile
-     * eşittir anahtarı bitirir. İçinde bunlardan biri geçen bir parola dosyaya
-     * yazıldığında sessizce başka bir parolaya dönüşür ve imzalama "parola
-     * yanlış" diyerek kırılır. Ortam değişkeninde böyle bir yorumlama yok.
+     * The reason CI reads environment variables instead of a file is the
+     * `.properties` format itself: a backslash is an escape character there,
+     * and a colon or an equals sign terminates the key. A password containing
+     * one of those silently turns into a different password when written to
+     * the file, and signing breaks with "wrong password". An environment
+     * variable involves no such interpretation.
      */
     val signingValues: Map<String, String>? = run {
         val propsFile = rootProject.file("keystore.properties")
@@ -65,8 +67,8 @@ android {
                 storePassword = signingValues["storePassword"]
                 keyAlias = signingValues["keyAlias"]
                 keyPassword = signingValues["keyPassword"]
-                // Üç şemayla da imzala: bazı OEM ROM'ları yalnızca v2 ile
-                // imzalı APK'ları "Uygulama yüklenmedi" diyerek reddedebiliyor.
+                // Sign with all three schemes: some OEM ROMs reject APKs signed
+                // with v2 only, saying "App not installed".
                 enableV1Signing = true
                 enableV2Signing = true
                 enableV3Signing = true
@@ -76,7 +78,7 @@ android {
 
     buildTypes {
         release {
-            // R8: kullanılmayan kodu ve kaynakları atar, kalanı küçültür.
+            // R8: drops unused code and resources and shrinks the rest.
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
@@ -90,8 +92,8 @@ android {
     }
 
     buildFeatures {
-        // AGP 8'de BuildConfig üretimi varsayılan kapalı; yalnız sürüm adını
-        // GPX raporuna yazmak için açıldı (F-6, MapActivity.buildReport).
+        // In AGP 8 BuildConfig generation is off by default; enabled only to
+        // write the version name into the GPX report (F-6, MapActivity.buildReport).
         buildConfig = true
     }
 
@@ -105,8 +107,8 @@ android {
     }
 }
 
-// Uygulama tarafında bilinçli olarak hiçbir dış bağımlılık yok: sadece Android
-// SDK + Kotlin stdlib. Aşağıdaki yalnızca testlerde kullanılır ve APK'ya girmez.
+// Deliberately no external dependencies on the app side: only the Android
+// SDK + Kotlin stdlib. The one below is used only in tests and never enters the APK.
 dependencies {
     testImplementation("junit:junit:4.13.2")
 }
