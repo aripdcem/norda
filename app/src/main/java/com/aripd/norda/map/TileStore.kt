@@ -5,10 +5,10 @@ import com.aripd.norda.core.map.WebMercator
 import java.io.File
 
 /**
- * Tek bir MBTiles paketini okur (docs/MVP.md, 7.3). Standart şema:
+ * Reads a single MBTiles package (docs/MVP.md, 7.3). Standard schema:
  * `metadata(name, value)` + `tiles(zoom_level, tile_column, tile_row,
- * tile_data)`; satır TMS düzenindedir ve burada çevrilir. Yalnız okur —
- * paket üretimi CI hattının işidir.
+ * tile_data)`; rows are in TMS order and are converted here. Read-only —
+ * producing packages is the CI pipeline's job.
  */
 class TileStore private constructor(
     private val db: SQLiteDatabase,
@@ -21,7 +21,7 @@ class TileStore private constructor(
                 while (c.moveToNext()) put(c.getString(0), c.getString(1))
             }
         } catch (_: Exception) {
-            // metadata tablosu yoksa paket yine karo sunabilir
+            // without a metadata table the package can still serve tiles
         }
     }
 

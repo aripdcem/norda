@@ -28,10 +28,11 @@ import com.aripd.norda.storage.ActivityDao
 import com.aripd.norda.storage.AppDatabase
 
 /**
- * Kayıt artık ekranın değil bu foreground service'in malı (docs/MVP.md, 5.6):
- * ekran kapansa da, kullanıcı başka uygulamaya geçse de sürer. Kabul edilen
- * her nokta anında diske yazılır; sistem süreci öldürüp servisi yeniden
- * başlatırsa (START_STICKY) kayıt diskteki yarım aktiviteden devralınır.
+ * The recording now belongs to this foreground service, not to the screen
+ * (docs/MVP.md, 5.6): it keeps running when the screen turns off or the user
+ * switches to another app. Every accepted point is written to disk at once;
+ * if the system kills the process and restarts the service (START_STICKY),
+ * the recording is taken over from the unfinished activity on disk.
  */
 class TrackingService : Service(), LocationListener {
 
@@ -39,8 +40,8 @@ class TrackingService : Service(), LocationListener {
     private lateinit var dao: ActivityDao
     private var lastNotifiedMillis = 0L
 
-    // Ekranlar aynı süreçte; bağlanma törenine gerek yok, denetim
-    // companion'daki statik yüzeyden geçer.
+    // The screens live in the same process; no binding ceremony needed,
+    // control goes through the static surface in the companion.
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onCreate() {
@@ -56,7 +57,7 @@ class TrackingService : Service(), LocationListener {
             if (intent != null) {
                 startNewRecording(ActivityType.fromName(intent.getStringExtra(EXTRA_TYPE)))
             } else if (!resumeUnfinishedRecording()) {
-                // Sticky yeniden başlatma ama devralınacak kayıt yok.
+                // Sticky restart, but no recording to take over.
                 stopSelf()
                 return START_NOT_STICKY
             }
@@ -76,13 +77,16 @@ class TrackingService : Service(), LocationListener {
         session = s
     }
 
-    /** Pil yüzdesi; okunamıyorsa null — Battery kuralları uydurma değer yasaklar. */
+    /** Battery percent; null if unreadable — Battery rules forbid made-up values. */
     private fun batteryPercent(): Int? =
         (getSystemService(BATTERY_SERVICE) as BatteryManager)
             .getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
             .takeIf { it in 0..100 }
 
-    /** Sistem servisi öldürüp geri getirdiyse: diskteki yarım kayda devam et. */
+    /**
+     * If the system killed and brought the service back: continue the
+     * unfinished recording on disk.
+     */
     private fun resumeUnfinishedRecording(): Boolean {
         val unfinished = dao.unfinishedActivity() ?: return false
         val points = dao.pointsFor(unfinished.id)
@@ -95,8 +99,8 @@ class TrackingService : Service(), LocationListener {
         )
         s.prime(
             recoveredDistanceM = Stats.totalDistanceMeters(points),
-            // Duraklatma bilgisi diske yazılmıyor; devralınan süre nokta
-            // aralığından yaklaşıktır.
+            // Pause information is not written to disk; the inherited duration
+            // is approximated from the point span.
             recoveredDurationMillis = (endTime - unfinished.startTimeMillis).coerceAtLeast(0),
             lastPoint = lastPoint,
             altitudes = dao.altitudesFor(unfinished.id)
@@ -113,16 +117,19 @@ class TrackingService : Service(), LocationListener {
             stopRecording(discard = false)
             return
         }
-        // Mesafe süzgeci bilerek 0 (docs/MVP.md, 5.3). Sağlayıcı o an kapalı
-        // olsa da kayıt olunur: kullanıcı konumu sonradan açarsa fix'ler
-        // akmaya başlar; isProviderEnabled'a bağlanmak kaydı sessizce boş
-        // bırakırdı. Var olmayan sağlayıcıya kayıt olmaksa fırlatır — guard o.
+        // Distance filter deliberately 0 (docs/MVP.md, 5.3). We subscribe even
+        // if the provider is disabled at that moment: if the user turns
+        // location on later, fixes start flowing; depending on
+        // isProviderEnabled would have left the recording silently empty.
+        // Subscribing to a provider that does not exist, however, throws —
+        // that is what the guard is for.
         if (LocationManager.GPS_PROVIDER in locationManager.allProviders) {
             locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000L, 0f, this)
         }
-        // Ağ-tohumlu ısıtma (F-10): ağ isteği GNSS'e kaba konum tohumlar ve
-        // kilidi hızlandırır. Fix'leri hiçbir yerde KULLANILMAZ (temiz iz);
-        // ilk gerçek GPS fix'i gelince bırakılır (pil kuralı).
+        // Network-seeded warm-up (F-10): the network request seeds GNSS with a
+        // coarse position and speeds up the lock. Its fixes are NEVER used
+        // anywhere (clean track); it is released once the first real GPS fix
+        // arrives (battery rule).
         if (LocationManager.NETWORK_PROVIDER in locationManager.allProviders) {
             locationManager.requestLocationUpdates(
                 LocationManager.NETWORK_PROVIDER, 5000L, 0f, networkSeed
@@ -131,10 +138,10 @@ class TrackingService : Service(), LocationListener {
         }
     }
 
-    /** Tohum dinleyicisi: hiçbir fix'i işlemez, varlığı yeter. */
+    /** Seed listener: processes no fix at all; its mere presence suffices. */
     private val networkSeed = object : LocationListener {
         override fun onLocationChanged(location: Location) = Unit
-        @Deprecated("Framework çağırmaya devam ediyor; API 29 öncesi için gerekli")
+        @Deprecated("The framework still calls this; needed for API < 29")
         override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) = Unit
         override fun onProviderEnabled(provider: String) = Unit
         override fun onProviderDisabled(provider: String) = Unit
@@ -149,7 +156,7 @@ class TrackingService : Service(), LocationListener {
     }
 
     override fun onLocationChanged(location: Location) {
-        // İze girebilecek tek yol gerçek GPS'tir (temiz iz duruşu, MVP 11).
+        // The only way into the track is real GPS (clean-track stance, MVP 11).
         if (location.provider != LocationManager.GPS_PROVIDER) return
         dropNetworkSeed()
         val s = session ?: return
@@ -163,20 +170,21 @@ class TrackingService : Service(), LocationListener {
             speedMps = if (location.hasSpeed()) location.speed else 0f,
             bearingDeg = if (location.hasBearing()) location.bearing else 0f
         )
-        // Oturma kapısı (F-11) yüzünden tek fix birden fazla nokta
-        // kalıcılaştırabilir: doğrulanan aday + fix'in kendisi. Bayrak
-        // noktaya aittir — adayınki bu fix'inkinden farklı olabilir.
+        // Because of the settling gate (F-11) a single fix can persist more
+        // than one point: the confirmed tentative + the fix itself. The flag
+        // belongs to the point — the tentative's may differ from this fix's.
         for (accepted in s.onFix(point, location.hasAltitude(), SystemClock.elapsedRealtime())) {
             dao.appendPoint(activityId, accepted.point, accepted.hasAltitude)
         }
-        // Bildirim her fix'te değil: durum değişince hemen, yoksa en az 10 sn arayla.
+        // Not a notification on every fix: immediately on a state change,
+        // otherwise at least 10 s apart.
         val now = SystemClock.elapsedRealtime()
         if (s.state != stateBefore || now - lastNotifiedMillis >= 10_000L) {
             updateNotification()
         }
     }
 
-    @Deprecated("Framework çağırmaya devam ediyor; API 29 öncesi için gerekli")
+    @Deprecated("The framework still calls this; needed for API < 29")
     override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) = Unit
     override fun onProviderEnabled(provider: String) = Unit
     override fun onProviderDisabled(provider: String) = Unit
@@ -188,9 +196,10 @@ class TrackingService : Service(), LocationListener {
             val now = SystemClock.elapsedRealtime()
             s.stop(now)
             if (s.points.isEmpty()) {
-                // Tek nokta bile girmemiş kayıt geçmişte gürültüdür: satır
-                // silinir ve NEDENİYLE söylenir (F-4): hiç fix mi gelmedi,
-                // yoksa doğruluk mu hiç eşiğin altına inmedi?
+                // A recording without a single point is noise in history: the
+                // row is deleted and this is said WITH THE REASON (F-4): did no
+                // fix arrive at all, or did the accuracy never get under the
+                // threshold?
                 dao.deleteActivity(activityId)
                 val best = s.bestAccuracyM
                 var message =
@@ -200,8 +209,8 @@ class TrackingService : Service(), LocationListener {
                         R.string.discarded_poor_accuracy,
                         best.toInt(), GpsFilter.MAX_ACCURACY_M.toInt()
                     )
-                // Güç tasarrufu birçok cihazda GPS'i kısar (F-5): boş kaydın
-                // olası nedeni olarak açıkça söylenir.
+                // Battery saver throttles GPS on many devices (F-5): it is
+                // stated explicitly as a likely cause of the empty recording.
                 if ((getSystemService(POWER_SERVICE) as android.os.PowerManager).isPowerSaveMode) {
                     message += " " + getString(R.string.power_save_hint)
                 }
@@ -221,10 +230,11 @@ class TrackingService : Service(), LocationListener {
     }
 
     /**
-     * Son kaydın filtre sayaçları kalıcı saklanır (F-2, Saha Turu 1 bulgusu):
-     * tur bittikten SONRA da Tanılama'dan okunabilsin — yürüyüş ortasında
-     * not almak gerekmesin. Boş/atılan kayıtta da yazılır: "kayıt neden boş
-     * kaldı"nın cevabı çoğu zaman bu sayaçlardadır.
+     * The last recording's filter counters are persisted (F-2, Field Run 1
+     * finding): so they can be read from Diagnostics even AFTER the outing is
+     * over — no need to take notes mid-walk. Written for an empty/discarded
+     * recording too: the answer to "why did the recording stay empty" is most
+     * often in these counters.
      */
     private fun saveFilterStats(s: RecordingSession) {
         getSharedPreferences(FILTER_STATS_PREFS, MODE_PRIVATE).edit()
@@ -245,7 +255,7 @@ class TrackingService : Service(), LocationListener {
         super.onDestroy()
     }
 
-    // ---- Bildirim ----
+    // ---- Notification ----
 
     private fun createChannel() {
         val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
@@ -300,14 +310,14 @@ class TrackingService : Service(), LocationListener {
 
     companion object {
         const val EXTRA_TYPE = "type"
-        /** Tanılama ekranı son kaydın sayaçlarını buradan okur. */
+        /** The Diagnostics screen reads the last recording's counters from here. */
         const val FILTER_STATS_PREFS = "filter_stats"
         private const val CHANNEL_ID = "tracking"
         private const val NOTIFICATION_ID = 1
 
         private var instance: TrackingService? = null
 
-        /** Ekranların "kayıt sürüyor mu" sorusuna hızlı cevabı. */
+        /** Quick answer to the screens' "is a recording running" question. */
         var session: RecordingSession? = null
             private set
         var activityId = 0L
@@ -324,7 +334,7 @@ class TrackingService : Service(), LocationListener {
             instance?.updateNotification()
         }
 
-        /** Kaydı bitirir, özeti yazar ve servisi kapatır. */
+        /** Finishes the recording, writes the summary and shuts the service down. */
         fun finishRecording() {
             instance?.stopRecording(discard = false)
         }

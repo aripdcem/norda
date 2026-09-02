@@ -1,2 +1,2 @@
-# Uygulamada yansıma kullanılmıyor; manifest'teki activity'ler için gereken
-# kuralları AGP kendisi üretir. Bu dosya bilinçli olarak boş.
+# The app uses no reflection; AGP generates the rules needed for the
+# activities in the manifest itself. This file is intentionally empty.

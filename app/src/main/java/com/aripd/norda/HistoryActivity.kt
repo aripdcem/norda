@@ -25,7 +25,7 @@ import com.aripd.norda.storage.WaypointDao
 import java.text.DateFormat
 import java.util.Date
 
-/** Bitmiş aktivitelerin listesi; uzun basış siler. Harita detayı Faz 4'te. */
+/** List of finished activities; long-press deletes. Map detail comes in Phase 4. */
 class HistoryActivity : Activity() {
 
     private lateinit var dao: ActivityDao
@@ -56,8 +56,9 @@ class HistoryActivity : Activity() {
                     distance, Format.duration(a.durationMillis), a.elevationGainM.toInt()
                 )
             )
-            // Pil ölçüm kültürü (Faz 8): tüketim ancak temiz ölçüldüyse yazılır.
-            // Oranın paydası duvar saati (F-1): pil duraklatmada da tükenir.
+            // Battery measurement culture (Phase 8): drain is shown only when it
+            // was measured cleanly. The rate's denominator is the wall clock
+            // (F-1): the battery drains during pauses too.
             val drain = Battery.drainPercent(a.startBatteryPct, a.endBatteryPct)
             if (drain != null) {
                 val rate = Battery.drainPerHour(drain, a.endTimeMillis - a.startTimeMillis)

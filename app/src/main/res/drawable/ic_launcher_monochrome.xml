@@ -1,4 +1,5 @@
-<!-- Temalı ikon: aynı şekil tek renkte; launcher kendi rengini uygular. -->
+<!-- Themed icon: the same shape in a single color; the launcher applies its
+     own color. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"

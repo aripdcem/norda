@@ -5,14 +5,14 @@ import com.aripd.norda.core.track.ActivitySummary
 import com.aripd.norda.core.track.ActivityType
 import com.aripd.norda.core.track.TrackPoint
 
-/** Yarım kalmış (end_time NULL) bir kaydın kimliği — kurtarma için. */
+/** Identity of an unfinished (end_time NULL) recording — for recovery. */
 data class UnfinishedActivity(
     val id: Long,
     val type: ActivityType,
     val startTimeMillis: Long
 )
 
-/** Aptal veri erişim katmanı: yalnız okur ve yazar, karar vermez (MVP.md 8.2). */
+/** Dumb data access layer: only reads and writes, makes no decisions (MVP.md 8.2). */
 class ActivityDao(private val helper: AppDatabase) {
 
     fun startActivity(
@@ -80,7 +80,7 @@ class ActivityDao(private val helper: AppDatabase) {
             out
         }
 
-    /** Noktalar + rakımın geçerli olup olmadığı bilgisi — GPX dışa aktarma için. */
+    /** Points + whether the altitude is valid — for GPX export. */
     fun pointsDetailed(activityId: Long): List<Pair<TrackPoint, Boolean>> =
         helper.readableDatabase.query(
             "track_point",
@@ -103,7 +103,7 @@ class ActivityDao(private val helper: AppDatabase) {
             out
         }
 
-    /** Geçerli rakım bildirmiş noktaların rakımları, zaman sırasıyla. */
+    /** Altitudes of the points that reported a valid altitude, in time order. */
     fun altitudesFor(activityId: Long): List<Double> =
         helper.readableDatabase.query(
             "track_point", arrayOf("altitude"),

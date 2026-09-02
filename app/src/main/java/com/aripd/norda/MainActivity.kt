@@ -30,17 +30,20 @@ import com.aripd.norda.storage.AppDatabase
 import com.aripd.norda.tracking.TrackingService
 
 /**
- * Home (docs/MVP.md, 3.1): olabildiğince boş — tip seç, START'a bas.
- * Açılışta yarım kalmış kayıt varsa (süreç ölümü) geçmişe kurtarılır.
+ * Home (docs/MVP.md, 3.1): as empty as possible — pick a type, tap START.
+ * If an unfinished recording exists at launch (process death) it is recovered
+ * into history.
  *
- * İzin UX (Faz 8): ret sonrası neden ekranda kalır; kalıcı ret Ayarlar'a
- * götüren diyalog açar. Konum servisi kapalıysa START bunu kayıt boş
- * kaldıktan sonra değil, baştan söyler.
+ * Permission UX (Phase 8): after a denial the reason stays on screen; a
+ * permanent denial opens a dialog leading to Settings. If the location
+ * service is off, START says so up front — not after the recording has
+ * stayed empty.
  *
- * GPS ön-ısıtma (F-6): çip ancak biri GPS istediğinde aramaya başlar; Home
- * açıkken dinlemeye başlanır ki kullanıcı tip seçerken kilitlensin, START'a
- * kör bekleyişle değil "GPS hazır" satırını görerek basılsın. Ekrandan
- * ayrılınca bırakılır (pil kuralı, MVP 14); kayıt sürerken servis dinliyor.
+ * GPS pre-warm-up (F-6): the chip only starts searching once someone asks for
+ * GPS; listening starts while Home is open so it locks while the user picks a
+ * type, and START is tapped on seeing the "GPS ready" line rather than in a
+ * blind wait. Released on leaving the screen (battery rule, MVP 14); while a
+ * recording is running the service is listening.
  */
 class MainActivity : Activity(), LocationListener {
 
@@ -62,8 +65,8 @@ class MainActivity : Activity(), LocationListener {
         permissionHint = findViewById(R.id.permissionHint)
         gpsHint = findViewById(R.id.gpsHint)
 
-        // Yüklü sürüm ekranda görünür (F-7): "hangi sürümdeyim" sorusu
-        // telefona değil ekrana sorulur.
+        // The installed version is visible on screen (F-7): the question "which
+        // version am I on" is asked of the screen, not the phone.
         findViewById<TextView>(R.id.versionText).text =
             getString(R.string.version_label, BuildConfig.VERSION_NAME)
 
@@ -92,9 +95,10 @@ class MainActivity : Activity(), LocationListener {
     }
 
     /**
-     * Kayıt sürerken düğme "yeni kayıt" gibi okunmasın (F-8): BAŞLAT →
-     * KAYDA DÖN olur, tip seçimi kilitlenir. Zaten teknik olarak da yeni
-     * kayıt açılmıyordu (servis korumalı); artık ekran da bunu söylüyor.
+     * While a recording is running the button must not read as "new
+     * recording" (F-8): START becomes BACK TO RECORDING and the type choice is
+     * locked. Technically no new recording was being opened anyway (the
+     * service is guarded); now the screen says so too.
      */
     private fun renderStartButton() {
         val recording = TrackingService.isRecording
@@ -112,18 +116,21 @@ class MainActivity : Activity(), LocationListener {
         gnssCallback = null
     }
 
-    // Uydu görünürlüğü (F-9): "GPS aranıyor" tek başına neden söylemez —
-    // uydu 0/0 = gökyüzü yok, uydu 7/0 = gökyüzü var ama kilit yok.
+    // Satellite visibility (F-9): "Searching for GPS" alone gives no reason —
+    // satellites 0/0 = no sky, satellites 7/0 = sky, but no lock.
     private var gnssCallback: GnssStatus.Callback? = null
     private var satsSeen = 0
     private var satsUsed = 0
     private var hasGpsFix = false
 
-    /** GPS ön-ısıtma (F-6): fix'ler kayda girmez, yalnız hazırlık göstergesini besler. */
+    /**
+     * GPS pre-warm-up (F-6): fixes never enter the recording; they only feed
+     * the readiness indicator.
+     */
     private fun startGpsWarmup() {
         gpsHint.visibility = View.GONE
-        // İzin kontrolü bilerek satır içi: lint'in MissingPermission akış
-        // analizi yardımcı fonksiyonun içini göremiyor (depodaki desen bu).
+        // The permission check is deliberately inline: lint's MissingPermission
+        // flow analysis cannot see inside a helper function (the repo's pattern).
         if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) !=
             PackageManager.PERMISSION_GRANTED || TrackingService.isRecording
         ) {
@@ -137,10 +144,11 @@ class MainActivity : Activity(), LocationListener {
         renderSearchingHint()
         gpsHint.visibility = View.VISIBLE
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000L, 0f, this)
-        // Ağ-tohumlu ısıtma (F-10): ağ sağlayıcısını istemek birçok cihazda
-        // GNSS motoruna kaba konum tohumlar, kilidi dakikalardan saniyelere
-        // indirir (saha kanıtı: Pusula/Haritalar ziyaretleri). Ağ fix'i
-        // göstergeye ve kayda ASLA girmez — onLocationChanged sağlayıcıyı süzer.
+        // Network-seeded warm-up (F-10): requesting the network provider seeds
+        // the GNSS engine with a coarse position on many devices, cutting the
+        // lock from minutes to seconds (field evidence: Compass/Maps visits).
+        // A network fix NEVER enters the indicator or the recording —
+        // onLocationChanged filters by provider.
         if (LocationManager.NETWORK_PROVIDER in locationManager.allProviders) {
             locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 5000L, 0f, this)
         }
@@ -164,7 +172,7 @@ class MainActivity : Activity(), LocationListener {
         }
     }
 
-    /** Fix yokken: aranıyor + uydu sayısı (0/0 = gökyüzü yok; 7/0 = kilit yok). */
+    /** Without a fix: searching + satellite count (0/0 = no sky; 7/0 = no lock). */
     private fun renderSearchingHint() {
         gpsHint.text =
             if (satsSeen > 0) getString(R.string.gps_searching_sats, satsUsed, satsSeen)
@@ -172,7 +180,7 @@ class MainActivity : Activity(), LocationListener {
     }
 
     override fun onLocationChanged(location: Location) {
-        // Yalnız gerçek GPS göstergeyi ilerletir; ağ fix'i sadece tohumdur.
+        // Only real GPS advances the indicator; a network fix is merely a seed.
         if (location.provider != LocationManager.GPS_PROVIDER) return
         hasGpsFix = true
         val acc = if (location.hasAccuracy()) location.accuracy else 0f
@@ -184,21 +192,21 @@ class MainActivity : Activity(), LocationListener {
         }
     }
 
-    @Deprecated("Framework çağırmaya devam ediyor; API 29 öncesi için gerekli")
+    @Deprecated("The framework still calls this; needed for API < 29")
     override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) = Unit
     override fun onProviderEnabled(provider: String) = Unit
     override fun onProviderDisabled(provider: String) = Unit
 
     private fun onStartTapped() {
         if (TrackingService.isRecording) {
-            // Süren kayda dönüş: izin/konum diyaloglarına gerek yok.
+            // Back to the running recording: no permission/location dialogs needed.
             startActivity(Intent(this, RecordingActivity::class.java))
             return
         }
         if (!hasLocationPermission()) {
             if (permissionDeniedForever()) {
-                // requestPermissions burada sessizce reddedilir; tek çıkış
-                // sistem ayarları. Kullanıcıya döngü değil, kapı gösterilir.
+                // requestPermissions is silently denied here; the only way out
+                // is the system settings. The user is shown a door, not a loop.
                 AlertDialog.Builder(this)
                     .setMessage(R.string.permission_denied_forever)
                     .setPositiveButton(R.string.open_settings) { _, _ ->
@@ -213,9 +221,10 @@ class MainActivity : Activity(), LocationListener {
                     .show()
                 return
             }
-            // Bildirim izni (13+) konumla birlikte istenir: foreground
-            // service'in kalıcı bildirimi kaydın görünür yüzüdür. Reddi
-            // kaydı engellemez, yalnız bildirim gizli kalır.
+            // The notification permission (13+) is requested together with
+            // location: the foreground service's persistent notification is the
+            // visible face of the recording. Denying it does not block the
+            // recording; only the notification stays hidden.
             val permissions = mutableListOf(
                 Manifest.permission.ACCESS_FINE_LOCATION,
                 Manifest.permission.ACCESS_COARSE_LOCATION
@@ -230,9 +239,10 @@ class MainActivity : Activity(), LocationListener {
 
         val locationManager = getSystemService(LOCATION_SERVICE) as LocationManager
         if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-            // Konum kapalıyken başlayan kayıt sessizce boş kalır; kullanıcı
-            // bunu yürüyüşün sonunda değil, başında öğrenmeli. "Yine de
-            // başlat" açık kalır: servis kayıtlı bekler, konum açılınca akar.
+            // A recording started with location off stays silently empty; the
+            // user should learn this at the start of the walk, not at the end.
+            // "Start anyway" stays available: the service waits subscribed, and
+            // fixes flow once location is turned on.
             AlertDialog.Builder(this)
                 .setMessage(R.string.location_disabled)
                 .setPositiveButton(R.string.location_enable) { _, _ ->
@@ -244,11 +254,12 @@ class MainActivity : Activity(), LocationListener {
         }
         val powerManager = getSystemService(POWER_SERVICE) as PowerManager
         if (powerManager.isPowerSaveMode) {
-            // Saha kanıtı (F-12, matris 20): güç tasarrufunda sistem ekran
-            // kapalıyken konumu durdurabiliyor — 33 dk'lık turda fix'ler
-            // yalnız cihaz uyanıkken aktı (61 nokta kaldı). Durum satırı
-            // (F-5) bunu kayıt sırasında söylüyordu; kullanıcı yürüyüşün
-            // başında da bilmeli. Mod desteklenmeye devam eder.
+            // Field evidence (F-12, matrix step 20): in battery saver the
+            // system can stop location while the screen is off — on a 33-min
+            // outing fixes flowed only while the device was awake (61 points
+            // remained). The status line (F-5) said so during the recording;
+            // the user should know at the start of the walk too. The mode
+            // remains supported.
             AlertDialog.Builder(this)
                 .setMessage(R.string.power_save_warning)
                 .setPositiveButton(R.string.power_save_settings) { _, _ ->
@@ -289,7 +300,7 @@ class MainActivity : Activity(), LocationListener {
         checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) ==
             PackageManager.PERMISSION_GRANTED
 
-    /** Sorulmuş + gerekçe artık gösterilmiyor = kullanıcı "bir daha sorma" dedi. */
+    /** Asked before + rationale no longer shown = the user said "don't ask again". */
     private fun permissionDeniedForever(): Boolean =
         prefs().getBoolean(KEY_LOCATION_ASKED, false) &&
             !shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION)
@@ -309,18 +320,19 @@ class MainActivity : Activity(), LocationListener {
     private fun prefs() = getSharedPreferences("ui", MODE_PRIVATE)
 
     /**
-     * Süreç ölümüyle yarım kalan kayıt (end_time NULL) diskteki noktalardan
-     * toparlanır: mesafe/yükseklik saf çekirdekle yeniden hesaplanır; süre,
-     * duraklatma bilgisi kaybolduğu için nokta aralığından yaklaşıktır.
+     * A recording left unfinished by process death (end_time NULL) is pieced
+     * back together from the points on disk: distance/elevation are recomputed
+     * with the pure core; the duration is approximated from the point span,
+     * since the pause information is lost.
      */
     private fun recoverUnfinished() {
-        // Servis kayıttaysa "yarım" görünen aktivite canlıdır — dokunma.
+        // If the service is recording, the "unfinished" activity is live — leave it.
         if (TrackingService.isRecording) return
         val unfinished = dao.unfinishedActivity() ?: return
         val points = dao.pointsFor(unfinished.id)
         if (points.isEmpty()) {
-            // Tek nokta bile girmemiş yarım kayıt: geçmişe gürültü olarak
-            // kurtarılmaz, sessizce silinir.
+            // An unfinished recording without a single point: not recovered
+            // into history as noise, silently deleted.
             dao.deleteActivity(unfinished.id)
             return
         }

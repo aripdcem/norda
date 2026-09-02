@@ -3,7 +3,7 @@ package com.aripd.norda.storage
 import android.content.ContentValues
 import com.aripd.norda.core.nav.Waypoint
 
-/** Nokta tablosunun aptal erişim katmanı (MVP.md 8.2): yalnız okur/yazar. */
+/** Dumb access layer for the waypoint table (MVP.md 8.2): only reads/writes. */
 class WaypointDao(private val helper: AppDatabase) {
 
     fun insert(

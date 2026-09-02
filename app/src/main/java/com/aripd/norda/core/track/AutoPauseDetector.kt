@@ -3,14 +3,14 @@ package com.aripd.norda.core.track
 import com.aripd.norda.core.geo.Geo
 
 /**
- * Kayıt sırasında duraksamayı ve sonrasındaki gerçek hareketi algılar; oturum
- * kendiliğinden duraklayıp (boş süre sayılmaz) kendiliğinden devam edebilsin
- * diye (docs/MVP.md, 5.5).
+ * Detects a standstill during recording and the real movement after it, so
+ * the session can pause by itself (idle time is not counted) and resume by
+ * itself (docs/MVP.md, 5.5).
  *
- * Her ham fix, filtrenin kabul edip etmediği bilgisiyle beslenir: kabul
- * edilen fix hareket kanıtıdır; fix'ler gelmeye devam ederken uzun süre kabul
- * çıkmaması, kullanıcının durduğu anlamına gelir. Devam kararı çapa noktasına
- * uzaklıktan verilir — titreme duraklatmayı bozamaz.
+ * Every raw fix is fed in together with whether the filter accepted it: an
+ * accepted fix is evidence of movement; no acceptance for a long time while
+ * fixes keep arriving means the user has stopped. The resume decision is made
+ * from the distance to the anchor point — jitter cannot break the pause.
  */
 class AutoPauseDetector(
     private val idleMillis: Long = 20_000L,
@@ -31,8 +31,8 @@ class AutoPauseDetector(
         }
 
         if (autoPaused) {
-            // Kötü doğruluklu bir fix çapadan "uzağa sıçrayabilir"; devam için
-            // kayıt filtresiyle aynı doğruluk çıtası aranır.
+            // A poor-accuracy fix can "jump far away" from the anchor; resuming
+            // requires the same accuracy bar as the recording filter.
             if (fix.accuracyM > GpsFilter.MAX_ACCURACY_M) return Decision.NONE
             val from = anchor ?: return Decision.NONE
             val distance = Geo.distanceMeters(
@@ -60,7 +60,7 @@ class AutoPauseDetector(
         return Decision.NONE
     }
 
-    /** Geçmişi unut — örn. kullanıcı elle duraklatıp devam ettiğinde. */
+    /** Forget the history — e.g. when the user manually pauses and resumes. */
     fun reset(at: TrackPoint) {
         started = true
         autoPaused = false

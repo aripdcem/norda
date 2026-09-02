@@ -1,6 +1,6 @@
 package com.aripd.norda.core.track
 
-/** Kaydedilmiş tek bir GPS fix'i. Saf model — Android bağımlılığı yok. */
+/** A single recorded GPS fix. Pure model — no Android dependency. */
 data class TrackPoint(
     val timeMillis: Long,
     val latitude: Double,

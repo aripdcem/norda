@@ -2,13 +2,13 @@ package com.aripd.norda.core.track
 
 import com.aripd.norda.core.geo.Geo
 
-/** Kaydedilmiş noktalar üzerinde mesafe, tempo ve hız. Saf, JVM'de test edilir. */
+/** Distance, pace and speed over recorded points. Pure, tested on the JVM. */
 object Stats {
 
-    /** Bu toplam mesafenin altında tempo rakamı anlamsız gürültüdür. */
+    /** Below this total distance the pace figure is meaningless noise. */
     const val MIN_PACE_DISTANCE_M = 10.0
 
-    /** Canlı tempo penceresi içinde aranan asgari hareket. */
+    /** Minimum movement required within the live-pace window. */
     const val MIN_WINDOW_DISTANCE_M = 5.0
 
     fun totalDistanceMeters(points: List<TrackPoint>): Double {
@@ -21,7 +21,7 @@ object Stats {
         return total
     }
 
-    /** Ortalama tempo, sn/km — anlamlı değilse null. */
+    /** Average pace, s/km — null if not meaningful. */
     fun avgPaceSecPerKm(distanceMeters: Double, durationMillis: Long): Double? {
         if (distanceMeters < MIN_PACE_DISTANCE_M || durationMillis <= 0) return null
         return (durationMillis / 1000.0) / (distanceMeters / 1000.0)
@@ -33,8 +33,8 @@ object Stats {
     }
 
     /**
-     * İzin son [windowMillis] diliminden canlı tempo (son kaydedilen noktada
-     * biter); yeterli yakın hareket yoksa null.
+     * Live pace from the track's last [windowMillis] slice (ending at the last
+     * recorded point); null if there is not enough recent movement.
      */
     fun currentPaceSecPerKm(points: List<TrackPoint>, windowMillis: Long = 30_000L): Double? {
         if (points.size < 2) return null

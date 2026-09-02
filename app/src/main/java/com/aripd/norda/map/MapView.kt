@@ -21,22 +21,22 @@ import com.aripd.norda.core.track.TrackPoint
 import kotlin.math.floor
 
 /**
- * Elle çizilen raster karo haritası (docs/MVP.md, 7.1): yalnızca viewport'u
- * kesen karolar çizilir, bitmap'ler LRU önbellekten gelir, çözme işi tek bir
- * arka plan iş parçacığında yapılır. Paket yoksa ya da karo eksikse
- * prosedürel ızgara çizilir — iz ve imleç yine görünür.
+ * Hand-drawn raster tile map (docs/MVP.md, 7.1): only the tiles intersecting
+ * the viewport are drawn, bitmaps come from an LRU cache, decoding is done on
+ * a single background thread. Without a package or with a tile missing, a
+ * procedural grid is drawn — the track and the cursor remain visible.
  *
- * Kadran disiplini geçerli: onDraw kare başına tahsis yapmaz.
+ * The dial discipline applies: onDraw allocates nothing per frame.
  */
 class MapView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null
 ) : View(context, attrs) {
 
-    /** Kayıt ekranı haritayı kilitler: izlemek var, gezinmek yok. */
+    /** The recording screen locks the map: following yes, panning no. */
     var interactive = true
 
-    /** Yeni konum geldiğinde merkez ona taşınsın mı (kayıt ekranı). */
+    /** Whether the center moves to each new location (recording screen). */
     var follow = false
 
     private var store: TileStore? = null
@@ -52,7 +52,7 @@ class MapView @JvmOverloads constructor(
     private var locLat = 0.0
     private var locLon = 0.0
 
-    /** Etkileşimli haritada uzun basış: nokta ekleme kancası (lat, lon). */
+    /** Long-press on the interactive map: waypoint-adding hook (lat, lon). */
     var onLongPressLatLon: ((Double, Double) -> Unit)? = null
 
     private val cache = TileCache()
@@ -103,7 +103,7 @@ class MapView @JvmOverloads constructor(
         markerFill.color = accent
     }
 
-    // ---- Dış API ----
+    // ---- External API ----
 
     fun setStore(newStore: TileStore?) {
         store?.close()
@@ -145,7 +145,7 @@ class MapView @JvmOverloads constructor(
         if (follow) setCenter(latDeg, lonDeg) else invalidate()
     }
 
-    /** İzi ekrana sığdırır; yerleşimden sonra (post ile) çağrılmalıdır. */
+    /** Fits the track to the view; must be called after layout (via post). */
     fun fitToTrack() {
         if (track.isEmpty() || width == 0 || height == 0) return
         var latMin = track[0].latitude
@@ -162,7 +162,7 @@ class MapView @JvmOverloads constructor(
         setCenter((latMin + latMax) / 2.0, (lonMin + lonMax) / 2.0)
     }
 
-    // ---- Hareketler ----
+    // ---- Gestures ----
 
     private val gestures = GestureDetector(context, object : GestureDetector.SimpleOnGestureListener() {
         override fun onDown(e: MotionEvent) = true
@@ -231,7 +231,7 @@ class MapView @JvmOverloads constructor(
         centerY = centerY.coerceIn(0.0, world)
     }
 
-    // ---- Çizim ----
+    // ---- Drawing ----
 
     override fun onDraw(canvas: Canvas) {
         val world = WebMercator.worldTiles(zoom)
@@ -314,7 +314,7 @@ class MapView @JvmOverloads constructor(
         canvas.drawCircle(px, py, 14f, markerRing)
     }
 
-    // ---- Karo çözme ----
+    // ---- Tile decoding ----
 
     private fun requestDecode(key: Long, z: Int, tx: Int, ty: Int) {
         val s = store ?: return

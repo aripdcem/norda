@@ -11,10 +11,10 @@ import javax.xml.parsers.DocumentBuilderFactory
 import org.w3c.dom.Element
 
 /**
- * GPX alışverişi (docs/MVP.md, 10. bölüm): tek dosyada iz (`trk`) ve
- * noktalar (`wpt`). Rakım yalnız geçerli olduğunda yazılır — 0.0 nöbetçi
- * değeri dışarıya sızmaz. Ayrıştırma bozuk girdiyi satır atlayarak tolere
- * eder. Saf JVM (java.xml); Android'e dokunmaz, tamamı testli.
+ * GPX interchange (docs/MVP.md, section 10): the track (`trk`) and the
+ * waypoints (`wpt`) in a single file. Altitude is written only when valid —
+ * the 0.0 sentinel value never leaks out. Parsing tolerates broken input by
+ * skipping entries. Pure JVM (java.xml); touches no Android, fully tested.
  */
 object Gpx {
 
@@ -27,7 +27,7 @@ object Gpx {
         val report: Report? = null
     )
 
-    /** GPS filtresi karar sayaçları — eşik kalibrasyonunun ham verisi. */
+    /** GPS filter verdict counters — the raw data for threshold calibration. */
     class FilterCounts(
         val accept: Int,
         val badAccuracy: Int,
@@ -37,11 +37,11 @@ object Gpx {
     )
 
     /**
-     * Tur telemetrisi (F-3, Saha Turu 1): uygulamanın gördüğü özet, pil ve
-     * filtre sayaçları GPX'in İÇİNDE taşınır — saha raporu tek dosyadır,
-     * elle not gerekmez. GPX 1.1 `extensions` + kendi ad alanımızla gider;
-     * diğer araçlar bloğu yok sayar, içe aktarma bunu veri saymaz
-     * (istatistikler her zaman noktalardan yeniden hesaplanır).
+     * Outing telemetry (F-3, Field Run 1): the summary, battery and filter
+     * counters as the app saw them travel INSIDE the GPX — the field report is
+     * a single file, no manual notes needed. Goes as GPX 1.1 `extensions` +
+     * our own namespace; other tools ignore the block, and import does not
+     * treat it as data (statistics are always recomputed from the points).
      */
     class Report(
         val filter: FilterCounts?,
@@ -51,7 +51,7 @@ object Gpx {
         val activeMillis: Long,
         val gainM: Double,
         val lossM: Double,
-        /** Kaydı yazan uygulama sürümü (F-6): dosya kendini tanıtır. */
+        /** App version that wrote the recording (F-6): the file identifies itself. */
         val appVersion: String? = null
     )
 
@@ -64,7 +64,7 @@ object Gpx {
         waypoints: List<Waypoint>,
         report: Report? = null
     ): String {
-        require(points.size == altitudeValid.size) { "nokta/rakım listeleri eş boyda olmalı" }
+        require(points.size == altitudeValid.size) { "point and altitude lists must have the same size" }
         val sb = StringBuilder()
         sb.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
         sb.append("<gpx version=\"1.1\" creator=\"Norda\" ")
@@ -92,7 +92,7 @@ object Gpx {
             sb.append("</trkseg>\n</trk>\n")
         }
         if (report != null) {
-            // GPX 1.1 şemasında extensions gpx'in SON çocuğudur.
+            // In the GPX 1.1 schema, extensions is the LAST child of gpx.
             sb.append("<extensions>\n<norda:report xmlns:norda=\"")
                 .append(NORDA_NS).append("\"")
             report.appVersion?.let { sb.append(" app=\"").append(escape(it)).append("\"") }
@@ -172,7 +172,7 @@ object Gpx {
         return Parsed(name, points, waypoints, parseReport(doc))
     }
 
-    /** `norda:report` bloğu — yoksa ya da bozuksa null (tolerans kuralı). */
+    /** The `norda:report` block — null if absent or broken (tolerance rule). */
     private fun parseReport(doc: org.w3c.dom.Document): Report? {
         val reports = doc.getElementsByTagName("norda:report")
         if (reports.length == 0) return null
@@ -228,7 +228,7 @@ object Gpx {
                 fmt.timeZone = TimeZone.getTimeZone("UTC")
                 return fmt.parse(text.trim())?.time ?: 0
             } catch (_: Exception) {
-                // sıradaki biçim denenir
+                // try the next format
             }
         }
         return 0

@@ -1,8 +1,9 @@
 package com.aripd.norda.core.track
 
 /**
- * Bitmiş bir aktivitenin özeti — geçmiş listesinin satırı. Pil seviyeleri
- * kayıt başı/sonu okunur; okunamadıysa null kalır (Battery kuralları).
+ * Summary of a finished activity — a row of the history list. Battery levels
+ * are read at recording start/end; they stay null if unreadable (Battery
+ * rules).
  */
 data class ActivitySummary(
     val id: Long,

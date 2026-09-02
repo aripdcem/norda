@@ -18,9 +18,9 @@ import com.aripd.norda.map.TileDownloader
 import java.io.File
 
 /**
- * Harita paketleri (docs/MVP.md, 3.5): indirilenler + index.json'daki
- * indirilebilir paketler tek listede. İndirme SHA-256 ile doğrulanır.
- * Elle içe aktarma (SAF) çevrimdışı yedek yol olarak durur.
+ * Map packages (docs/MVP.md, 3.5): downloaded ones + the downloadable
+ * packages from index.json in a single list. Downloads are verified with
+ * SHA-256. Manual import (SAF) remains as the offline fallback path.
  */
 class MapsActivity : Activity() {
 
@@ -120,7 +120,7 @@ class MapsActivity : Activity() {
         adapter.notifyDataSetChanged()
     }
 
-    /** Liste ağdan gelir; ağ yoksa yalnız yerel paketler görünür. */
+    /** The list comes from the network; without it only local packages show. */
     private fun fetchIndex() {
         Thread {
             val fetched = try {
@@ -191,7 +191,7 @@ class MapsActivity : Activity() {
     }
 
     private fun importPackage(uri: Uri) {
-        val name = displayName(uri) ?: "paket-${System.currentTimeMillis()}.mbtiles"
+        val name = displayName(uri) ?: "pack-${System.currentTimeMillis()}.mbtiles"
         val target = File(
             MapPackages.dir(this),
             if (name.endsWith(".mbtiles")) name else "$name.mbtiles"

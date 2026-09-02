@@ -4,9 +4,9 @@ import android.content.Context
 import java.io.File
 
 /**
- * İndirilen/içe aktarılan harita paketlerinin dosya yönetimi. Paketler
- * uygulama verisinden ayrıdır: silinip yeniden eklenebilir, aktivite
- * veritabanı etkilenmez (docs/MVP.md, 7.3).
+ * File management for downloaded/imported map packages. Packages are separate
+ * from the app data: they can be deleted and re-added, and the activity
+ * database is unaffected (docs/MVP.md, 7.3).
  */
 object MapPackages {
 
@@ -19,8 +19,8 @@ object MapPackages {
             ?: emptyList()
 
     /**
-     * Verilen konumu kapsayan ilk paketi açar; kapsayan yoksa ilk paketi.
-     * Konum bilinmiyorsa ilk paket.
+     * Opens the first package covering the given location; if none covers it,
+     * the first package. If the location is unknown, the first package.
      */
     fun openBest(context: Context, latDeg: Double?, lonDeg: Double?): TileStore? {
         val files = list(context)

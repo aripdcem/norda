@@ -14,7 +14,7 @@ import com.aripd.norda.core.nav.WaypointNaming
 import com.aripd.norda.storage.AppDatabase
 import com.aripd.norda.storage.WaypointDao
 
-/** Nokta listesi: dokun → yeniden adlandır, uzun bas → sil. */
+/** Waypoint list: tap → rename, long-press → delete. */
 class WaypointsActivity : Activity() {
 
     private lateinit var dao: WaypointDao

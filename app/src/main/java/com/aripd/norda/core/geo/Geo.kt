@@ -9,15 +9,15 @@ import kotlin.math.sin
 import kotlin.math.sqrt
 
 /**
- * Saf jeodezi: mesafe, büyük daire kerterizi ve açı aritmetiği tek modülde.
- * Android'e dokunmaz; tamamı JVM'de test edilir.
+ * Pure geodesy: distance, great-circle bearing and angle arithmetic in one
+ * module. Touches no Android; all of it is tested on the JVM.
  */
 object Geo {
 
-    /** Ortalama Dünya yarıçapı (IUGG). */
+    /** Mean Earth radius (IUGG). */
     private const val EARTH_RADIUS_M = 6_371_008.8
 
-    /** İki koordinat arasındaki büyük daire mesafesi, metre (haversine). */
+    /** Great-circle distance between two coordinates, in metres (haversine). */
     fun distanceMeters(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
         val dLat = Math.toRadians(lat2 - lat1)
         val dLon = Math.toRadians(lon2 - lon1)
@@ -27,11 +27,11 @@ object Geo {
     }
 
     /**
-     * [fromLat],[fromLon] noktasından [toLat],[toLon] noktasına giden büyük
-     * daire yayının çıkış kerterizi, gerçek kuzeye göre 0–360°.
+     * Initial bearing of the great-circle arc from [fromLat],[fromLon] to
+     * [toLat],[toLon], 0–360° relative to true north.
      *
-     * Δλ hedef − kaynak yönündedir; işaret ters alınırsa sonuç doğu–batı
-     * aynalanır (bkz. docs/MVP.md, 9. bölüm) ve aşağıdaki ekvator testi düşer.
+     * Δλ runs destination − source; with the sign reversed the result mirrors
+     * east–west (see docs/MVP.md, section 9) and the equator test below fails.
      */
     fun initialBearingDeg(fromLat: Double, fromLon: Double, toLat: Double, toLon: Double): Double {
         val phi1 = Math.toRadians(fromLat)
@@ -42,13 +42,13 @@ object Geo {
         return normalizeDeg(Math.toDegrees(atan2(y, x)))
     }
 
-    /** Açıyı [0, 360) aralığına indirger. */
+    /** Reduces an angle into the [0, 360) range. */
     fun normalizeDeg(deg: Double): Double {
         val m = deg % 360.0
         return if (m < 0) m + 360.0 else m
     }
 
-    /** [from] açısından [to] açısına işaretli en kısa dönüş, (-180, 180]. */
+    /** Signed shortest turn from angle [from] to angle [to], (-180, 180]. */
     fun signedDifferenceDeg(from: Double, to: Double): Double {
         val d = normalizeDeg(to - from)
         return if (d > 180.0) d - 360.0 else d

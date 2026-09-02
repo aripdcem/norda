@@ -11,9 +11,10 @@ import com.aripd.norda.core.heading.Smoothing
 import kotlin.math.sqrt
 
 /**
- * Yön okuma (docs/MVP.md, 6.1): rotation vector → ekran yönüne remap →
- * zaman sabitli yumuşatma. Ham manyetometre de dinlenir — füzyon yönü verir
- * ama alanın BÜYÜKLÜĞÜNÜ vermez; bozulma algılama o büyüklüğe bakar.
+ * Heading readout (docs/MVP.md, 6.1): rotation vector → remap to the display
+ * rotation → time-constant smoothing. The raw magnetometer is listened to as
+ * well — the fusion gives the heading but not the MAGNITUDE of the field;
+ * disturbance detection looks at that magnitude.
  */
 class HeadingProvider(
     context: Context,

@@ -10,9 +10,9 @@ import android.view.View
 import kotlin.math.min
 
 /**
- * Elle çizilen kadran: kadran gerçek kuzeye göre döner, üstteki gösterge
- * sabittir. Kuzey iğnesi yeşil, başlangıç noktası işareti altın baklava.
- * onDraw kare başına tahsis yapmaz.
+ * Hand-drawn dial: the dial rotates relative to true north, the indicator at
+ * the top is fixed. The north needle is green, the start-point marker a golden
+ * diamond. onDraw allocates nothing per frame.
  */
 class CompassView @JvmOverloads constructor(
     context: Context,
@@ -81,7 +81,7 @@ class CompassView @JvmOverloads constructor(
         invalidate()
     }
 
-    /** En yakın noktanın kerterizi — içi boş baklava (başlangıç dolu olandır). */
+    /** Nearest waypoint's bearing — hollow diamond (the filled one is the start). */
     fun setWaypointBearing(deg: Double?) {
         waypointBearingDeg = deg
         invalidate()
@@ -98,7 +98,7 @@ class CompassView @JvmOverloads constructor(
 
         canvas.drawCircle(cx, cy, radius, ringPaint)
 
-        // 30°'de bir çentik; ana yönlerde harf (K/D/G/B).
+        // A tick every 30°; letters at the cardinal points (N/E/S/W).
         for (i in 0 until 12) {
             canvas.save()
             canvas.rotate(i * 30f, cx, cy)
@@ -114,7 +114,7 @@ class CompassView @JvmOverloads constructor(
             canvas.restore()
         }
 
-        // Kuzey iğnesi (dolu) ve güney yarısı (çizgi).
+        // North needle (filled) and the south half (a line).
         needlePath.rewind()
         needlePath.moveTo(cx, cy - radius * 0.56f)
         needlePath.lineTo(cx - radius * 0.09f, cy)
@@ -123,7 +123,7 @@ class CompassView @JvmOverloads constructor(
         canvas.drawPath(needlePath, needlePaint)
         canvas.drawLine(cx, cy, cx, cy + radius * 0.44f, southPaint)
 
-        // Başlangıç işareti: hedef kerterizinde altın baklava (kadran çerçevesi).
+        // Start marker: golden diamond at the target bearing (in the dial frame).
         targetBearingDeg?.let { bearing ->
             canvas.save()
             canvas.rotate(bearing.toFloat(), cx, cy)
@@ -156,7 +156,7 @@ class CompassView @JvmOverloads constructor(
 
         canvas.restore()
 
-        // Sabit üst gösterge: telefonun baktığı yön.
+        // Fixed top indicator: the direction the phone is facing.
         needlePath.rewind()
         needlePath.moveTo(cx, cy - radius - 6f)
         needlePath.lineTo(cx - radius * 0.06f, cy - radius * 1.12f - 6f)

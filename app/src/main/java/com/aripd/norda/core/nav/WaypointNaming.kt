@@ -1,8 +1,8 @@
 package com.aripd.norda.core.nav
 
 /**
- * Varsayılan nokta adları: "Nokta N" — N, listede boş olan İLK numaradır;
- * silinen numaralar yeniden kullanılır (docs/MVP.md, 2.1).
+ * Default waypoint names: "Point N" — N is the FIRST number free in the list;
+ * deleted numbers are reused (docs/MVP.md, 2.1).
  */
 object WaypointNaming {
 
@@ -19,7 +19,7 @@ object WaypointNaming {
         return "$prefix $n"
     }
 
-    /** Ad temizliği: kırpma + satır sonlarının boşluğa inmesi. Boş kalırsa null. */
+    /** Name cleanup: trimming + line breaks collapsed to spaces. Null if left empty. */
     fun sanitize(raw: String): String? {
         val cleaned = raw.replace('\n', ' ').replace('\r', ' ').trim()
         return cleaned.ifEmpty { null }

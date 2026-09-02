@@ -28,9 +28,10 @@ import com.aripd.norda.core.track.GpsFilter
 import com.aripd.norda.tracking.TrackingService
 
 /**
- * Faz 1'in sensör tanılama ekranı: ham konum ve yön verisi. Saha
- * doğrulaması için Home'dan erişilir durumda tutulur. Faz 8'den beri kayıt
- * sürerken filtre sayaçlarını da gösterir — eşik kalibrasyonunun ham verisi.
+ * Phase 1's sensor diagnostics screen: raw location and heading data. Kept
+ * reachable from Home for field verification. Since Phase 8 it also shows the
+ * filter counters while a recording is running — the raw data for threshold
+ * calibration.
  */
 class DiagnosticsActivity : Activity(), LocationListener, SensorEventListener {
 
@@ -56,7 +57,7 @@ class DiagnosticsActivity : Activity(), LocationListener, SensorEventListener {
     private var lastFixElapsedMs = 0L
     private var startFix: Location? = null
 
-    // Uydu görünürlüğü (F-9): fix yokken bile çipin ne gördüğü belli olsun.
+    // Satellite visibility (F-9): what the chip sees is known even without a fix.
     private var gnssCallback: GnssStatus.Callback? = null
     private var satsSeen = 0
     private var satsUsed = 0
@@ -123,7 +124,8 @@ class DiagnosticsActivity : Activity(), LocationListener, SensorEventListener {
         handler.post(ageTicker)
     }
 
-    // Pil kuralı: ekran görünmüyorken ne sensör ne konum dinlenir.
+    // Battery rule: neither sensors nor location are listened to while the
+    // screen is not visible.
     override fun onPause() {
         super.onPause()
         sensorManager.unregisterListener(this)
@@ -133,7 +135,7 @@ class DiagnosticsActivity : Activity(), LocationListener, SensorEventListener {
         handler.removeCallbacks(ageTicker)
     }
 
-    // ---- İzin ----
+    // ---- Permission ----
 
     private var permissionAskedBefore = false
 
@@ -182,7 +184,7 @@ class DiagnosticsActivity : Activity(), LocationListener, SensorEventListener {
         }
     }
 
-    // ---- Konum ----
+    // ---- Location ----
 
     private fun startLocationUpdates() {
         if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) !=
@@ -190,9 +192,10 @@ class DiagnosticsActivity : Activity(), LocationListener, SensorEventListener {
         ) {
             return
         }
-        // Mesafe süzgeci bilerek 0 (docs/MVP.md, 5.3'te belgelenen tuzak).
-        // Sağlayıcıya kapalıyken de kayıt olunur (0.8.0 servis düzeltmesiyle
-        // aynı desen); guard yalnız var olmayan sağlayıcı içindir.
+        // Distance filter deliberately 0 (the trap documented in docs/MVP.md, 5.3).
+        // We subscribe to the provider even while it is disabled (same pattern
+        // as the 0.8.0 service fix); the guard is only for a provider that
+        // does not exist.
         if (LocationManager.GPS_PROVIDER in locationManager.allProviders) {
             locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000L, 0f, this)
         }
@@ -229,7 +232,7 @@ class DiagnosticsActivity : Activity(), LocationListener, SensorEventListener {
         renderStart()
     }
 
-    @Deprecated("Framework çağırmaya devam ediyor; API 29 öncesi için gerekli")
+    @Deprecated("The framework still calls this; needed for API < 29")
     override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) = Unit
     override fun onProviderEnabled(provider: String) = Unit
     override fun onProviderDisabled(provider: String) {
@@ -242,8 +245,8 @@ class DiagnosticsActivity : Activity(), LocationListener, SensorEventListener {
             locationText.text = getString(R.string.location_needs_permission)
             return
         }
-        // Uydu satırı fix'ten bağımsız: çipin ne gördüğü her durumda görünür
-        // (F-9). 0/0 = gökyüzü yok; N görülüp 0 kullanılıyorsa kilit yok.
+        // The satellite line is independent of the fix: what the chip sees is
+        // visible in every case (F-9). 0/0 = no sky; N seen but 0 used = no lock.
         val satellites = getString(R.string.diag_satellites, satsUsed, satsSeen)
         if (fix == null) {
             locationText.text = getString(R.string.location_waiting) + "\n" + satellites
@@ -262,9 +265,10 @@ class DiagnosticsActivity : Activity(), LocationListener, SensorEventListener {
     }
 
     /**
-     * Filtre sayaçları — kalibrasyonun ham verisi (Faz 8). Kayıt sürerken
-     * canlı; kayıt yokken son kaydın kalıcı sayaçları gösterilir (F-2):
-     * tur raporu eve dönünce yazılabilsin.
+     * Filter counters — the raw data for calibration (Phase 8). Live while a
+     * recording is running; without one, the persisted counters of the last
+     * recording are shown (F-2): so the outing report can be written after
+     * getting home.
      */
     private fun renderFilter() {
         val s = TrackingService.session
@@ -320,7 +324,7 @@ class DiagnosticsActivity : Activity(), LocationListener, SensorEventListener {
         startText.text = getString(R.string.start_line, bearing.toInt(), distanceText)
     }
 
-    // ---- Yön ----
+    // ---- Heading ----
 
     override fun onSensorChanged(event: SensorEvent) {
         if (event.sensor.type != Sensor.TYPE_ROTATION_VECTOR) return

@@ -1,16 +1,18 @@
 package com.aripd.norda.core.db
 
 /**
- * SQLite şeması ve göç planı saf veri olarak (docs/MVP.md, 8.1). Hangi DDL
- * sıfırdan kurulumda, hangisi hangi sürümden göçte çalışır — hepsi burada
- * yaşar ve JVM'de test edilir; `AppDatabase` yalnız bu listeleri yürütür.
+ * SQLite schema and migration plan as pure data (docs/MVP.md, 8.1). Which DDL
+ * runs on a fresh install and which on a migration from which version — all
+ * of it lives here and is tested on the JVM; `AppDatabase` merely executes
+ * these lists.
  *
- * Kural: yeni tablo/sütun eklerken sürüm artar ve DDL HEM createStatements
- * HEM upgradeStatements yoluna girer. Parite testi (SchemaTest) göçle gelen
- * kurulumun sıfırdan kurulumla aynı şemaya varmadığını yakalar — 0.7.0'daki
- * "DAO var, tablo yok" çökmesi tam olarak bu değişmezin ihlaliydi.
+ * Rule: when adding a new table/column the version increases and the DDL
+ * enters BOTH the createStatements AND the upgradeStatements path. The parity
+ * test (SchemaTest) catches a migrated install not arriving at the same
+ * schema as a fresh install — the "DAO exists, table doesn't" crash in 0.7.0
+ * was exactly a violation of this invariant.
  *
- * Sürümler: v1 activity + track_point (+ indeks), v2 + waypoint,
+ * Versions: v1 activity + track_point (+ index), v2 + waypoint,
  * v3 + activity.start_battery/end_battery.
  */
 object Schema {
@@ -52,27 +54,28 @@ object Schema {
                 created_at INTEGER NOT NULL
             )"""
 
-    // v3: aktivite başına pil ölçümü — okunamadıysa NULL kalır.
+    // v3: per-activity battery measurement — stays NULL if it could not be read.
     private const val ALTER_ACTIVITY_START_BATTERY =
         "ALTER TABLE activity ADD COLUMN start_battery INTEGER"
     private const val ALTER_ACTIVITY_END_BATTERY =
         "ALTER TABLE activity ADD COLUMN end_battery INTEGER"
 
     /**
-     * Sıfırdan kurulum (onCreate) = v1 tabanı + göç zinciri: iki kurulum yolu
-     * aynı tanımdan beslenir, parite yapısal olarak da korunur (test yine
-     * nöbette — birisi bu bileşimi bozarsa yakalar).
+     * Fresh install (onCreate) = the v1 base + the migration chain: both
+     * install paths feed from the same definition, so parity is preserved
+     * structurally too (the test still stands guard — it catches anyone
+     * breaking this composition).
      */
     fun createStatements(version: Int = VERSION): List<String> {
-        require(version in 1..VERSION) { "bilinmeyen şema sürümü: $version" }
+        require(version in 1..VERSION) { "unknown schema version: $version" }
         return listOf(CREATE_ACTIVITY, CREATE_TRACK_POINT, CREATE_POINT_INDEX) +
             upgradeStatements(1, version)
     }
 
-    /** Göç (onUpgrade): eski sürümü hedef sürüme taşıyan DDL, sırayla. */
+    /** Migration (onUpgrade): DDL moving the old version to the target, in order. */
     fun upgradeStatements(oldVersion: Int, newVersion: Int = VERSION): List<String> {
         require(oldVersion in 1..newVersion && newVersion <= VERSION) {
-            "geçersiz göç: v$oldVersion → v$newVersion"
+            "invalid migration: v$oldVersion → v$newVersion"
         }
         val out = mutableListOf<String>()
         if (oldVersion < 2 && newVersion >= 2) out += CREATE_WAYPOINT

@@ -20,9 +20,9 @@ import com.aripd.norda.storage.WaypointDao
 import com.aripd.norda.tracking.TrackingService
 
 /**
- * Kayıt ekranı — Faz 3'ten itibaren yalnızca bir gösterge: kaydın sahibi
- * TrackingService. Geri tuşu kaydı bitirmez; kayıt arka planda sürer ve
- * bildirimden geri dönülür.
+ * Recording screen — from Phase 3 on merely a display: the recording is owned
+ * by TrackingService. The back button does not finish the recording; it keeps
+ * running in the background and the notification leads back to it.
  */
 class RecordingActivity : Activity() {
 
@@ -60,8 +60,8 @@ class RecordingActivity : Activity() {
         liveMap.follow = true
         liveMap.interactive = false
 
-        // Servis zaten kayıttaysa (bildirimden ya da Home'dan dönüş) yeni
-        // kayıt açılmaz; yalnızca gösterilir.
+        // If the service is already recording (returning from the notification
+        // or from Home) no new recording is opened; it is only displayed.
         if (!TrackingService.isRecording) {
             startForegroundService(
                 Intent(this, TrackingService::class.java)
@@ -93,7 +93,7 @@ class RecordingActivity : Activity() {
         liveMap.setWaypoints(WaypointDao(AppDatabase.get(this)).list())
     }
 
-    /** Kayıt sırasında tek dokunuşla nokta: son kabul edilen konuma (MVP 2.1). */
+    /** One-tap waypoint while recording: at the last accepted location (MVP 2.1). */
     private fun addWaypointHere() {
         val last = TrackingService.session?.points?.lastOrNull()
         if (last == null) {
@@ -115,7 +115,7 @@ class RecordingActivity : Activity() {
     private fun render() {
         val session = TrackingService.session
         if (session == null) {
-            // Kayıt başka yerden bitirildi ya da servis kapandı.
+            // The recording was finished elsewhere or the service shut down.
             finish()
             return
         }
@@ -124,7 +124,7 @@ class RecordingActivity : Activity() {
         liveMap.setTrack(points)
         points.lastOrNull()?.let { last ->
             if (!mapStoreLoaded) {
-                // İlk konumla birlikte, o konumu kapsayan paket seçilir.
+                // With the first location, the package covering it is chosen.
                 mapStoreLoaded = true
                 liveMap.setStore(MapPackages.openBest(this, last.latitude, last.longitude))
             }
@@ -145,9 +145,10 @@ class RecordingActivity : Activity() {
         )
         stateText.text =
             if (session.state == RecordingSession.State.RECORDING && points.isEmpty()) {
-                // GPS henüz oturmadı (F-4): durum yerine canlı GPS kalitesi —
-                // "2 dakikalık tur neden boş kaldı" ekranda görünür olsun.
-                // Güç tasarrufu GPS'i kısabilir (F-5); açıksa o da söylenir.
+                // GPS has not settled yet (F-4): live GPS quality instead of the
+                // state — "why did the 2-minute outing stay empty" should be
+                // visible on screen. Battery saver can throttle GPS (F-5); if
+                // it is on, that is said too.
                 val acc = session.latestAccuracyM
                 val base =
                     if (acc == null) getString(R.string.location_waiting)

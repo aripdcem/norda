@@ -3,9 +3,10 @@ package com.aripd.norda.core.nav
 import com.aripd.norda.core.geo.Geo
 
 /**
- * Return to Start kılavuzu (docs/MVP.md, 9. bölüm): mevcut konumdan
- * başlangıca kuş uçuşu kerteriz + mesafe + tempo biliniyorsa tahmini süre.
- * Bu bir yol ağı rotası değildir — bilinçli tasarım kararı.
+ * Return to Start guidance (docs/MVP.md, section 9): straight-line bearing +
+ * distance from the current position to the start, plus an estimated time if
+ * the pace is known. This is not a road-network route — a deliberate design
+ * decision.
  */
 object ReturnToStart {
 
@@ -27,8 +28,8 @@ object ReturnToStart {
     }
 
     /**
-     * Hedefe dönmek için işaretli açı: pozitif sağa, negatif sola.
-     * (Device heading ile target bearing ayrımı — docs/MVP.md, 6.4.)
+     * Signed angle to turn towards the target: positive right, negative left.
+     * (The device heading vs. target bearing distinction — docs/MVP.md, 6.4.)
      */
     fun relativeAngleDeg(headingDeg: Double, targetBearingDeg: Double): Double =
         Geo.signedDifferenceDeg(headingDeg, targetBearingDeg)

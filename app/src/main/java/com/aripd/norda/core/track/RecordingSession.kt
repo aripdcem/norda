@@ -3,13 +3,13 @@ package com.aripd.norda.core.track
 import com.aripd.norda.core.geo.Geo
 
 /**
- * Kayıt durum makinesi: filtre, oto-duraklatma, kronometre, mesafe ve
- * yükseklik tek çatı altında. Saf Kotlin — Android tarafı yalnızca fix'leri
- * iletir ve kabul edilen noktaları kalıcılaştırır.
+ * Recording state machine: filter, auto-pause, stopwatch, distance and
+ * elevation under one roof. Pure Kotlin — the Android side only forwards
+ * fixes and persists the accepted points.
  *
- * İki ayrı zaman tabanı bilinçli: kronometre işlemleri monotonik saatle
- * çağrılır (kullanıcı duvar saatini değiştirebilir), oto-duraklatma ise
- * fix'lerin kendi zaman damgalarıyla karar verir.
+ * Two separate time bases, deliberately: stopwatch operations are called with
+ * the monotonic clock (the user can change the wall clock), while auto-pause
+ * decides using the fixes' own timestamps.
  */
 class RecordingSession(
     val type: ActivityType,
@@ -33,44 +33,51 @@ class RecordingSession(
     val elevationGainM get() = elevation.gainM
     val elevationLossM get() = elevation.lossM
 
-    // Elle duraklatma sonrası: aradaki yol mesafeye sayılmaz (kullanıcı o
-    // bölümü bilerek dışladı) ve dedektör yeni konumla sıfırlanır.
+    // After a manual pause: the path in between does not count towards the
+    // distance (the user deliberately excluded that segment) and the detector
+    // is reset with the new location.
     private var breakSegment = false
     private var pendingDetectorReset = false
 
-    // Filtre kalibrasyonunun ham verisi (Faz 8): karar başına sayaç. Yalnız
-    // RECORDING durumunda değerlendirilen fix'ler sayılır — duraklatmada
-    // gelenler kalibrasyon verisi değildir. Oturma kapısındaki adayın kararı
-    // ikinci fix'le kesinleşir; hiç kesinleşmeyen aday sayılmaz.
+    // Raw data for filter calibration (Phase 8): a counter per verdict. Only
+    // fixes evaluated in the RECORDING state are counted — those arriving
+    // during a pause are not calibration data. The verdict on the tentative
+    // fix at the settling gate is finalized by the second fix; a tentative
+    // that never gets finalized is not counted.
     private val filterCounts = IntArray(GpsFilter.Verdict.entries.size)
 
     fun filterCount(verdict: GpsFilter.Verdict): Int = filterCounts[verdict.ordinal]
 
     fun evaluatedFixCount(): Int = filterCounts.sum()
 
-    /** Bu çağrıda kayda giren nokta + kalıcılaştırma bayrağı (çağıran DB'ye yazar). */
+    /**
+     * A point entering the recording in this call + the persistence flag (the
+     * caller writes it to the DB).
+     */
     data class Accepted(val point: TrackPoint, val hasAltitude: Boolean)
 
-    // Oturma kapısı (F-11): iki turda ilk fix 13–26 m sapık geldi ve çapa
-    // yapıldığı için hayalet mesafe — sıçrayan nokta reddedilse bile — bir
-    // sonraki noktayla yine sayıldı. İlk fix bu yüzden çapa değil ADAYdır:
-    // ikinci fix'le fiziksel tutarlılık doğrulanana dek kayda girmez;
-    // ışınlama çıkarsa suçlu ilk fix'tir — aday değiştirilir.
+    // Settling gate (F-11): on two outings the first fix came in 13–26 m off,
+    // and because it was made the anchor, the phantom distance — even with the
+    // jumping point rejected — was still counted with the next point. That is
+    // why the first fix is not an anchor but TENTATIVE: it does not enter the
+    // recording until the second fix confirms physical consistency; if a
+    // teleport shows up, the culprit is the first fix — the tentative is
+    // replaced.
     private var tentative: Accepted? = null
 
-    // GPS oturana dek geçen süre ekranda görünür olmalı (F-4): kayda nokta
-    // girmemişken son/en iyi doğruluk buradan okunur. 0 = cihaz doğruluk
-    // bildirmiyor, kaliteye sayılmaz.
+    // The time until GPS settles must be visible on screen (F-4): while no
+    // point has entered the recording, the latest/best accuracy is read from
+    // here. 0 = the device reports no accuracy; it does not count as quality.
     var latestAccuracyM: Float? = null
         private set
     var bestAccuracyM: Float? = null
         private set
 
     /**
-     * Ham fix işlenir; bu çağrıda kayda GİREN noktalar döner (çağıran
-     * kalıcılaştırır): boş, tek nokta ya da — aday ikinci fix'le
-     * doğrulandığında — aday + fix birlikte. [hasAltitude] yalnız geçerli
-     * rakımlarda true olmalı.
+     * Processes a raw fix; returns the points that ENTER the recording in this
+     * call (the caller persists them): none, a single point, or — when the
+     * tentative is confirmed by the second fix — the tentative + the fix
+     * together. [hasAltitude] must be true only for valid altitudes.
      */
     fun onFix(fix: TrackPoint, hasAltitude: Boolean, nowMonotonicMillis: Long): List<Accepted> {
         if (state == State.STOPPED || state == State.PAUSED) return emptyList()
@@ -80,12 +87,14 @@ class RecordingSession(
             pendingDetectorReset = false
         }
 
-        // Kapı yalnız kayıt boşken işler; kurtarmada (prime) devralınan son
-        // nokta kayda konduğundan orada oturma sınaması yeniden yapılmaz.
+        // The gate operates only while the recording is empty; on recovery
+        // (prime) the inherited last point is placed into the recording, so the
+        // settling test is not repeated there.
         val gate = recorded.isEmpty()
         val previous = if (gate) tentative?.point else recorded.lastOrNull()
-        // accepted: oto-duraklatma dedektörünün gördüğü bayrak (aday da kaliteli
-        // harekettir); commitFix: fix'in kendisinin bu çağrıda kayda girmesi.
+        // accepted: the flag the auto-pause detector sees (a tentative is also
+        // quality movement); commitFix: the fix itself entering the recording
+        // in this call.
         var accepted = false
         var commitFix = false
         var confirmTentative = false
@@ -99,8 +108,8 @@ class RecordingSession(
                 GpsFilter.Verdict.ACCEPT -> {
                     accepted = true
                     if (previous == null) {
-                        // İlk kaliteli fix: aday olur, kabul sayımı ve kayıt
-                        // ikinci fix'le kesinleşir.
+                        // First quality fix: becomes the tentative; the accept
+                        // count and the recording are finalized by the second fix.
                         tentative = Accepted(fix, hasAltitude)
                     } else {
                         confirmTentative = true
@@ -108,14 +117,16 @@ class RecordingSession(
                     }
                 }
                 GpsFilter.Verdict.JITTER -> {
-                    // Aday yakınında kıpırdama: çift tutarlı → aday kesinleşir,
-                    // fix'in kendisi her zamanki gibi titreme olarak elenir.
+                    // Jitter near the tentative: the pair is consistent → the
+                    // tentative is confirmed, the fix itself is rejected as
+                    // jitter as usual.
                     filterCounts[verdict.ordinal]++
                     confirmTentative = true
                 }
                 GpsFilter.Verdict.TELEPORT -> {
-                    // Çift fiziksel olarak tutarsız; saha kanıtına göre sapık
-                    // olan İLK fix'tir. Sayaç düşen adayı anlatır.
+                    // The pair is physically inconsistent; per field evidence
+                    // the outlier is the FIRST fix. The counter records the
+                    // dropped tentative.
                     filterCounts[verdict.ordinal]++
                     tentative = Accepted(fix, hasAltitude)
                 }
@@ -155,7 +166,8 @@ class RecordingSession(
             )
         }
         breakSegment = false
-        // Kapı dışındaki kabul yukarıda sayıldı; kapıdaki burada kesinleşir.
+        // An accept outside the gate was counted above; one at the gate is
+        // finalized here.
         if (gate) filterCounts[GpsFilter.Verdict.ACCEPT.ordinal]++
         recorded += fix
         if (hasAltitude) elevation.onAltitude(fix.altitude)
@@ -173,11 +185,11 @@ class RecordingSession(
     }
 
     /**
-     * Süreç ölümü sonrası kurtarma: diskteki yarım kayıttan devralınan durum.
-     * Yalnızca kurgudan hemen sonra, ilk fix'ten önce çağrılır. Mesafe ve
-     * süre devralınır; yükseklik, saklanan rakımlar sırayla beslenerek
-     * aynı histerezisle yeniden hesaplanır; son nokta filtreye "önceki"
-     * olarak verilir.
+     * Recovery after process death: the state inherited from the unfinished
+     * recording on disk. Called only right after construction, before the
+     * first fix. Distance and duration are inherited; elevation is recomputed
+     * with the same hysteresis by feeding the stored altitudes in order; the
+     * last point is handed to the filter as "previous".
      */
     fun prime(
         recoveredDistanceM: Double,

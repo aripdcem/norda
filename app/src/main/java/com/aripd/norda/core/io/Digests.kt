@@ -2,7 +2,7 @@ package com.aripd.norda.core.io
 
 import java.security.MessageDigest
 
-/** SHA-256 özetleri: indirilen paketlerin doğrulanması. Saf, JVM'de testli. */
+/** SHA-256 digests: verification of downloaded packages. Pure, tested on the JVM. */
 object Digests {
 
     fun sha256Hex(bytes: ByteArray): String =

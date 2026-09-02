@@ -5,9 +5,10 @@ import android.hardware.GeomagneticField
 import com.aripd.norda.core.geo.Geo
 
 /**
- * Manyetik sapma ve beklenen alan şiddeti (docs/MVP.md, 6.3). Sapma yüzlerce
- * kilometrede bir derece oynar; 1 km yol alınmadan yeniden hesaplanmaz ve
- * kalıcı saklanır — sonraki açılışta gerçek kuzey anında hazırdır.
+ * Magnetic declination and expected field strength (docs/MVP.md, 6.3). The
+ * declination shifts by a degree over hundreds of kilometres; it is not
+ * recomputed before 1 km has been travelled and is persisted — on the next
+ * launch true north is ready instantly.
  */
 object DeclinationCache {
 
@@ -20,7 +21,7 @@ object DeclinationCache {
     private const val KEY_LON = "lon"
     private const val REFRESH_DISTANCE_M = 1_000.0
 
-    /** Son bilinen değerler — konum henüz yokken açılış için. */
+    /** Last known values — for launch, while there is no location yet. */
     fun cached(context: Context): Field? {
         val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
         if (!prefs.contains(KEY_DECL)) return null
@@ -30,7 +31,7 @@ object DeclinationCache {
         )
     }
 
-    /** Konum bilinince: gerekiyorsa yeniden hesaplar, saklar ve döner. */
+    /** Once the location is known: recomputes if needed, stores and returns. */
     fun update(
         context: Context,
         latDeg: Double,
@@ -55,7 +56,7 @@ object DeclinationCache {
         val geo = GeomagneticField(
             latDeg.toFloat(), lonDeg.toFloat(), altitudeM.toFloat(), nowMillis
         )
-        // getFieldStrength nanoTesla döner; sensör µT verir.
+        // getFieldStrength returns nanotesla; the sensor gives µT.
         val field = Field(geo.declination, geo.fieldStrength / 1000.0)
         prefs.edit()
             .putFloat(KEY_DECL, field.declinationDeg)

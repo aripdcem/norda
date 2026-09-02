@@ -7,12 +7,13 @@ import kotlin.math.exp
 import kotlin.math.sin
 
 /**
- * İbrenin alçak geçiren süzgeci (docs/MVP.md, 6.2).
+ * The needle's low-pass filter (docs/MVP.md, 6.2).
  *
- * Açı doğrudan değil sin/cos bileşenleri üzerinden süzülür — aksi hâlde
- * 359°→0° geçişinde ibre bir tam tur atardı. Saklanan şey katsayı değil
- * ZAMAN SABİTİDİR; katsayı her örnekte gerçek aralıktan hesaplanır, böylece
- * örnekleme hızı değişse de ibrenin hissi sabit kalır.
+ * The angle is filtered through its sin/cos components, not directly —
+ * otherwise the needle would spin a full turn at the 359°→0° crossing. What
+ * is stored is not a coefficient but the TIME CONSTANT; the coefficient is
+ * computed from the real interval on every sample, so the needle's feel stays
+ * the same even if the sampling rate changes.
  */
 class Smoothing(private val timeConstantSeconds: Double) {
 
@@ -20,7 +21,7 @@ class Smoothing(private val timeConstantSeconds: Double) {
     private var cosPart = 1.0
     private var started = false
 
-    /** Yeni örneği işler ve süzülmüş açıyı (0–360) döner. */
+    /** Processes a new sample and returns the filtered angle (0–360). */
     fun update(angleDeg: Double, dtSeconds: Double): Double {
         val rad = Math.toRadians(angleDeg)
         if (!started) {

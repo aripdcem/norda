@@ -5,8 +5,8 @@ import android.view.View
 import android.view.WindowInsets
 
 /**
- * targetSdk 35: kenardan kenara çizim zorunlu; sistem çubuklarının boşluğunu
- * pencere değil uygulama bırakır. Her ekranın kök görünümüne uygulanır.
+ * targetSdk 35: edge-to-edge drawing is mandatory; the app, not the window,
+ * leaves room for the system bars. Applied to every screen's root view.
  */
 object Insets {
 

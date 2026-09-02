@@ -3,7 +3,7 @@ package com.aripd.norda.map
 import android.graphics.Bitmap
 import android.util.LruCache
 
-/** Çözülmüş karo bitmap'leri için bellek önbelleği (LRU). */
+/** In-memory cache (LRU) for decoded tile bitmaps. */
 class TileCache {
 
     private val cache = object : LruCache<Long, Bitmap>(maxBytes()) {
@@ -16,7 +16,7 @@ class TileCache {
     }
 
     companion object {
-        /** z<32, x ve y < 2^26 — z20'ye kadar çakışmasız tek anahtar. */
+        /** z<32, x and y < 2^26 — a single collision-free key up to z20. */
         fun key(zoom: Int, x: Int, y: Int): Long =
             (zoom.toLong() shl 52) or (x.toLong() shl 26) or y.toLong()
 

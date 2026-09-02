@@ -1,15 +1,17 @@
 package com.aripd.norda.core.track
 
 /**
- * Histerezisli yükseklik kazanımı/kaybı (docs/MVP.md, 5.4).
+ * Elevation gain/loss with hysteresis (docs/MVP.md, 5.4).
  *
- * GNSS dikey hatası yatayın 2-3 katıdır; ham farkları toplamak düz yolda bile
- * yüzlerce metre hayalet tırmanış üretir. Burada yükseklik, son demirlenen
- * değerden eşik kadar net ayrışmadıkça sayılmaz; ayrışınca fark tek hamlede
- * işlenir ve demir güncellenir.
+ * GNSS vertical error is 2-3 times the horizontal; summing raw differences
+ * produces hundreds of metres of phantom climb even on flat ground. Here the
+ * altitude is not counted until it clearly separates from the last anchored
+ * value by the threshold; once it does, the difference is booked in one step
+ * and the anchor is updated.
  *
- * Yalnızca geçerli rakım bildiren fix'lerle beslenmelidir (Android tarafında
- * `Location.hasAltitude()` şartı) — 0.0 nöbetçi değeri hayalet iniş üretirdi.
+ * Must be fed only with fixes reporting a valid altitude (the
+ * `Location.hasAltitude()` condition on the Android side) — the 0.0 sentinel
+ * value would produce phantom descent.
  */
 class ElevationTracker(private val thresholdM: Double = 4.0) {
 

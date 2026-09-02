@@ -8,12 +8,13 @@ import java.net.URL
 import java.security.MessageDigest
 
 /**
- * Ağa dokunan TEK sınıf (docs/MVP.md, 11. bölüm): paket listesini okur ve
- * paket indirir. Tracking, pusula, navigasyon ve GPX ağ görmeden çalışır.
+ * The ONLY class that touches the network (docs/MVP.md, section 11): reads
+ * the package list and downloads packages. Tracking, compass, navigation and
+ * GPX work without ever seeing the network.
  *
- * İndirme önce `.part` dosyasına akar, SHA-256 doğrulanır, sonra adlandırılır;
- * yarım ya da bozuk indirme hiçbir zaman geçerli paket gibi görünmez.
- * Çağıran, işlemleri kendi iş parçacığında yürütür.
+ * A download first streams into a `.part` file, is verified with SHA-256 and
+ * then renamed; a partial or corrupt download never looks like a valid
+ * package. The caller runs these operations on its own thread.
  */
 object TileDownloader {
 
@@ -57,8 +58,9 @@ object TileDownloader {
     }
 
     /**
-     * Paketi [targetDir] altına `<id>.mbtiles` olarak indirir; SHA-256
-     * tutmazsa dosya silinir ve hata fırlatılır. [onProgress] 0-100 alır.
+     * Downloads the package into [targetDir] as `<id>.mbtiles`; if the SHA-256
+     * does not match, the file is deleted and an error is thrown. [onProgress]
+     * receives 0-100.
      */
     fun download(pkg: RemotePackage, targetDir: File, onProgress: (Int) -> Unit): File {
         val target = File(targetDir, "${pkg.id}.mbtiles")
@@ -93,11 +95,11 @@ object TileDownloader {
             }
             val actual = Digests.hex(digest.digest())
             if (actual != pkg.sha256) {
-                throw IllegalStateException("SHA-256 uyuşmuyor")
+                throw IllegalStateException("SHA-256 mismatch")
             }
             if (target.exists()) target.delete()
             if (!part.renameTo(target)) {
-                throw IllegalStateException("dosya adlandırılamadı")
+                throw IllegalStateException("could not rename the file")
             }
             onProgress(100)
             return target

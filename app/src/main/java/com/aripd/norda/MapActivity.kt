@@ -22,8 +22,8 @@ import java.util.Date
 import java.util.Locale
 
 /**
- * Tam ekran harita: bir aktivitenin izi (geçmişten, GPX dışa aktarmalı) ya da
- * bir paketin önizlemesi. Haritaya uzun basmak nokta ekler (MVP 2.1).
+ * Full-screen map: an activity's track (from history, with GPX export) or a
+ * package preview. Long-pressing the map adds a waypoint (MVP 2.1).
  */
 class MapActivity : Activity() {
 
@@ -104,7 +104,7 @@ class MapActivity : Activity() {
             .show()
     }
 
-    // ---- GPX dışa aktarma: tek dosyada iz + tüm noktalar (MVP 10. bölüm) ----
+    // ---- GPX export: track + all waypoints in a single file (MVP section 10) ----
 
     private fun exportFileName(): String {
         val date = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
@@ -128,7 +128,7 @@ class MapActivity : Activity() {
             )
             contentResolver.openOutputStream(uri)?.use { out ->
                 out.write(xml.toByteArray(Charsets.UTF_8))
-            } ?: throw IllegalStateException("çıkış akışı açılamadı")
+            } ?: throw IllegalStateException("could not open the output stream")
             Toast.makeText(this, R.string.gpx_exported, Toast.LENGTH_SHORT).show()
         } catch (e: Exception) {
             Toast.makeText(this, R.string.gpx_export_failed, Toast.LENGTH_LONG).show()
@@ -136,9 +136,10 @@ class MapActivity : Activity() {
     }
 
     /**
-     * Tur telemetrisi (F-3): özet + pil DB'den; filtre sayaçları yalnız son
-     * kayıt BU aktiviteyse eklenir — sayaçlar aktiviteye değil son kayda ait,
-     * eski bir izi dışa aktarırken yanlış sayaç gömülmemeli.
+     * Outing telemetry (F-3): summary + battery from the DB; the filter
+     * counters are added only if the last recording IS this activity — the
+     * counters belong to the last recording, not to the activity, and an old
+     * track exported later must not get the wrong counters embedded.
      */
     private fun buildReport(dao: ActivityDao): Gpx.Report? {
         val s = dao.summary(activityId) ?: return null

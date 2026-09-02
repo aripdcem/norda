@@ -11,7 +11,8 @@
         android:layout_height="0dp"
         android:layout_weight="1">
 
-        <!-- Ekran okuyucu için süs: tüm metrikler alttaki metinlerde. -->
+        <!-- Decorative for the screen reader: all metrics are in the texts
+             below. -->
         <com.aripd.norda.map.MapView
             android:id="@+id/liveMap"
             android:layout_width="match_parent"

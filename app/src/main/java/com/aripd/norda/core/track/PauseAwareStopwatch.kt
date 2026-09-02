@@ -1,9 +1,10 @@
 package com.aripd.norda.core.track
 
 /**
- * Duraklatmaları saymayan kronometre. Zaman dışarıdan verilir (saf ve test
- * edilebilir kalsın diye); Android tarafı `SystemClock.elapsedRealtime()`
- * geçirir — duvar saati değil, çünkü kullanıcı saati değiştirebilir.
+ * A stopwatch that does not count pauses. Time is supplied from outside (to
+ * stay pure and testable); the Android side passes
+ * `SystemClock.elapsedRealtime()` — not the wall clock, because the user can
+ * change the clock.
  */
 class PauseAwareStopwatch {
 
@@ -29,7 +30,7 @@ class PauseAwareStopwatch {
     fun elapsedMillis(nowMillis: Long): Long =
         accumulatedMillis + if (isRunning) nowMillis - runningSince else 0L
 
-    /** Kurtarma sonrası: kaybolan oturumun süresini devral. */
+    /** After recovery: take over the lost session's duration. */
     fun prime(elapsedMillis: Long) {
         accumulatedMillis = elapsedMillis
     }

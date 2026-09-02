@@ -1,6 +1,6 @@
 package com.aripd.norda.core.nav
 
-/** Adlandırılmış nokta (docs/MVP.md, 2.1). Saf model. */
+/** A named point (docs/MVP.md, 2.1). Pure model. */
 data class Waypoint(
     val id: Long,
     val name: String,

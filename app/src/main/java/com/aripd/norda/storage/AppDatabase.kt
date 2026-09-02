@@ -6,11 +6,12 @@ import android.database.sqlite.SQLiteOpenHelper
 import com.aripd.norda.core.db.Schema
 
 /**
- * SQLite açma/göç kabuğu (docs/MVP.md, 8. bölüm). İnce katman kuralı: burada
- * ve DAO'da mantık yoktur — DDL ve göç planı dahil her karar saf `Schema`'da
- * yaşar ve JVM'de test edilir; bu sınıf yalnız listeleri yürütür.
+ * SQLite open/migration shell (docs/MVP.md, section 8). Thin-layer rule:
+ * there is no logic here or in the DAOs — every decision, DDL and migration
+ * plan included, lives in the pure `Schema` and is tested on the JVM; this
+ * class merely executes the lists.
  *
- * WAL: fix başına tek INSERT ile çökmeye dayanıklı kayıt (8.3).
+ * WAL: crash-resilient recording with a single INSERT per fix (8.3).
  */
 class AppDatabase(context: Context) :
     SQLiteOpenHelper(context.applicationContext, "norda.db", null, Schema.VERSION) {

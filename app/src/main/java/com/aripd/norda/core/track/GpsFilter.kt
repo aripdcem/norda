@@ -3,35 +3,37 @@ package com.aripd.norda.core.track
 import com.aripd.norda.core.geo.Geo
 
 /**
- * Ham bir GPS fix'inin kayda değer olup olmadığına karar verir. Filtresiz GPS
- * mesafeyi şişirir ve rotayı çizik çizik yapar: soğuk fix ışınlamaları,
- * doğruluk sıçramaları ve durağan titreme burada elenir (docs/MVP.md, 5.2).
+ * Decides whether a raw GPS fix is worth recording. Unfiltered GPS inflates
+ * the distance and scribbles the route: cold-fix teleports, accuracy jumps
+ * and stationary jitter are weeded out here (docs/MVP.md, 5.2).
  */
 object GpsFilter {
 
-    /** Bundan kötü yatay doğruluk bildiren fix'ler atılır. */
+    /** Fixes reporting worse horizontal accuracy than this are dropped. */
     const val MAX_ACCURACY_M = 30f
 
     /**
-     * Bundan hızlı görünen hareket ışınlanmadır. Başlangıç değeri 15 idi;
-     * iki turda ilk-fix oturma sıçraması (12,7 ve 12,85 m/s) tavanın hemen
-     * altından geçince sahayla 10'a kalibre edildi (F-11, MVP 5.2):
-     * yürüyüş/koşu ürününde 36 km/h üstü hareket koşu değildir.
+     * Movement that appears faster than this is a teleport. The initial value
+     * was 15; after the first-fix settling jump on two outings (12.7 and
+     * 12.85 m/s) slipped just under the ceiling, it was field-calibrated to 10
+     * (F-11, MVP 5.2): in a walk/run product, movement above 36 km/h is not
+     * running.
      */
     const val MAX_SPEED_MPS = 10.0
 
-    /** Bunun altındaki kıpırdama yol değil, durağan titremedir. */
+    /** Movement below this is not distance travelled but stationary jitter. */
     const val MIN_DISTANCE_M = 2.0
 
     /**
-     * Karar + neden. Neden, filtre kalibrasyonunun ham verisidir (Faz 8):
-     * sahada eşik ayarlamak için hangi kuralın kaç fix elediği görünür olmalı.
+     * Verdict + reason. The reason is the raw data for filter calibration
+     * (Phase 8): to tune thresholds in the field, it must be visible which rule
+     * rejected how many fixes.
      */
     enum class Verdict { ACCEPT, BAD_ACCURACY, NON_MONOTONIC, JITTER, TELEPORT }
 
     fun evaluate(previous: TrackPoint?, candidate: TrackPoint): Verdict {
-        // accuracy <= 0, cihazın doğruluk bildirmediği anlamına gelir; böyle
-        // cihazlarda hiç kayıt yapmamaktansa fix kabul edilir.
+        // accuracy <= 0 means the device reports no accuracy; on such devices
+        // the fix is accepted rather than recording nothing at all.
         if (candidate.accuracyM > MAX_ACCURACY_M) return Verdict.BAD_ACCURACY
         if (previous == null) return Verdict.ACCEPT
 

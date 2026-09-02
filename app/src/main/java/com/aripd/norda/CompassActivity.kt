@@ -28,10 +28,11 @@ import kotlin.math.abs
 import kotlin.math.roundToInt
 
 /**
- * Pusula ve Return to Start (docs/MVP.md, 3.3 + 3.6). Device heading ile
- * target bearing ayrı kavramlardır: kadran cihazın baktığı yönü, altın
- * baklava başlangıcın yönünü gösterir; alt satır ne kadar dönüleceğini söyler.
- * Durum önceliği: manyetik bozulma > kalibrasyon (bozulma görsel ipucu vermez).
+ * Compass and Return to Start (docs/MVP.md, 3.3 + 3.6). Device heading and
+ * target bearing are separate concepts: the dial shows where the device is
+ * facing, the golden diamond shows the direction of the start; the bottom
+ * line says how far to turn. Status priority: magnetic disturbance >
+ * calibration (a disturbance gives no visual cue).
  */
 class CompassActivity : Activity(), LocationListener {
 
@@ -90,14 +91,15 @@ class CompassActivity : Activity(), LocationListener {
         startLocationUpdates()
     }
 
-    // Pil kuralı: ekran görünmüyorken ne sensör ne konum dinlenir.
+    // Battery rule: neither sensors nor location are listened to while the
+    // screen is not visible.
     override fun onPause() {
         super.onPause()
         headingProvider.stop()
         locationManager.removeUpdates(this)
     }
 
-    /** Aktif kaydın ilk noktası; kayıt yoksa en son aktivitenin başlangıcı. */
+    /** First point of the active recording; else the start of the latest activity. */
     private fun resolveStartPoint(): TrackPoint? {
         TrackingService.session?.points?.firstOrNull()?.let { return it }
         val dao = ActivityDao(AppDatabase.get(this))
@@ -111,9 +113,10 @@ class CompassActivity : Activity(), LocationListener {
         ) {
             return
         }
-        // Sağlayıcı kapalıyken de kayıt olunur (0.8.0'daki servis düzeltmesiyle
-        // aynı desen): kullanıcı konumu ekran açıkken açarsa fix'ler akar.
-        // Guard yalnız var olmayan sağlayıcı içindir — ona kayıt fırlatır.
+        // We subscribe even while the provider is disabled (same pattern as the
+        // 0.8.0 service fix): if the user turns location on while the screen is
+        // open, fixes start flowing. The guard is only for a provider that does
+        // not exist — subscribing to that one throws.
         if (LocationManager.GPS_PROVIDER in locationManager.allProviders) {
             locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000L, 0f, this)
         }
@@ -130,7 +133,7 @@ class CompassActivity : Activity(), LocationListener {
         )
     }
 
-    @Deprecated("Framework çağırmaya devam ediyor; API 29 öncesi için gerekli")
+    @Deprecated("The framework still calls this; needed for API < 29")
     override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) = Unit
     override fun onProviderEnabled(provider: String) = Unit
     override fun onProviderDisabled(provider: String) = Unit
@@ -150,7 +153,7 @@ class CompassActivity : Activity(), LocationListener {
         renderWaypoints()
     }
 
-    /** En yakın iki nokta: kadranda içi boş baklava en yakını gösterir. */
+    /** The two nearest waypoints: on the dial, the hollow diamond marks the nearest. */
     private fun renderWaypoints() {
         val fix = lastFix
         if (fix == null || waypoints.isEmpty()) {

@@ -42,7 +42,8 @@
         android:minLines="2"
         android:textSize="14sp" />
 
-    <!-- Ekran okuyucu için süs: sayısal yön ve durum yukarıdaki metinlerde. -->
+    <!-- Decorative for the screen reader: the numeric heading and status are
+         in the texts above. -->
     <com.aripd.norda.CompassView
         android:id="@+id/compassView"
         android:layout_width="match_parent"
