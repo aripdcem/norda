@@ -200,7 +200,18 @@ class Raster:
         """Even-odd scanline fill; rings are lists of (x, y) in pixel space,
         open or closed. Coordinates may lie far outside the canvas."""
         h, w = self.h, self.w
-        rows = [[] for _ in range(h)]
+        # Bucket edges only over the rows the polygon actually spans: a road
+        # segment quad touches a handful of rows, and allocating one bucket
+        # per canvas row for each of thousands of quads was the render-time
+        # bottleneck on dense urban tiles.
+        ys = [p[1] for ring in rings for p in ring]
+        if not ys:
+            return
+        lo = max(0, int(math.ceil(min(ys) - 0.5)))
+        hi = min(h - 1, int(math.ceil(max(ys) - 0.5)) - 1)
+        if hi < lo:
+            return
+        rows = [[] for _ in range(hi - lo + 1)]
         any_edge = False
         for ring in rings:
             n = len(ring)
@@ -214,21 +225,21 @@ class Raster:
                 if y0 > y1:
                     x0, y0, x1, y1 = x1, y1, x0, y0
                 # rows whose centre (r + 0.5) lies in [y0, y1)
-                r0 = max(0, int(math.ceil(y0 - 0.5)))
-                r1 = min(h - 1, int(math.ceil(y1 - 0.5)) - 1)
+                r0 = max(lo, int(math.ceil(y0 - 0.5)))
+                r1 = min(hi, int(math.ceil(y1 - 0.5)) - 1)
                 if r1 < r0:
                     continue
                 slope = (x1 - x0) / (y1 - y0)
                 edge = (x0, y0, slope)
                 for r in range(r0, r1 + 1):
-                    rows[r].append(edge)
+                    rows[r - lo].append(edge)
                 any_edge = True
         if not any_edge:
             return
         px = bytes(color)
         buf = self.buf
-        for r in range(h):
-            edges = rows[r]
+        for r in range(lo, hi + 1):
+            edges = rows[r - lo]
             if not edges:
                 continue
             yc = r + 0.5
