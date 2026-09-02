@@ -1,0 +1,39 @@
+# One-shot maintenance: rewrite the titles and notes of already published
+# releases in English (the project went international). Bodies are rebuilt
+# from the same templates release.yml and map-pack.yml use, so old and new
+# releases read identically. Tags, assets and dates are untouched — only
+# title/notes metadata changes. Idempotent; safe to re-run.
+
+name: Release notes to English
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Only print what would change (true/false)'
+        required: false
+        default: 'true'
+        type: string
+
+permissions:
+  contents: write   # gh release edit
+
+jobs:
+  rewrite:
+    name: Rewrite release notes
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Rewrite
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          if [ "$DRY_RUN" = "true" ]; then
+            python3 tools/release-notes-en.py --dry-run
+          else
+            python3 tools/release-notes-en.py
+          fi

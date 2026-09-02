@@ -2,13 +2,13 @@
 build/
 local.properties
 
-# İmzalama anahtarı ve parolaları — asla commit edilmez
+# Signing key and passwords — never committed
 keystore.properties
 keys/
 *.jks
 *.keystore
 
-# Üretilen APK'lar
+# Generated APKs
 dist/
 
 .idea/
