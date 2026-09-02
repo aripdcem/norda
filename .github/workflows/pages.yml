@@ -1,7 +1,7 @@
-# Norda'nın tanıtım sayfası (norda.aripd.com): site/ klasörü elle yazılmış
-# tek HTML'dir, derleme adımı yoktur — Actions yalnız yükler ve yayınlar.
-# Özel alan adı repo ayarından (Settings → Pages → Custom domain) okunur;
-# site/CNAME dosyası da gelenek gereği artifact'ta taşınır.
+# Norda's landing page (norda.aripd.com): the site/ folder is a single
+# hand-written HTML file with no build step — Actions only uploads and deploys.
+# The custom domain is read from the repo settings (Settings → Pages → Custom
+# domain); site/CNAME is carried along in the artifact too, by convention.
 name: Pages
 
 on:
@@ -17,14 +17,15 @@ permissions:
   pages: write
   id-token: write
 
-# Aynı anda tek yayın; yarım kalan eski koşu iptal edilmez (sayfa yarım kalmasın).
+# One deployment at a time; an older run still in progress is not cancelled
+# (so the page is never left half-deployed).
 concurrency:
   group: pages
   cancel-in-progress: false
 
 jobs:
   deploy:
-    name: Siteyi yayınla
+    name: Deploy the site
     runs-on: ubuntu-latest
     environment:
       name: github-pages
@@ -32,17 +33,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Pages'i yapılandır
+      - name: Configure Pages
         uses: actions/configure-pages@v5
         with:
-          # Pages daha önce hiç açılmadıysa ilk koşuda açmayı dener.
+          # If Pages has never been enabled before, the first run tries to enable it.
           enablement: true
 
-      - name: Site artifact'ını yükle
+      - name: Upload the site artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: site
 
-      - name: Yayınla
+      - name: Deploy
         id: deployment
         uses: actions/deploy-pages@v4

@@ -4,18 +4,19 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 
 /**
- * Testler fiziksel sabitlere dayanır: kendi çıktımızı değil, jeodeziyi
- * doğrularlar (docs/MVP.md, 13.1 kural 3).
+ * The tests rest on physical constants: they verify geodesy, not our own
+ * output (docs/MVP.md, 13.1 rule 3).
  */
 class GeoTest {
 
-    // Ekvatorda 1 boylam derecesi = Dünya çevresi / 360 ≈ 111,2 km.
+    // At the equator, 1° of longitude = Earth's circumference / 360 ≈ 111.2 km.
     @Test
     fun equatorOneDegreeLongitude() {
         assertEquals(111_195.0, Geo.distanceMeters(0.0, 0.0, 0.0, 1.0), 200.0)
     }
 
-    // 1 enlem derecesi her boylamda aynı uzunluktadır (küre üzerinde meridyen yayı).
+    // 1 degree of latitude has the same length at every longitude (a meridian
+    // arc on a sphere).
     @Test
     fun oneDegreeLatitude() {
         assertEquals(111_195.0, Geo.distanceMeters(40.0, 29.0, 41.0, 29.0), 200.0)
@@ -33,8 +34,9 @@ class GeoTest {
         assertEquals(ab, ba, 1e-6)
     }
 
-    // Ekvatorda tam doğudaki hedefin kerterizi 90°'dir. MVP taslağındaki işaret
-    // hatası (Δλ ters) burada 270 verirdi — bu test o hatayı kalıcı kapatır.
+    // At the equator the bearing to a target due east is 90°. The sign error in
+    // the MVP draft (Δλ reversed) gave 270 here — this test closes that bug for
+    // good.
     @Test
     fun bearingDueEastOnEquator() {
         assertEquals(90.0, Geo.initialBearingDeg(0.0, 29.0, 0.0, 29.1), 0.01)
@@ -50,7 +52,8 @@ class GeoTest {
         assertEquals(0.0, Geo.initialBearingDeg(40.0, 29.0, 41.0, 29.0), 0.01)
     }
 
-    // İstanbul'dan Kâbe'ye kerteriz ≈ 151,6° — bilinen coğrafi referans değer.
+    // Bearing from Istanbul to the Kaaba ≈ 151.6° — a known geographic
+    // reference value.
     @Test
     fun bearingIstanbulToKaaba() {
         val b = Geo.initialBearingDeg(41.0082, 28.9784, 21.4225, 39.8262)

@@ -7,7 +7,7 @@ import org.junit.Test
 
 class StatsTest {
 
-    // ~10 m'lik enlem adımı.
+    // A latitude step of ~10 m.
     private val step10m = 0.00008993
 
     private fun p(t: Long, latSteps: Int) =
@@ -21,7 +21,7 @@ class StatsTest {
 
     @Test
     fun avgPaceKnownValue() {
-        // 1 km / 300 sn → 300 sn/km (5:00)
+        // 1 km / 300 s → 300 s/km (5:00)
         assertEquals(300.0, Stats.avgPaceSecPerKm(1_000.0, 300_000)!!, 1e-9)
     }
 
@@ -38,14 +38,14 @@ class StatsTest {
 
     @Test
     fun currentPaceUsesTrailingWindowOnly() {
-        // İlk 30 sn hızlı (10 m / 5 sn), son 30 sn yavaş (10 m / 15 sn):
-        // canlı tempo yalnız son pencereyi görmeli.
+        // The first 30 s fast (10 m / 5 s), the last 30 s slow (10 m / 15 s):
+        // the live pace must see only the trailing window.
         val points = listOf(
             p(0, 0), p(5_000, 1), p(10_000, 2), p(15_000, 3),
             p(30_000, 4), p(45_000, 5), p(60_000, 6)
         )
         val pace = Stats.currentPaceSecPerKm(points)!!
-        // pencere: t >= 30_000 → 20 m / 30 sn = 1500 sn/km
+        // window: t >= 30_000 → 20 m / 30 s = 1500 s/km
         assertEquals(1_500.0, pace, 40.0)
     }
 

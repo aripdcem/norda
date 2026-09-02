@@ -12,7 +12,7 @@ class AutoPauseDetectorTest {
         acc: Float = 10f
     ) = TrackPoint(t, lat, 29.0, 0.0, acc, 0f, 0f)
 
-    // ~10 m'lik enlem adımı.
+    // A latitude step of ~10 m.
     private val step10m = 0.00008993
 
     @Test
@@ -29,7 +29,7 @@ class AutoPauseDetectorTest {
         val d = AutoPauseDetector()
         d.onFix(p(0), accepted = true)
         d.onFix(p(15_000, lat = 41.0 + step10m), accepted = true)
-        // hareketten yalnızca 10 sn geçti — duraklatma yok
+        // only 10 s since the movement — no pause
         assertEquals(Decision.NONE, d.onFix(p(25_000), accepted = false))
         assertEquals(Decision.PAUSE, d.onFix(p(36_000), accepted = false))
     }
@@ -38,13 +38,13 @@ class AutoPauseDetectorTest {
     fun resumesOnlyBeyondAnchorDistance() {
         val d = AutoPauseDetector()
         d.onFix(p(0), accepted = true)
-        d.onFix(p(21_000), accepted = false)              // PAUSE düştü
-        // 5 m kıpırdama devam ettirmez (8 m eşiği)
+        d.onFix(p(21_000), accepted = false)              // PAUSE fired
+        // 5 m of jitter does not resume (8 m threshold)
         assertEquals(Decision.NONE, d.onFix(p(25_000, lat = 41.0 + step10m / 2), accepted = false))
         assertEquals(Decision.RESUME, d.onFix(p(30_000, lat = 41.0 + step10m), accepted = false))
     }
 
-    // Kötü doğruluklu fix çapadan "uzağa sıçrayabilir" — devam ettirmemeli.
+    // A poor-accuracy fix can "jump away" from the anchor — it must not resume.
     @Test
     fun poorAccuracyCannotResume() {
         val d = AutoPauseDetector()
@@ -60,7 +60,7 @@ class AutoPauseDetectorTest {
         d.onFix(p(0), accepted = true)
         d.onFix(p(21_000), accepted = false)              // PAUSE
         d.reset(p(30_000))
-        // sıfırlamadan sonra duraklatılmış sayılmaz ve süre baştan işler
+        // after the reset it no longer counts as paused and the timer starts over
         assertEquals(Decision.NONE, d.onFix(p(45_000), accepted = false))
         assertEquals(Decision.PAUSE, d.onFix(p(51_000), accepted = false))
     }

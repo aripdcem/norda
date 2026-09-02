@@ -11,7 +11,7 @@ class WaypointNamingTest {
         assertEquals("Nokta 1", WaypointNaming.nextDefaultName(emptyList(), "Nokta"))
     }
 
-    // Silinen numara yeniden kullanılır: boş İLK numara seçilir.
+    // A deleted number is reused: the FIRST free number is chosen.
     @Test
     fun deletedNumberIsReused() {
         val existing = listOf("Nokta 1", "Nokta 3", "Kamp")

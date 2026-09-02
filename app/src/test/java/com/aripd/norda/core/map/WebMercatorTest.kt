@@ -5,8 +5,8 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * Bilinen sabit noktalarla doğrulama: Greenwich, ekvator, İstanbul'un
- * z10 karosu. Kendi çıktımızı değil projeksiyonun tanımını sınıyoruz.
+ * Verification against known fixed points: Greenwich, the equator, Istanbul's
+ * z10 tile. We test the projection's definition, not our own output.
  */
 class WebMercatorTest {
 
@@ -23,8 +23,8 @@ class WebMercatorTest {
         assertEquals(32.0, WebMercator.xTile(180.0, 5), 1e-12)
     }
 
-    // İstanbul (41.0082, 28.9784) z10'da (594, 383) karosuna düşer —
-    // herkesin harita sunucusunda doğrulayabileceği bilinen değer.
+    // Istanbul (41.0082, 28.9784) falls on tile (594, 383) at z10 — a known
+    // value anyone can verify on a map server.
     @Test
     fun istanbulLandsOnKnownTile() {
         val x = WebMercator.xTile(28.9784, 10)
@@ -45,12 +45,12 @@ class WebMercatorTest {
     fun latitudeIsClampedToProjectionDomain() {
         assertEquals(WebMercator.MAX_LAT, WebMercator.clampLat(89.9), 1e-12)
         assertEquals(-WebMercator.MAX_LAT, WebMercator.clampLat(-89.9), 1e-12)
-        // clamp sayesinde uç değerler sonlu karo koordinatı verir
+        // thanks to the clamp, extreme values give a finite tile coordinate
         assertTrue(WebMercator.yTile(89.9, 10) >= 0.0)
     }
 
-    // MBTiles'ın TMS satırı: y ekseni ters. Çevirmeyi unutmak haritayı
-    // dikeyde aynalar — bu test o hatayı kalıcı kapatır.
+    // MBTiles' TMS row: the y axis is inverted. Forgetting the flip mirrors the
+    // map vertically — this test closes that bug for good.
     @Test
     fun tmsRowFlipsVertically() {
         assertEquals(0, WebMercator.tmsRow(0, 0))

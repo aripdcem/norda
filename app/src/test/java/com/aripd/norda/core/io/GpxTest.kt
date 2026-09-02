@@ -12,8 +12,8 @@ class GpxTest {
     private fun p(t: Long, lat: Double, lon: Double, alt: Double) =
         TrackPoint(t, lat, lon, alt, 0f, 0f, 0f)
 
-    // Yazdığımızı geri okuyabilmeliyiz: iz + noktalar, rakım bayrakları ve
-    // XML kaçışlı adlar korunur.
+    // We must be able to read back what we wrote: track + waypoints, altitude
+    // flags and XML-escaped names are preserved.
     @Test
     fun roundTripPreservesTrackAndWaypoints() {
         val points = listOf(
@@ -38,7 +38,7 @@ class GpxTest {
         assertEquals(210.0, parsed.waypoints[0].altitude!!, 1e-9)
     }
 
-    // Bozuk girdi satır atlanarak tolere edilir (docs/MVP.md, 10. bölüm).
+    // Broken input is tolerated by skipping the line (docs/MVP.md, section 10).
     @Test
     fun brokenPointsAreSkippedOthersSurvive() {
         val xml = """<?xml version="1.0"?><gpx>
@@ -77,9 +77,9 @@ class GpxTest {
         assertEquals(null, parsed.waypoints[0].altitude)
     }
 
-    // F-3 (Saha Turu 1): tur telemetrisi GPX'in İÇİNDE gider — sayaçlar, pil
-    // ve uygulama özeti elle not gerektirmez. Standart yol: <extensions> +
-    // kendi ad alanımız; diğer araçlar bloğu yok sayar.
+    // F-3 (Field Tour 1): the tour's telemetry travels INSIDE the GPX — the
+    // counters, battery and app summary need no manual notes. The standard
+    // route: <extensions> + our own namespace; other tools ignore the block.
     @Test
     fun reportSurvivesRoundTrip() {
         val xml = Gpx.write(

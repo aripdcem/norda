@@ -16,7 +16,8 @@ class SmoothingTest {
         assertEquals(45.0, out, 1e-6)
     }
 
-    // Saklanan şey zaman sabiti: 50 Hz ile 16 Hz aynı sürede aynı yere varır.
+    // What is kept is the time constant: 50 Hz and 16 Hz arrive at the same
+    // place in the same amount of time.
     @Test
     fun sampleRateDoesNotChangeTheFeel()  {
         val fast = Smoothing(0.17)
@@ -25,13 +26,14 @@ class SmoothingTest {
         slow.update(0.0, 0.0625)
         var a = 0.0
         var b = 0.0
-        repeat(50) { a = fast.update(90.0, 0.02) }      // 1,0 sn @ 50 Hz
-        repeat(16) { b = slow.update(90.0, 0.0625) }    // 1,0 sn @ 16 Hz
+        repeat(50) { a = fast.update(90.0, 0.02) }      // 1.0 s @ 50 Hz
+        repeat(16) { b = slow.update(90.0, 0.0625) }    // 1.0 s @ 16 Hz
         assertTrue("50Hz=$a 16Hz=$b", abs(a - b) < 3.0)
         assertTrue(a in 60.0..90.0)
     }
 
-    // 359°→1° geçişinde ibre kadranı dolaşmaz: çıktı hep kuzey civarında kalır.
+    // On the 359°→1° crossing the needle does not travel around the dial: the
+    // output always stays near north.
     @Test
     fun northCrossingDoesNotSpinTheDial() {
         val s = Smoothing(0.17)
@@ -52,6 +54,6 @@ class SmoothingTest {
         var c = 0.0
         repeat(10) { a = agile.update(90.0, 0.02) }
         repeat(10) { c = calm.update(90.0, 0.02) }
-        assertTrue("çevik=$a sakin=$c", a > c)
+        assertTrue("agile=$a calm=$c", a > c)
     }
 }

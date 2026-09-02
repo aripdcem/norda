@@ -1,12 +1,13 @@
-# Kendi karo paketleme hattımız (docs/MVP.md, 7.2): elle tetiklenir, bölge
-# için MBTiles paketi üretir, `maps/<id>-vN` etiketiyle Release'e asar ve
-# docs/maps/index.json'u günceller — uygulama listeyi oradan okur.
+# Our own tile-packaging pipeline (docs/MVP.md, 7.2): triggered manually, it
+# builds an MBTiles pack for a region, attaches it to a Release under the
+# `maps/<id>-vN` tag and updates docs/maps/index.json — the app reads the list
+# from there.
 #
-# Hiçbir canlı karo sunucusuna bağımlılık yok; secret da gerekmez
-# (GITHUB_TOKEN yeter). Üretim adımı bugün prosedüreldir; gerçek OSM
-# kartografyası geldiğinde yalnız "Paketi üret" adımı değişir.
+# No dependency on any live tile server; no secret is needed either
+# (GITHUB_TOKEN is enough). The build step is procedural today; when real OSM
+# cartography arrives only the "Build the pack" step changes.
 #
-# `maps/...` etiketleri release.yml'i tetiklemez (o yalnız `v*` dinler).
+# `maps/...` tags do not trigger release.yml (it listens to `v*` only).
 
 name: Map pack
 
@@ -14,11 +15,11 @@ on:
   workflow_dispatch:
     inputs:
       id:
-        description: 'Paket kimliği (dosya adı, ör. istanbul)'
+        description: 'Pack id (file name, e.g. istanbul)'
         required: true
         type: string
       name:
-        description: 'Görünen ad (ör. İstanbul)'
+        description: 'Display name (e.g. Istanbul)'
         required: true
         type: string
       bbox:
@@ -26,18 +27,18 @@ on:
         required: true
         type: string
       minzoom:
-        description: 'En küçük zoom'
+        description: 'Minimum zoom'
         required: false
         default: '8'
         type: string
       maxzoom:
-        description: 'En büyük zoom'
+        description: 'Maximum zoom'
         required: false
         default: '13'
         type: string
 
 permissions:
-  contents: write   # release açmak ve index.json'u itmek için
+  contents: write   # to create the release and push index.json
 
 concurrency:
   group: map-pack-${{ inputs.id }}
@@ -45,16 +46,16 @@ concurrency:
 
 jobs:
   pack:
-    name: Paket üret ve yayımla
+    name: Build and publish the pack
     runs-on: ubuntu-latest
 
     steps:
-      - name: Kaynağı al
+      - name: Check out source
         uses: actions/checkout@v4
 
-      # Girdiler kabuğa ortam değişkeninden geçer; ad/bbox içindeki özel
-      # karakterler komut olarak yorumlanamaz.
-      - name: Paketi üret
+      # Inputs reach the shell through environment variables; special
+      # characters in name/bbox cannot be interpreted as commands.
+      - name: Build the pack
         env:
           PKG_ID: ${{ inputs.id }}
           PKG_NAME: ${{ inputs.name }}
@@ -71,8 +72,8 @@ jobs:
           echo "PKG_SIZE=$(stat -c%s "$FILE")" >> "$GITHUB_ENV"
           sha256sum "$FILE" > "$FILE.sha256"
 
-      # Paket sürümü koşu numarasıdır: her yayın yeni, değişmez bir etikettir.
-      - name: Release'e yayımla
+      # The pack version is the run number: every publish is a new, immutable tag.
+      - name: Publish to Release
         env:
           GH_TOKEN: ${{ github.token }}
           PKG_ID: ${{ inputs.id }}
@@ -81,21 +82,21 @@ jobs:
         run: |
           TAG="maps/$PKG_ID-v$GITHUB_RUN_NUMBER"
           {
-            echo "Harita paketi **$PKG_NAME** (\`$PKG_ID\`, v$GITHUB_RUN_NUMBER)."
+            echo "Map pack **$PKG_NAME** (\`$PKG_ID\`, v$GITHUB_RUN_NUMBER)."
             echo
-            echo "- Kapsam: \`$PKG_BBOX\` · zoom ${{ inputs.minzoom }}-${{ inputs.maxzoom }}"
-            echo "- Boyut: $PKG_SIZE bayt"
+            echo "- Coverage: \`$PKG_BBOX\` · zoom ${{ inputs.minzoom }}-${{ inputs.maxzoom }}"
+            echo "- Size: $PKG_SIZE bytes"
             echo "- SHA-256: \`$PKG_SHA\`"
             echo
-            echo "Uygulama bu paketi Haritalar ekranındaki listeden indirir;"
-            echo "elle kurulum için dosyayı indirip 'Paket içe aktar' da kullanılabilir."
+            echo "The app downloads this pack from the list on the Maps screen;"
+            echo "for manual installation, download the file and use \"Import package\"."
           } > notes.md
           gh release create "$TAG" "$PKG_FILE" "$PKG_FILE.sha256" \
-            --title "Harita paketi: $PKG_NAME v$GITHUB_RUN_NUMBER" \
+            --title "Map pack: $PKG_NAME v$GITHUB_RUN_NUMBER" \
             --notes-file notes.md
           echo "PKG_URL=https://github.com/$GITHUB_REPOSITORY/releases/download/$TAG/$PKG_ID.mbtiles" >> "$GITHUB_ENV"
 
-      - name: index.json'u güncelle ve it
+      - name: Update index.json and push
         env:
           PKG_ID: ${{ inputs.id }}
           PKG_NAME: ${{ inputs.name }}

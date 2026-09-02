@@ -1,14 +1,14 @@
-# Her itişte testler, lint ve kurulmaya hazır bir debug APK.
+# Tests, lint and an installable debug APK on every push.
 #
-# Uygulamanın hiç dış çalışma zamanı bağımlılığı yok; kurulması gereken tek
-# şey Android SDK'sı ve onu koşucu imajı hazır getiriyor.
+# The app has no external runtime dependencies at all; the only thing that
+# needs installing is the Android SDK, and the runner image ships it ready.
 
 name: CI
 
 on:
   push:
-    # Etiketler bu iş akışını tetiklemez: `branches` verildiğinde etiket
-    # itişleri zaten eşleşmiyor, onlar Release iş akışına gidiyor.
+    # Tags do not trigger this workflow: once `branches` is given, tag pushes
+    # no longer match — they go to the Release workflow.
     branches: ['**']
   pull_request:
   workflow_dispatch:
@@ -16,7 +16,7 @@ on:
 permissions:
   contents: read
 
-# Aynı dalda üst üste itiş yapılırsa yarıda kalan koşu iptal edilsin.
+# Back-to-back pushes on the same branch cancel the run still in progress.
 concurrency:
   group: ci-${{ github.head_ref || github.ref }}
   cancel-in-progress: true
@@ -26,44 +26,44 @@ env:
 
 jobs:
   build:
-    name: Test, lint ve debug APK
+    name: Test, lint and debug APK
     runs-on: ubuntu-latest
 
     steps:
-      - name: Kaynağı al
+      - name: Check out source
         uses: actions/checkout@v4
 
-      # Proje jvmTarget 17 ile derleniyor; koşucunun varsayılan JDK'sına
-      # güvenmek yerine sürüm açıkça sabitleniyor.
+      # The project compiles with jvmTarget 17; the version is pinned explicitly
+      # instead of trusting the runner's default JDK.
       - name: JDK 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
 
-      # Gradle önbelleği ve wrapper doğrulaması. Wrapper JAR'ı depoda duruyor;
-      # doğrulama onun bilinen bir Gradle sürümüne ait olduğunu sınar.
+      # Gradle cache and wrapper validation. The wrapper JAR lives in the repo;
+      # validation checks that it belongs to a known Gradle release.
       - name: Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
           validate-wrappers: true
 
-      - name: Android SDK bileşenleri
+      - name: Android SDK components
         run: bash .github/scripts/android-sdk.sh
 
-      # Testler JVM'de koşar, öykünücü gerekmez. Lint uyarıları derlemeyi
-      # kırmaz ama raporu çıktı olarak saklanır.
-      - name: Testler ve lint
+      # Tests run on the JVM, no emulator needed. Lint warnings do not break
+      # the build, but the report is kept as an artifact.
+      - name: Tests and lint
         run: ./gradlew test lintDebug
 
       - name: Debug APK
         run: ./gradlew assembleDebug
 
-      - name: APK'yı adlandır
+      - name: Name the APK
         id: apk
         run: bash .github/scripts/collect-apk.sh debug
 
-      - name: APK'yı çıktıya as
+      - name: Upload the APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.apk.outputs.name }}
@@ -71,13 +71,14 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
-      # Başarısızlıkta da yüklenir: düşen testin ve lint bulgularının raporu
-      # burada. Koşu günlüğü özet verir, ayrıntı bu HTML'lerde.
-      - name: Test ve lint raporları
+      # Uploaded on failure too: the report of the failing test and the lint
+      # findings lives here. The run log gives a summary; the details are in
+      # these HTML files.
+      - name: Test and lint reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: raporlar-${{ github.run_number }}
+          name: reports-${{ github.run_number }}
           path: |
             app/build/reports/
             app/build/test-results/

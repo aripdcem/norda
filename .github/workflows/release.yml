@@ -1,66 +1,67 @@
-# Sürüm yayımı: `v` ile başlayan bir etiket itildiğinde imzalı release APK
-# üretilir ve GitHub sürümüne (Releases) eklenir.
+# Release publishing: when a tag starting with `v` is pushed, a signed release
+# APK is built and attached to the GitHub release (Releases).
 #
 #   git tag v0.2.0 && git push origin v0.2.0
 #
-# İmzalama anahtarı depoya girmez; depo ayarlarındaki secret'lardan gelir
-# (Settings -> Secrets and variables -> Actions):
+# The signing key never enters the repository; it comes from the secrets in
+# the repository settings (Settings -> Secrets and variables -> Actions):
 #
-#   ANDROID_KEYSTORE_BASE64    anahtar deposunun base64 hâli:  base64 -w0 keys/norda-release.jks
-#   ANDROID_KEYSTORE_PASSWORD  depo parolası
-#   ANDROID_KEY_ALIAS          isteğe bağlı; boşsa "norda" varsayılır
-#   ANDROID_KEY_PASSWORD       isteğe bağlı; boşsa depo parolası kullanılır
-#                              (keytool'un PKCS12 varsayılanında ikisi zaten aynıdır)
+#   ANDROID_KEYSTORE_BASE64    the keystore, base64-encoded:  base64 -w0 keys/norda-release.jks
+#   ANDROID_KEYSTORE_PASSWORD  keystore password
+#   ANDROID_KEY_ALIAS          optional; defaults to "norda" when empty
+#   ANDROID_KEY_PASSWORD       optional; the keystore password is used when empty
+#                              (keytool's PKCS12 default makes the two identical anyway)
 #
-# Secret'lar tanımlı değilse koşu kırılmaz: APK imzasız üretilir, adında
-# "imzasiz" geçer ve uyarı düşer. İmzasız APK telefona kurulamaz — kalıcı
-# kurulum için secret'ları tanımlamak gerekir.
+# If the secrets are not defined the run does not break: the APK is built
+# unsigned, its name carries "unsigned" and a warning is raised. An unsigned APK
+# cannot be installed on a phone — the secrets must be defined for a permanent
+# install.
 
 name: Release
 
 on:
   push:
     tags: ['v*']
-  # Etiket itme yetkisi olmayan bir ortamdan yayın: elle tetikle, etiketi
-  # girdiyle ver — `gh release create --target` etiketi burada oluşturur.
+  # Publishing from an environment that cannot push tags: trigger manually and
+  # pass the tag as an input — `gh release create --target` creates the tag here.
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Yayımlanacak etiket (vX.Y.Z); boşsa yalnız APK üretilir'
+        description: 'Tag to publish (vX.Y.Z); if empty only the APK is built'
         required: false
         type: string
 
 permissions:
-  contents: write   # sürüm oluşturmak ve APK eklemek için
+  contents: write   # to create the release and attach the APK
 
 env:
   GRADLE_OPTS: -Dorg.gradle.daemon=false
 
 jobs:
   release:
-    name: İmzalı release APK
+    name: Signed release APK
     runs-on: ubuntu-latest
 
     steps:
-      - name: Kaynağı al
+      - name: Check out source
         uses: actions/checkout@v4
         with:
-          # Sürüm notları önceki etiketten beri gelen commit'lerden üretiliyor;
-          # sığ kopyada o geçmiş bulunmaz.
+          # The release notes are generated from the commits since the previous
+          # tag; a shallow clone does not have that history.
           fetch-depth: 0
 
-      # Etiket iki kaynaktan gelebilir: etiket itişi ya da elle tetiklemedeki
-      # `tag` girdisi. Sonraki adımlar tek bir RELEASE_TAG değişkenine bakar.
-      - name: Etiketi belirle
+      # The tag can come from two sources: a tag push or the `tag` input of a
+      # manual trigger. Later steps look at a single RELEASE_TAG variable.
+      - name: Determine the tag
         env:
           PUSHED_TAG: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
           INPUT_TAG: ${{ inputs.tag || '' }}
         run: echo "RELEASE_TAG=${PUSHED_TAG:-$INPUT_TAG}" >> "$GITHUB_ENV"
 
-      # Etiket adı kabuğa doğrudan gömülmüyor, ortam değişkeninden geçiyor:
-      # git etiket adlarında `;`, `&`, `$` gibi karakterlere izin veriyor ve
-      # gömülen bir ad koşucuda komut çalıştırabilirdi.
-      - name: Etiket sürümle tutuyor mu
+      # The tag name is not embedded in the shell directly, it goes through an
+      # environment variable: git allows characters such as `;`, `&`, `$` in
+      # tag names, and an embedded name could have run commands on the runner.
+      - name: Check that the tag matches the version
         if: env.RELEASE_TAG != ''
         env:
           TAG: ${{ env.RELEASE_TAG }}
@@ -77,25 +78,25 @@ jobs:
         with:
           validate-wrappers: true
 
-      - name: Android SDK bileşenleri
+      - name: Android SDK components
         run: bash .github/scripts/android-sdk.sh
 
-      # Anahtar deposu diske yalnızca koşunun geçici dizinine yazılır; parolalar
-      # hiç diske düşmez, doğrudan Gradle'ın ortamına verilir (bkz.
-      # app/build.gradle.kts içindeki signingValues).
-      - name: İmzalama anahtarını çöz
+      # The keystore is written to disk only in the run's temporary directory;
+      # the passwords never touch the disk, they are handed straight to Gradle's
+      # environment (see signingValues in app/build.gradle.kts).
+      - name: Decode the signing key
         env:
           KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
         run: |
           if [ -z "${KEYSTORE_BASE64:-}" ]; then
-            echo "::warning::ANDROID_KEYSTORE_BASE64 secret'ı tanımlı değil; APK imzasız üretilecek ve telefona kurulamaz."
+            echo "::warning::The ANDROID_KEYSTORE_BASE64 secret is not defined; the APK will be built unsigned and cannot be installed on a phone."
             exit 0
           fi
           printf '%s' "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.jks"
           echo "NORDA_KEYSTORE_FILE=$RUNNER_TEMP/release.jks" >> "$GITHUB_ENV"
 
-      # Yayımlanan APK'nın testten geçmiş olması şart: sürüm geri alınamaz.
-      - name: Testler ve lint
+      # The published APK must have passed the tests: a release cannot be undone.
+      - name: Tests and lint
         run: ./gradlew test lintDebug
 
       - name: Release APK
@@ -105,15 +106,15 @@ jobs:
           NORDA_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD || secrets.ANDROID_KEYSTORE_PASSWORD }}
         run: ./gradlew assembleRelease
 
-      - name: Anahtarı sil
+      - name: Delete the key
         if: always()
         run: rm -f "$RUNNER_TEMP/release.jks"
 
-      - name: APK'yı adlandır
+      - name: Name the APK
         id: apk
         run: bash .github/scripts/collect-apk.sh release
 
-      - name: APK'yı çıktıya as
+      - name: Upload the APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.apk.outputs.name }}
@@ -121,7 +122,7 @@ jobs:
           if-no-files-found: error
           retention-days: 90
 
-      - name: Sürüm notlarını hazırla
+      - name: Prepare release notes
         if: env.RELEASE_TAG != ''
         env:
           VERSION: ${{ steps.apk.outputs.version }}
@@ -130,29 +131,29 @@ jobs:
           SIGNED: ${{ steps.apk.outputs.signed }}
         run: |
           {
-            echo "Sürüm **$VERSION ($CODE)**."
+            echo "Release **$VERSION ($CODE)**."
             echo
             if [ "$SIGNED" = 'true' ]; then
-              echo "APK imzalıdır; telefona doğrudan kurulabilir."
+              echo "The APK is signed and can be installed directly on the phone."
             else
-              echo "> **Uyarı:** bu APK imzasızdır ve telefona kurulamaz."
-              echo "> Depoda imzalama secret'ları tanımlı değil (bkz. release.yml başlığı)."
+              echo "> **Warning:** this APK is unsigned and cannot be installed on a phone."
+              echo "> The signing secrets are not configured in the repository (see the header of release.yml)."
             fi
             echo
-            echo "İndirdikten sonra dosyayı doğrulamak için:"
+            echo "To verify the file after downloading:"
             echo
             echo '```'
             echo "sha256sum -c $APK_NAME.apk.sha256"
             echo '```'
             echo
-            echo "Kapsam ve yol haritası: docs/MVP.md · Değişiklikler: CHANGELOG.md"
+            echo "Scope and roadmap: docs/MVP.md · Changes: CHANGELOG.md"
           } > "$RUNNER_TEMP/notes.md"
 
-      # `--generate-notes` önceki etiketten beri gelen commit listesini üretir;
-      # GitHub API'si onu verilen gövdenin *ardına* ekler, üzerine yazmaz.
-      # `--target`: etiket yoksa (elle tetikleme yolu) bu commit'te oluşturulur;
-      # etiket zaten varsa GitHub bu bayrağı yok sayar.
-      - name: GitHub sürümünü yayımla
+      # `--generate-notes` produces the list of commits since the previous tag;
+      # the GitHub API appends it *after* the given body, it does not overwrite.
+      # `--target`: if the tag does not exist (manual-trigger path) it is created
+      # at this commit; if the tag already exists GitHub ignores the flag.
+      - name: Publish the GitHub release
         if: env.RELEASE_TAG != ''
         env:
           GH_TOKEN: ${{ github.token }}

@@ -14,7 +14,7 @@ class GpsFilterTest {
         acc: Float = 10f
     ) = TrackPoint(t, lat, lon, 0.0, acc, 0f, 0f)
 
-    // ~10 m'lik enlem adımı.
+    // A latitude step of ~10 m.
     private val step10m = 0.00008993
 
     @Test
@@ -32,8 +32,8 @@ class GpsFilterTest {
         assertFalse(GpsFilter.accept(p(0), p(5_000, lat = 41.0 + step10m, acc = 31f)))
     }
 
-    // accuracy <= 0: cihaz doğruluk bildirmiyor — reddetmek hiç kayıt
-    // yapmamak olurdu.
+    // accuracy <= 0: the device reports no accuracy — rejecting would mean
+    // never recording at all.
     @Test
     fun missingAccuracyIsAccepted() {
         assertTrue(GpsFilter.accept(p(0), p(5_000, lat = 41.0 + step10m, acc = 0f)))
@@ -41,23 +41,23 @@ class GpsFilterTest {
 
     @Test
     fun standstillJitterIsRejected() {
-        // 1 m kıpırdama < 2 m eşiği
+        // 1 m of jitter < 2 m threshold
         assertFalse(GpsFilter.accept(p(0), p(5_000, lat = 41.0 + step10m / 10)))
     }
 
     @Test
     fun teleportIsRejected() {
-        // 5 saniyede ~100 m → 20 m/s > 10 m/s tavanı
+        // ~100 m in 5 seconds → 20 m/s > 10 m/s ceiling
         assertFalse(GpsFilter.accept(p(0), p(5_000, lat = 41.0 + step10m * 10)))
     }
 
-    // F-11 kalibrasyonu (MVP 5.2 "başlangıç değerleri sahayla kalibre
-    // edilir"): iki turda ilk-fix oturma sıçraması (12,7 ve 12,85 m/s) eski
-    // 15 m/s tavanının hemen altından geçti. Yürüyüş/koşu ürününde 10 m/s
-    // (36 km/h) üstü hareket koşu değil sıçramadır.
+    // F-11 calibration (MVP 5.2 "initial values are calibrated in the
+    // field"): on two tours the first-fix settling spike (12.7 and 12.85 m/s)
+    // passed just under the old 15 m/s ceiling. In a walking/running product,
+    // movement above 10 m/s (36 km/h) is a jump, not a run.
     @Test
     fun settlingSpikeFromFieldIsRejected() {
-        // saha verisi: 2 sn'de ~25,7 m = 12,85 m/s
+        // field data: ~25.7 m in 2 s = 12.85 m/s
         assertEquals(
             GpsFilter.Verdict.TELEPORT,
             GpsFilter.evaluate(p(0), p(2_000, lat = 41.0 + step10m * 2.57))
@@ -66,7 +66,7 @@ class GpsFilterTest {
 
     @Test
     fun fastDownhillRunStaysAccepted() {
-        // 3 sn'de ~27 m = 9 m/s — hızlı iniş koşusu tavanın altında kalmalı
+        // ~27 m in 3 s = 9 m/s — a fast downhill run must stay under the ceiling
         assertTrue(GpsFilter.accept(p(0), p(3_000, lat = 41.0 + step10m * 2.7)))
     }
 
@@ -76,8 +76,8 @@ class GpsFilterTest {
         assertFalse(GpsFilter.accept(p(5_000), p(4_000, lat = 41.0 + step10m)))
     }
 
-    // Faz 8, filtre kalibrasyonu: sahada eşik ayarlamak için yalnız kabul/ret
-    // değil, RET NEDENİ de görünür olmalı.
+    // Phase 8, filter calibration: to tune thresholds in the field, not only
+    // accept/reject but the REASON FOR REJECTION must be visible too.
     @Test
     fun evaluateNamesTheRejectionReason() {
         assertEquals(GpsFilter.Verdict.ACCEPT, GpsFilter.evaluate(null, p(0)))

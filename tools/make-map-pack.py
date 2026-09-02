@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
-"""Bölge için MBTiles harita paketi üretir (yalnız stdlib) — map-pack hattının
-üretim adımı (docs/MVP.md, 7.2).
+"""Builds an MBTiles map pack for a region (stdlib only) — the build step of
+the map-pack pipeline (docs/MVP.md, 7.2).
 
-Şimdilik kartografya prosedüreldir: parite renkli zemin, karo kenar çizgisi ve
-sol üst köşede L işareti — hizalama/TMS hataları ızgarada anında belli olur.
-Gerçek OSM kartografyası bu adımın içinde değiştirilecek tek şeydir; paket
-biçimi, yayın ve indirme zinciri aynı kalır.
+For now the cartography is procedural: a parity-colored background, a tile
+edge line and an L mark in the top-left corner — alignment/TMS mistakes show
+up in the grid instantly. Real OSM cartography is the only thing that will be
+swapped inside this step; the pack format, publishing and download chain stay
+the same.
 
-Kullanım:
-  python3 tools/make-map-pack.py --id istanbul --name "İstanbul" \
+Usage:
+  python3 tools/make-map-pack.py --id istanbul --name "Istanbul" \
       --bbox 28.6,40.8,29.4,41.3 --minzoom 8 --maxzoom 13 --out dist
 """
 
@@ -48,9 +49,9 @@ def tile_png(z, x, y, min_zoom):
         for px in range(TILE):
             c = bg
             if px == 0 or py == 0:
-                c = border                      # üst/sol kenar: hizalama kılavuzu
+                c = border                      # top/left edge: alignment guide
             if (px < 28 and py < 7) or (px < 7 and py < 28):
-                c = border                      # L köşe: aynalanma dedektörü
+                c = border                      # L corner: mirroring detector
             row += bytes(c)
         rows.append(b"\x00" + bytes(row))
     ihdr = struct.pack(">IIBBBBB", TILE, TILE, 8, 2, 0, 0, 0)
@@ -61,8 +62,8 @@ def tile_png(z, x, y, min_zoom):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--id", required=True, help="paket kimliği (dosya adı)")
-    ap.add_argument("--name", required=True, help="görünen ad")
+    ap.add_argument("--id", required=True, help="pack id (file name)")
+    ap.add_argument("--name", required=True, help="display name")
     ap.add_argument("--bbox", required=True,
                     help="left,bottom,right,top (lon/lat)")
     ap.add_argument("--minzoom", type=int, default=8)
@@ -72,12 +73,12 @@ def main():
 
     parts = [float(v) for v in args.bbox.split(",")]
     if len(parts) != 4:
-        raise SystemExit("bbox 'left,bottom,right,top' olmalı")
+        raise SystemExit("bbox must be 'left,bottom,right,top'")
     left, bottom, right, top = parts
     if not (left < right and bottom < top):
-        raise SystemExit("bbox sıralaması bozuk: left<right ve bottom<top olmalı")
+        raise SystemExit("bbox is out of order: left<right and bottom<top required")
     if not (args.minzoom <= args.maxzoom):
-        raise SystemExit("minzoom <= maxzoom olmalı")
+        raise SystemExit("minzoom must be <= maxzoom")
 
     os.makedirs(args.out, exist_ok=True)
     out = os.path.join(args.out, f"{args.id}.mbtiles")
@@ -108,14 +109,14 @@ def main():
                 key = (z, (x + y) % 2)
                 if key not in blob_cache:
                     blob_cache[key] = tile_png(z, x, y, args.minzoom)
-                tms_row = (1 << z) - 1 - y      # MBTiles TMS satırı
+                tms_row = (1 << z) - 1 - y      # MBTiles TMS row
                 db.execute("INSERT INTO tiles VALUES (?, ?, ?, ?)",
                            (z, x, tms_row, blob_cache[key]))
                 total += 1
     db.commit()
     db.close()
     size = os.path.getsize(out)
-    print(f"{out}: {total} karo, {size / 1024:.0f} KB, "
+    print(f"{out}: {total} tiles, {size / 1024:.0f} KB, "
           f"z{args.minzoom}-z{args.maxzoom}")
 
 

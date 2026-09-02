@@ -5,9 +5,10 @@ import org.junit.Assert.assertNull
 import org.junit.Test
 
 /**
- * Pil ölçüm kültürü (MVP.md 16. bölüm "battery drain" riski): sayı ancak
- * ölçüm temizse üretilir — bilinmeyen seviye, aralık dışı okuma, kayıtta
- * şarj ya da oran için fazla kısa süre null döner, uydurma değer değil.
+ * Battery measurement culture (MVP.md section 16, the "battery drain" risk):
+ * a number is produced only when the measurement is clean — an unknown
+ * level, an out-of-range reading, charging during the recording or a
+ * duration too short for a rate returns null, not a made-up value.
  */
 class BatteryTest {
 
@@ -27,8 +28,8 @@ class BatteryTest {
 
     @Test
     fun chargingDuringRecordingGivesNoDrain() {
-        // Kayıt sırasında prize takıldıysa ölçüm kirlidir; negatif "tüketim"
-        // raporlamak yanıltıcı olur.
+        // If the phone was plugged in during the recording the measurement is
+        // dirty; reporting a negative "drain" would be misleading.
         assertNull(Battery.drainPercent(40, 70))
     }
 
@@ -39,9 +40,10 @@ class BatteryTest {
     }
 
     /**
-     * Saha Turu 1 verisi (F-1): %2 tüketim, 42:46 duvar saati → 2,8 %/sa.
-     * Payda DUVAR saatidir, aktif kayıt süresi değil — pil duraklatmada da
-     * tükenir; aktif süreye bölmek oranı şişirir (aynı turda 4,2 görünürdü).
+     * Field Tour 1 data (F-1): 2% drain, 42:46 wall clock → 2.8 %/h.
+     * The denominator is WALL-CLOCK time, not the active recording time — the
+     * battery drains during pauses too; dividing by active time inflates the
+     * rate (the same tour would have shown 4.2).
      */
     @Test
     fun rateDenominatorIsWallClockNotActiveDuration() {
@@ -50,7 +52,7 @@ class BatteryTest {
 
     @Test
     fun tooShortDurationGivesNoRate() {
-        // %1'lik yuvarlama hatası kısa sürede devasa orana dönüşür.
+        // A 1% rounding error turns into a huge rate over a short duration.
         assertNull(Battery.drainPerHour(1, Battery.MIN_RATE_DURATION_MILLIS - 1))
         assertNull(Battery.drainPerHour(1, 0))
     }

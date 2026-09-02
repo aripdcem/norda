@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-"""docs/maps/index.json içindeki paket kaydını ekler/günceller (yalnız stdlib).
+"""Adds/updates a pack entry in docs/maps/index.json (stdlib only).
 
-Uygulamanın Maps ekranı bu dosyayı okur (docs/MVP.md, 7.2). Kimliği aynı olan
-kayıt değiştirilir, yenisi eklenir; sıralama kimliğe göre kararlıdır.
+The app's Maps screen reads this file (docs/MVP.md, 7.2). An entry with the
+same id is replaced, a new one is appended; the ordering is stable by id.
 
-Kullanım:
-  python3 tools/update-map-index.py --id istanbul --name "İstanbul" \
+Usage:
+  python3 tools/update-map-index.py --id istanbul --name "Istanbul" \
       --bbox 28.6,40.8,29.4,41.3 --minzoom 8 --maxzoom 13 \
-      --size 331776 --sha256 <hex> --url <indirme-url> --version 3
+      --size 331776 --sha256 <hex> --url <download-url> --version 3
 """
 
 import argparse
@@ -32,7 +32,7 @@ def main():
 
     bbox = [float(v) for v in args.bbox.split(",")]
     if len(bbox) != 4:
-        raise SystemExit("bbox 'left,bottom,right,top' olmalı")
+        raise SystemExit("bbox must be 'left,bottom,right,top'")
 
     with open(INDEX, encoding="utf-8") as f:
         index = json.load(f)
@@ -56,7 +56,7 @@ def main():
     with open(INDEX, "w", encoding="utf-8") as f:
         json.dump(index, f, ensure_ascii=False, indent=2)
         f.write("\n")
-    print(f"{INDEX}: {args.id} v{args.version} yazıldı ({len(packages)} paket)")
+    print(f"{INDEX}: {args.id} v{args.version} written ({len(packages)} packs)")
 
 
 if __name__ == "__main__":

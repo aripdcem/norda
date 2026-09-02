@@ -23,7 +23,7 @@ import sys
 import tempfile
 
 APK = re.compile(
-    r"sha256sum -c (norda-(\d+\.\d+\.\d+)-(\d+)-release(-imzasiz)?-[0-9a-f]+\.apk)\.sha256"
+    r"sha256sum -c (norda-(\d+\.\d+\.\d+)-(\d+)-release(-imzasiz|-unsigned)?-[0-9a-f]+\.apk)\.sha256"
 )
 MAP_BBOX = re.compile(r"(?:Kapsam|Coverage): `([^`]+)` · zoom (\S+)")
 MAP_SIZE = re.compile(r"(?:Boyut|Size): (\d+) (?:bayt|bytes)")

@@ -5,7 +5,7 @@ import org.junit.Test
 
 class DigestsTest {
 
-    // NIST'in yayımlanmış test vektörü: kendi çıktımızı değil standardı sınar.
+    // NIST's published test vector: it tests the standard, not our own output.
     @Test
     fun sha256MatchesKnownVector() {
         assertEquals(

@@ -5,13 +5,15 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * Durum makinesinin uçtan uca sınanması: sentetik bir yürüyüş beslenir,
- * mesafe/süre/yükseklik ve durum geçişleri doğrulanır. Testlerde monotonik
- * saat ile fix zamanı aynı değerdir (sadelik için).
+ * End-to-end test of the state machine: a synthetic walk is fed in, and
+ * distance/duration/elevation and the state transitions are verified. In the
+ * tests the monotonic clock and the fix time have the same value (for
+ * simplicity).
  *
- * onFix bu çağrıda kayda GİREN noktaları döndürür (0/1/2 eleman): oturma
- * kapısı (F-11) yüzünden ilk fix aday olarak bekler ve ikinci fix'le
- * doğrulanınca ikisi birden dönebilir.
+ * onFix returns the points that ENTER the recording on this call (0/1/2
+ * elements): because of the settling gate (F-11) the first fix waits as a
+ * tentative point, and once the second fix confirms it both may be returned
+ * together.
  */
 class RecordingSessionTest {
 
@@ -29,10 +31,10 @@ class RecordingSessionTest {
     @Test
     fun filterCountsFeedCalibration() {
         val s = session()
-        s.onFix(fix(0, 0.0), false, 0)                          // aday
-        s.onFix(fix(5_000, 1.0), false, 5_000)                  // doğrular: 2 kabul
-        s.onFix(fix(10_000, 1.05), false, 10_000)               // ~0,5 m titreme
-        s.onFix(fix(15_000, 1.0, acc = 99f), false, 15_000)     // kötü doğruluk
+        s.onFix(fix(0, 0.0), false, 0)                          // tentative
+        s.onFix(fix(5_000, 1.0), false, 5_000)                  // confirms: 2 accepted
+        s.onFix(fix(10_000, 1.05), false, 10_000)               // ~0.5 m jitter
+        s.onFix(fix(15_000, 1.0, acc = 99f), false, 15_000)     // poor accuracy
         assertEquals(2, s.filterCount(GpsFilter.Verdict.ACCEPT))
         assertEquals(1, s.filterCount(GpsFilter.Verdict.JITTER))
         assertEquals(1, s.filterCount(GpsFilter.Verdict.BAD_ACCURACY))
@@ -40,16 +42,17 @@ class RecordingSessionTest {
         assertEquals(0, s.filterCount(GpsFilter.Verdict.NON_MONOTONIC))
     }
 
-    // F-4 (tenis kortu denemesi): GPS oturmadan geçen süre ekranda görünür
-    // olmalı — kayda nokta girmemişken son/en iyi doğruluk gözlemlenebilir.
+    // F-4 (tennis-court trial): the time spent before the GPS settles must be
+    // visible on screen — the latest/best accuracy is observable while no
+    // point has entered the recording yet.
     @Test
     fun gpsQualityIsObservableBeforeFirstAccept() {
         val s = session()
         assertEquals(null, s.latestAccuracyM)
         assertEquals(null, s.bestAccuracyM)
         assertEquals(0, s.evaluatedFixCount())
-        s.onFix(fix(0, 0.0, acc = 48f), false, 0)          // kötü doğruluk
-        s.onFix(fix(1_000, 0.0, acc = 35f), false, 1_000)  // hâlâ kötü
+        s.onFix(fix(0, 0.0, acc = 48f), false, 0)          // poor accuracy
+        s.onFix(fix(1_000, 0.0, acc = 35f), false, 1_000)  // still poor
         assertEquals(35f, s.latestAccuracyM)
         assertEquals(35f, s.bestAccuracyM)
         assertEquals(2, s.evaluatedFixCount())
@@ -59,8 +62,8 @@ class RecordingSessionTest {
     @Test
     fun unknownAccuracyDoesNotPolluteGpsQuality() {
         val s = session()
-        s.onFix(fix(0, 0.0, acc = 0f), false, 0)                // doğruluk bilinmiyor → aday
-        s.onFix(fix(5_000, 1.0, acc = 0f), false, 5_000)        // doğrular
+        s.onFix(fix(0, 0.0, acc = 0f), false, 0)                // accuracy unknown → tentative
+        s.onFix(fix(5_000, 1.0, acc = 0f), false, 5_000)        // confirms
         assertEquals(null, s.bestAccuracyM)
         assertEquals(null, s.latestAccuracyM)
         assertEquals(2, s.evaluatedFixCount())
@@ -71,9 +74,9 @@ class RecordingSessionTest {
     fun manualPauseDoesNotPolluteFilterCounts() {
         val s = session()
         s.onFix(fix(0, 0.0), false, 0)
-        s.onFix(fix(2_000, 1.0), false, 2_000)   // aday + bu fix kayda girer
+        s.onFix(fix(2_000, 1.0), false, 2_000)   // tentative + this fix recorded
         s.pauseManual(3_000)
-        s.onFix(fix(5_000, 2.0), false, 5_000)   // duraklatmada gelen fix sayılmaz
+        s.onFix(fix(5_000, 2.0), false, 5_000)   // fix during pause is not counted
         assertEquals(2, s.filterCount(GpsFilter.Verdict.ACCEPT))
     }
 
@@ -81,7 +84,7 @@ class RecordingSessionTest {
     fun recordsAcceptedFixesAndAccumulatesDistance() {
         val s = session()
         assertEquals(0, s.onFix(fix(0, 0.0), hasAltitude = false, nowMonotonicMillis = 0).size)
-        assertEquals(2, s.onFix(fix(5_000, 1.0), false, 5_000).size)  // aday + kendisi
+        assertEquals(2, s.onFix(fix(5_000, 1.0), false, 5_000).size)  // tentative + itself
         assertEquals(1, s.onFix(fix(10_000, 2.0), false, 10_000).size)
         assertEquals(20.0, s.distanceM, 0.5)
         assertEquals(10_000, s.durationMillis(10_000))
@@ -92,7 +95,8 @@ class RecordingSessionTest {
     fun rejectedJitterAddsNothing() {
         val s = session()
         s.onFix(fix(0, 0.0), false, 0)
-        // ~0,5 m kıpırdama: adayı doğrular (yakın = tutarlı) ama kendisi girmez
+        // ~0.5 m jitter: confirms the tentative point (close = consistent) but
+        // does not enter itself
         val r = s.onFix(fix(5_000, 0.05), false, 5_000)
         assertEquals(1, r.size)
         assertEquals(41.0, r[0].point.latitude, 1e-12)
@@ -100,34 +104,37 @@ class RecordingSessionTest {
         assertEquals(1, s.points.size)
     }
 
-    // F-11 (Tur 2t + gece koşusu, iki saha kanıtı): ilk fix "oturma"
-    // sırasında 13–26 m sapık gelebiliyor; çapa yapılırsa sıçrayan nokta
-    // reddedilse bile hayalet mesafe bir SONRAKİ noktayla yine sayılıyor.
-    // İlk fix bu yüzden çapa değil ADAYdır: ikinci fix'le fiziksel
-    // tutarlılık doğrulanana dek kayda girmez; ışınlama çıkarsa suçlu ilk
-    // fix'tir — aday değiştirilir, hayalet mesafe hiç doğmaz.
+    // F-11 (Tour 2 (repeat) + night tour, two field proofs): during "settling"
+    // the first fix can arrive 13–26 m off; if it is made the anchor, the
+    // phantom distance still gets counted with a LATER point even when the
+    // jumping point is rejected. That is why the first fix is TENTATIVE, not
+    // an anchor: it does not enter the recording until the second fix confirms
+    // physical consistency; if a teleport shows up the culprit is the first
+    // fix — the tentative point is replaced and the phantom distance is never
+    // born.
     @Test
     fun settlingFirstFixIsReplacedNotAnchored() {
         val s = session()
-        assertEquals(0, s.onFix(fix(0, 0.0), false, 0).size)          // aday
-        // saha verisi: 2 sn'de ~25,7 m = 12,85 m/s — oturma sıçraması
-        assertEquals(0, s.onFix(fix(2_000, 2.57), false, 2_000).size) // aday değişir
+        assertEquals(0, s.onFix(fix(0, 0.0), false, 0).size)          // tentative
+        // field data: ~25.7 m in 2 s = 12.85 m/s — settling spike
+        assertEquals(0, s.onFix(fix(2_000, 2.57), false, 2_000).size) // tentative replaced
         assertEquals(1, s.filterCount(GpsFilter.Verdict.TELEPORT))
         assertEquals(0, s.points.size)
-        // yeni adayın yakınındaki üçüncü fix adayı doğrular
+        // a third fix near the new tentative point confirms it
         val confirmed = s.onFix(fix(4_000, 2.62), false, 4_000)
         assertEquals(1, confirmed.size)
         assertEquals(41.0 + 2.57 * step10m, confirmed[0].point.latitude, 1e-12)
-        assertEquals(0.0, s.distanceM, 1e-9)                          // hayalet mesafe yok
+        assertEquals(0.0, s.distanceM, 1e-9)                          // no phantom distance
         assertEquals(1, s.points.size)
-        // normal akış devam eder
+        // normal flow continues
         assertEquals(1, s.onFix(fix(9_000, 3.57), false, 9_000).size)
         assertEquals(10.0, s.distanceM, 0.5)
         assertEquals(2, s.filterCount(GpsFilter.Verdict.ACCEPT))
         assertEquals(1, s.filterCount(GpsFilter.Verdict.JITTER))
     }
 
-    // Hiç doğrulanamayan aday kayda girmez: tek fix'lik "kayıt" veri değil.
+    // A tentative point that never gets confirmed does not enter the
+    // recording: a single-fix "recording" is not data.
     @Test
     fun unresolvedTentativeFixNeverEntersTrack() {
         val s = session()
@@ -141,12 +148,12 @@ class RecordingSessionTest {
     fun autoPausesAndFreezesDuration() {
         val s = session()
         s.onFix(fix(0, 0.0), false, 0)
-        // aynı yerde bekleme: kabul edilmeyen fix'ler
+        // standing in the same place: fixes that are not accepted
         s.onFix(fix(10_000, 0.0), false, 10_000)
         s.onFix(fix(20_000, 0.0), false, 20_000)
         assertEquals(0, s.onFix(fix(21_000, 0.0), false, 21_000).size)
         assertEquals(RecordingSession.State.AUTO_PAUSED, s.state)
-        // süre duraklatma anında donar
+        // the duration freezes at the moment of the pause
         assertEquals(21_000, s.durationMillis(60_000))
     }
 
@@ -157,10 +164,10 @@ class RecordingSessionTest {
         s.onFix(fix(21_000, 0.0), false, 21_000)              // AUTO_PAUSED
         s.onFix(fix(30_000, 1.0), false, 30_000)              // 10 m → RESUME
         assertEquals(RecordingSession.State.RECORDING, s.state)
-        // devamdan sonraki kabul edilen nokta mesafeye normal eklenir
+        // an accepted point after the resume is added to the distance as usual
         assertTrue(s.onFix(fix(35_000, 2.0), false, 35_000).isNotEmpty())
         assertEquals(20.0, s.distanceM, 0.5)
-        // duraklamada geçen 9 sn süreye sayılmaz: 21 + 5
+        // the 9 s spent paused do not count toward the duration: 21 + 5
         assertEquals(26_000, s.durationMillis(35_000))
     }
 
@@ -175,15 +182,16 @@ class RecordingSessionTest {
         assertEquals(5_000, s.durationMillis(60_000))
     }
 
-    // Elle duraklatmada yürünen yol kullanıcının bilerek dışladığı bölümdür:
-    // devamdan sonraki ilk nokta kaydedilir ama aradaki mesafe sayılmaz.
+    // Ground covered during a manual pause is the part the user deliberately
+    // excluded: the first point after the resume is recorded, but the distance
+    // in between is not counted.
     @Test
     fun manualResumeSkipsGapDistance() {
         val s = session()
         s.onFix(fix(0, 0.0), false, 0)
         s.pauseManual(5_000)
         s.resumeManual(50_000)
-        // aday + devam fix'i birlikte girer; aradaki mesafe sayılmaz
+        // tentative + resume fix enter together; the gap distance is not counted
         assertEquals(2, s.onFix(fix(55_000, 10.0), false, 55_000).size)
         assertEquals(0.0, s.distanceM, 1e-9)
         assertEquals(1, s.onFix(fix(60_000, 11.0), false, 60_000).size)
@@ -207,8 +215,9 @@ class RecordingSessionTest {
         assertEquals(0.0, sum.elevationLossM, 1e-9)
     }
 
-    // Kalıcılaştırma bayrağı noktaya aittir: rakımı geçerli aday ile rakımsız
-    // doğrulayıcı fix aynı çağrıda dönerken bayraklar karışmamalı.
+    // The persistence flag belongs to the point: when a tentative point with a
+    // valid altitude and an altitude-less confirming fix are returned in the
+    // same call, the flags must not get mixed up.
     @Test
     fun committedPointsCarryTheirOwnAltitudeFlag() {
         val s = session()
@@ -220,10 +229,11 @@ class RecordingSessionTest {
         assertEquals(0.0, s.elevationGainM, 1e-9)
     }
 
-    // Servis öldürülüp yeniden başlatıldığında kayıt diskten devralınır:
-    // mesafe/süre korunur, yeni fix eski son noktadan ölçülür, yükseklik
-    // saklanan rakımlardan aynı histerezisle yeniden kurulur. Devralınan son
-    // nokta zaten kayıtta olduğundan oturma kapısı işlemez.
+    // When the service is killed and restarted, the recording is taken over
+    // from disk: distance/duration are preserved, a new fix is measured from
+    // the old last point, and elevation is rebuilt from the stored altitudes
+    // with the same hysteresis. Since the recovered last point is already in
+    // the recording, the settling gate does not apply.
     @Test
     fun primeRestoresRecoveredState() {
         val s = session()
@@ -241,8 +251,8 @@ class RecordingSessionTest {
         assertEquals(510.0, s.distanceM, 0.5)
     }
 
-    // Rakım bildirmeyen fix yükseklik hesabına girmez — 0.0 nöbetçi değeri
-    // hayalet iniş üretirdi.
+    // A fix that reports no altitude does not enter the elevation calculation
+    // — the 0.0 sentinel value would have produced a phantom descent.
     @Test
     fun invalidAltitudeIsIgnored() {
         val s = session()

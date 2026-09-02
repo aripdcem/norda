@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
 #
-# Üretilen APK'yı dist/ altına sürümü ve commit'iyle adlandırarak kopyalar,
-# yanına SHA-256 özetini yazar.
+# Copies the built APK under dist/, named with its version and commit, and
+# writes its SHA-256 digest next to it.
 #
-# Adın anlamlı olması işe yarıyor: indirilen dosya "app-debug.apk" diye durunca
-# hangi sürüm olduğu ancak kurup Ayarlar'a bakınca anlaşılıyor. Burada ad
-# doğrudan söylüyor: norda-0.1.0-33-debug-1a2b3c4.apk
+# A meaningful name pays off: when the downloaded file sits there as
+# "app-debug.apk", which version it is only becomes clear after installing it
+# and looking at Settings. Here the name says it outright:
+# norda-0.1.0-33-debug-1a2b3c4.apk
 #
-# Kullanım: collect-apk.sh <debug|release>
+# Usage: collect-apk.sh <debug|release>
 
 set -euo pipefail
 
@@ -19,7 +20,7 @@ version_code=$(grep -oE 'versionCode[[:space:]]*=[[:space:]]*[0-9]+' app/build.g
   | grep -oE '[0-9]+$' | head -1)
 
 if [ -z "$version_name" ] || [ -z "$version_code" ]; then
-  echo "::error::app/build.gradle.kts içinde versionName/versionCode okunamadı"
+  echo "::error::could not read versionName/versionCode from app/build.gradle.kts"
   exit 1
 fi
 
@@ -27,15 +28,15 @@ short_sha=$(git rev-parse --short=7 HEAD 2>/dev/null || echo "${GITHUB_SHA:0:7}"
 
 source_apk=$(find "app/build/outputs/apk/$variant" -maxdepth 1 -name '*.apk' 2>/dev/null | head -1)
 if [ -z "$source_apk" ]; then
-  echo "::error::app/build/outputs/apk/$variant altında APK bulunamadı"
+  echo "::error::no APK found under app/build/outputs/apk/$variant"
   exit 1
 fi
 
-# İmzasız release APK'sı "app-release-unsigned.apk" adıyla çıkar. Ad bunu
-# saklamamalı: imzasız APK telefona kurulamaz, indiren kişi bunu dosya adından
-# görmeli.
+# An unsigned release APK comes out as "app-release-unsigned.apk". The name
+# must not hide that: an unsigned APK cannot be installed on a phone, and
+# whoever downloads it should see so from the file name.
 case "$(basename "$source_apk")" in
-  *unsigned*) label="$variant-imzasiz" ;;
+  *unsigned*) label="$variant-unsigned" ;;
   *)          label="$variant" ;;
 esac
 
@@ -63,9 +64,9 @@ if [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
     echo
     echo "| | |"
     echo "|---|---|"
-    echo "| Sürüm | $version_name ($version_code) |"
-    echo "| Tür | $label |"
-    echo "| Boyut | $size |"
+    echo "| Version | $version_name ($version_code) |"
+    echo "| Type | $label |"
+    echo "| Size | $size |"
     echo "| SHA-256 | \`$digest\` |"
   } >> "$GITHUB_STEP_SUMMARY"
 fi

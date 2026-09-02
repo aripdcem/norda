@@ -6,8 +6,8 @@ import org.junit.Test
 
 class ReturnToStartTest {
 
-    // Ekvatorda başlangıç tam doğuda: kerteriz 90° — taslaktaki ayna
-    // hatasını kapatan senaryonun kılavuz seviyesindeki karşılığı.
+    // At the equator the start is due east: bearing 90° — the guidance-level
+    // counterpart of the scenario that closed the mirror bug in the draft.
     @Test
     fun bearingAndDistanceToEastStart() {
         val g = ReturnToStart.guidance(0.0, 29.0, 0.0, 29.1, paceSecPerKm = null)
@@ -16,7 +16,7 @@ class ReturnToStartTest {
         assertNull(g.etaMillis)
     }
 
-    // 2 km @ 10 dk/km → 20 dk.
+    // 2 km @ 10 min/km → 20 min.
     @Test
     fun etaFromPace() {
         val g = ReturnToStart.guidance(41.0, 29.0, 41.0179866, 29.0, 600.0)
@@ -26,9 +26,10 @@ class ReturnToStartTest {
 
     @Test
     fun relativeAngleSignsSteering() {
-        // Kuzeye bakıyorsun, hedef 40°'de: 40° sağa.
+        // You are facing 10°, the target is at 40°: 30° to the right.
         assertEquals(30.0, ReturnToStart.relativeAngleDeg(10.0, 40.0), 1e-9)
-        // Kuzey geçişi tam tur saydırmaz: 350°'den 10°'ye 20° sağa.
+        // Crossing north does not count a full turn: from 350° to 10° is 20°
+        // to the right.
         assertEquals(20.0, ReturnToStart.relativeAngleDeg(350.0, 10.0), 1e-9)
         assertEquals(-20.0, ReturnToStart.relativeAngleDeg(10.0, 350.0), 1e-9)
     }

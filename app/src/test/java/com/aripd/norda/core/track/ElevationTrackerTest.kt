@@ -5,7 +5,7 @@ import org.junit.Test
 
 class ElevationTrackerTest {
 
-    // GNSS dikey gürültüsü: ±3 m salınım hiç tırmanış saymamalı.
+    // GNSS vertical noise: a ±3 m oscillation must count no climb at all.
     @Test
     fun flatNoiseAccumulatesNothing() {
         val e = ElevationTracker()
@@ -17,14 +17,15 @@ class ElevationTrackerTest {
     @Test
     fun steadyClimbIsCounted() {
         val e = ElevationTracker()
-        // 100 → 200, 5'er metrelik adımlar: her adım eşiği (4 m) aşar
+        // 100 → 200 in 5 m steps: every step exceeds the threshold (4 m)
         for (a in 100..200 step 5) e.onAltitude(a.toDouble())
         assertEquals(100.0, e.gainM, 1e-9)
         assertEquals(0.0, e.lossM, 1e-9)
     }
 
-    // Yavaş ama gerçek tırmanış: adımlar eşiğin altında olsa da demirden
-    // ayrışma birikince sayılır — eşik toplamı yutmaz, yalnız geciktirir.
+    // A slow but real climb: even though the steps are below the threshold,
+    // the divergence from the anchor is counted once it accumulates — the
+    // threshold does not swallow the total, it only delays it.
     @Test
     fun slowClimbStillAccumulates() {
         val e = ElevationTracker()
