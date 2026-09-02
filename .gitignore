@@ -15,3 +15,7 @@ dist/
 *.iml
 .DS_Store
 .kotlin/
+
+# Python bytecode from the map-pack tooling
+__pycache__/
+*.pyc
