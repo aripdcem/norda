@@ -33,6 +33,10 @@ jobs:
       - name: Check out source
         uses: actions/checkout@v4
 
+      # Map-pack tooling (renderer, pack builder): pure stdlib, seconds to run.
+      - name: Tooling tests
+        run: python3 -m unittest discover -s tools/tests
+
       # The project compiles with jvmTarget 17; the version is pinned explicitly
       # instead of trusting the runner's default JDK.
       - name: JDK 17

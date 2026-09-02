@@ -55,6 +55,9 @@ jobs:
 
       # Inputs reach the shell through environment variables; special
       # characters in name/bbox cannot be interpreted as commands.
+      - name: Tooling tests
+        run: python3 -m unittest discover -s tools/tests
+
       - name: Build the pack
         env:
           PKG_ID: ${{ inputs.id }}

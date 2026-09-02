@@ -1,0 +1,324 @@
+{
+ "version": 0.6,
+ "generator": "fixture",
+ "elements": [
+  {
+   "type": "way",
+   "id": 1,
+   "tags": {
+    "natural": "coastline"
+   },
+   "nodes": [
+    1001,
+    1002,
+    1003,
+    1004
+   ],
+   "geometry": [
+    {
+     "lon": 28.9,
+     "lat": 41.018
+    },
+    {
+     "lon": 29.02,
+     "lat": 41.021
+    },
+    {
+     "lon": 29.05,
+     "lat": 41.019
+    },
+    {
+     "lon": 29.07,
+     "lat": 41.022
+    }
+   ]
+  },
+  {
+   "type": "way",
+   "id": 11,
+   "tags": {
+    "natural": "coastline"
+   },
+   "nodes": [
+    1004,
+    1102,
+    1103
+   ],
+   "geometry": [
+    {
+     "lon": 29.07,
+     "lat": 41.022
+    },
+    {
+     "lon": 29.09,
+     "lat": 41.02
+    },
+    {
+     "lon": 29.2,
+     "lat": 41.023
+    }
+   ]
+  },
+  {
+   "type": "way",
+   "id": 2,
+   "tags": {
+    "natural": "coastline"
+   },
+   "nodes": [
+    200,
+    201,
+    202,
+    203,
+    204
+   ],
+   "geometry": [
+    {
+     "lon": 29.053,
+     "lat": 41.008
+    },
+    {
+     "lon": 29.05,
+     "lat": 41.011
+    },
+    {
+     "lon": 29.047,
+     "lat": 41.008
+    },
+    {
+     "lon": 29.05,
+     "lat": 41.005
+    },
+    {
+     "lon": 29.053,
+     "lat": 41.008
+    }
+   ]
+  },
+  {
+   "type": "way",
+   "id": 3,
+   "tags": {
+    "natural": "water"
+   },
+   "nodes": [
+    300,
+    301,
+    302,
+    303,
+    304
+   ],
+   "geometry": [
+    {
+     "lon": 29.015,
+     "lat": 41.036
+    },
+    {
+     "lon": 29.025,
+     "lat": 41.036
+    },
+    {
+     "lon": 29.025,
+     "lat": 41.044
+    },
+    {
+     "lon": 29.015,
+     "lat": 41.044
+    },
+    {
+     "lon": 29.015,
+     "lat": 41.036
+    }
+   ]
+  },
+  {
+   "type": "way",
+   "id": 4,
+   "tags": {
+    "landuse": "forest"
+   },
+   "nodes": [
+    400,
+    401,
+    402,
+    403,
+    404
+   ],
+   "geometry": [
+    {
+     "lon": 29.075,
+     "lat": 41.036
+    },
+    {
+     "lon": 29.095,
+     "lat": 41.036
+    },
+    {
+     "lon": 29.095,
+     "lat": 41.048
+    },
+    {
+     "lon": 29.075,
+     "lat": 41.048
+    },
+    {
+     "lon": 29.075,
+     "lat": 41.036
+    }
+   ]
+  },
+  {
+   "type": "relation",
+   "id": 5,
+   "tags": {
+    "type": "multipolygon",
+    "natural": "water"
+   },
+   "members": [
+    {
+     "type": "way",
+     "ref": 51,
+     "role": "outer",
+     "geometry": [
+      {
+       "lon": 29.055,
+       "lat": 41.033
+      },
+      {
+       "lon": 29.068,
+       "lat": 41.033
+      },
+      {
+       "lon": 29.068,
+       "lat": 41.04
+      }
+     ]
+    },
+    {
+     "type": "way",
+     "ref": 52,
+     "role": "outer",
+     "geometry": [
+      {
+       "lon": 29.055,
+       "lat": 41.033
+      },
+      {
+       "lon": 29.055,
+       "lat": 41.04
+      },
+      {
+       "lon": 29.068,
+       "lat": 41.04
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "type": "way",
+   "id": 6,
+   "tags": {
+    "highway": "primary"
+   },
+   "nodes": [
+    600,
+    601
+   ],
+   "geometry": [
+    {
+     "lon": 29.0,
+     "lat": 41.045
+    },
+    {
+     "lon": 29.1,
+     "lat": 41.045
+    }
+   ]
+  },
+  {
+   "type": "way",
+   "id": 7,
+   "tags": {
+    "highway": "residential"
+   },
+   "nodes": [
+    700,
+    701
+   ],
+   "geometry": [
+    {
+     "lon": 29.03,
+     "lat": 41.03
+    },
+    {
+     "lon": 29.03,
+     "lat": 41.05
+    }
+   ]
+  },
+  {
+   "type": "way",
+   "id": 8,
+   "tags": {
+    "waterway": "river"
+   },
+   "nodes": [
+    800,
+    801
+   ],
+   "geometry": [
+    {
+     "lon": 29.09,
+     "lat": 41.05
+    },
+    {
+     "lon": 29.09,
+     "lat": 41.031
+    }
+   ]
+  },
+  {
+   "type": "way",
+   "id": 9,
+   "tags": {
+    "railway": "rail"
+   },
+   "nodes": [
+    900,
+    901
+   ],
+   "geometry": [
+    {
+     "lon": 29.0,
+     "lat": 41.035
+    },
+    {
+     "lon": 29.1,
+     "lat": 41.035
+    }
+   ]
+  },
+  {
+   "type": "way",
+   "id": 10,
+   "tags": {
+    "highway": "track"
+   },
+   "nodes": [
+    1000,
+    1001
+   ],
+   "geometry": [
+    {
+     "lon": 29.04,
+     "lat": 41.024
+    },
+    {
+     "lon": 29.05,
+     "lat": 41.032
+    }
+   ]
+  }
+ ]
+}

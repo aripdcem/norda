@@ -378,16 +378,28 @@ pipeline:
 
 ```
 map-pack.yml  (workflow_dispatch: region name + bbox + zoom range)
-  1. Download the OSM region extract (Geofabrik .pbf — ODbL)
-  2. Vector tile generation (tilemaker / Planetiler)
-  3. Rasterize in CI (headless MapLibre render tool / tileserver-gl container)
-  4. Raster .mbtiles pack + SHA-256
-  5. Publish as an asset on a GitHub Release (tag: maps/<region>-vN)
-  6. Update docs/maps/index.json (commit)
+  1. Fetch the region's OSM data from the Overpass API (ODbL): coastline
+     for the tile-aligned extent of the smallest zoom, then — in ≤0.2° cells
+     with retries — water and green areas (ways + multipolygon outers),
+     rivers, roads by class and rails
+  2. Render 256-px raster tiles with our own standard-library renderer
+     (tools/osmrender.py): coastline → sea polygons by OSM's land-left /
+     water-right rule, even-odd fills, cased roads, 2× supersampling
+  3. Raster .mbtiles pack + SHA-256
+  4. Publish as an asset on a GitHub Release (tag: maps/<region>-vN)
+  5. Update docs/maps/index.json (commit)
 ```
 
-- The tools in steps 2–3 are **build-time** tools; no dependency enters the
-  app (the zero-dependency principle is about runtime).
+- The pipeline has **no build-time dependencies either**: Python 3 standard
+  library only — no tilemaker, no MapLibre, no containers. The first draft
+  planned a Geofabrik → vector tiles → headless-renderer chain; a renderer of
+  our own turned out smaller, testable (unit tests in `tools/tests`) and free
+  of a live tile server or heavyweight tooling.
+- Cartography is deliberately minimalist and outdoor-first: land, sea, water,
+  forest/park, roads by class (motorways down to residential; tracks and
+  paths from z13), rails. **No labels in v1** — text needs fonts, and fonts
+  would be the first dependency; the style values are starting points to be
+  calibrated in the field like the GPS filter.
 - Requesting a new region = manually triggering `map-pack.yml` in Actions; the
   pack lands on a Release and appears in the list on the phone. The map
   pipeline needs no secrets (`GITHUB_TOKEN` is enough); the signing secrets are
@@ -395,8 +407,8 @@ map-pack.yml  (workflow_dispatch: region name + bbox + zoom range)
 - `index.json` schema: `[{id, name, bbox, minZoom, maxZoom, sizeBytes,
   sha256, url, version}]` — the app reads it, downloads the pack and verifies
   it.
-- Zoom range starting point: z8–z15 (city scale ~hundreds of MB, mountain
-  region ~tens of MB); sizes are measured with the first packs and adjusted.
+- Zoom range in practice: z8–z13 (the app over-zooms z13 for closer views);
+  the renderer runs in minutes in CI at this range.
 - **Attribution is mandatory**: "© OpenStreetMap contributors" on the Maps
   screen and in About; the ODbL license note in the README.
 

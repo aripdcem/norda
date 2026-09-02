@@ -46,4 +46,6 @@ baseline list was invisible to the parity test (both sides get polluted
 together); `statementCountPerVersionIsFrozen`, which freezes the statement
 count per version, was added.
 
-License: [MIT](LICENSE). Map data: © OpenStreetMap contributors (ODbL).
+License: [MIT](LICENSE). Map packs are rendered from OpenStreetMap data by
+our own standard-library pipeline (`tools/make-map-pack.py`); map data
+© OpenStreetMap contributors (ODbL).
