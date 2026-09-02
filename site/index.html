@@ -1,15 +1,15 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light dark">
 <meta name="theme-color" content="#F6F7F3" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#151A15" media="(prefers-color-scheme: dark)">
-<title>Norda — Yürü. Koş. Keşfet. Yolunu kaybetme.</title>
-<meta name="description" content="Norda: minimalist, offline-first outdoor navigasyon uygulaması (Android). Yürüyüş/koşu kaydı, offline harita, pusula, Return to Start, waypoint ve GPX — konumun cihazında kalır.">
-<meta property="og:title" content="Norda — offline-first outdoor navigasyon">
-<meta property="og:description" content="Yürü. Koş. Keşfet. Yolunu kaybetme. Konumun cihazında kalır; sıfır bağımlılık, ~110 KB imzalı APK.">
+<title>Norda — Walk. Run. Explore. Don't lose your way.</title>
+<meta name="description" content="Norda: a minimalist, offline-first outdoor navigation app (Android). Walk/run recording, offline maps, compass, Return to Start, waypoints and GPX — your location stays on your device.">
+<meta property="og:title" content="Norda — offline-first outdoor navigation">
+<meta property="og:description" content="Walk. Run. Explore. Don't lose your way. Your location stays on your device; zero dependencies, ~110 KB signed APK.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%232F6B4C'/%3E%3Cpath d='M32 10 L39 32 L32 54 L25 32 Z' fill='%23F6F7F3'/%3E%3Cpath d='M32 10 L39 32 L25 32 Z' fill='%23E8C468'/%3E%3C/svg%3E">
 <style>
   :root {
@@ -25,7 +25,7 @@
     --gold: #8F6412;
     --shadow: 0 1px 2px rgba(33, 42, 32, 0.06);
   }
-  /* Işık/koyu: buton yok, sistem ayarı seçer. */
+  /* Light/dark: no toggle, the system setting decides. */
   @media (prefers-color-scheme: dark) {
     :root {
       --bg: #151A15;
@@ -176,27 +176,27 @@
       </svg>
       Norda
     </a>
-    <nav class="top-nav" aria-label="Sayfa içi">
-      <a href="#ozellikler">Özellikler</a>
-      <a href="#durus">Duruş</a>
+    <nav class="top-nav" aria-label="On this page">
+      <a href="#features">Features</a>
+      <a href="#stance">Stance</a>
       <a href="https://github.com/aripdcem/norda">GitHub</a>
     </nav>
   </header>
 
   <main>
-    <section class="hero" aria-label="Tanıtım">
-      <h1>Yürü. Koş. Keşfet.<br><span class="go">Yolunu kaybetme.</span></h1>
-      <p class="sub"><strong>Norda</strong>, minimalist ve offline-first bir
-        outdoor navigasyon uygulamasıdır: yürüyüş/koşu kaydı, offline harita,
-        pusula, Return to Start, waypoint ve GPX — hepsi internetsiz,
-        hepsi cihazında.</p>
+    <section class="hero" aria-label="Introduction">
+      <h1>Walk. Run. Explore.<br><span class="go">Don't lose your way.</span></h1>
+      <p class="sub"><strong>Norda</strong> is a minimalist, offline-first
+        outdoor navigation app: walk/run recording, offline maps, compass,
+        Return to Start, waypoints and GPX — all without internet,
+        all on your device.</p>
       <div class="cta">
-        <a class="btn primary" href="https://github.com/aripdcem/norda/releases/latest">APK indir <span class="ver"></span></a>
-        <a class="btn ghost" href="https://github.com/aripdcem/norda">Kaynak kodu</a>
+        <a class="btn primary" href="https://github.com/aripdcem/norda/releases/latest">Download APK <span class="ver"></span></a>
+        <a class="btn ghost" href="https://github.com/aripdcem/norda">Source code</a>
       </div>
-      <p class="fineprint">İmzalı APK · Android 8.0+ · tamamı <code>≈110 KB</code> · sıfır çalışma zamanı bağımlılığı</p>
+      <p class="fineprint">Signed APK · Android 8.0+ · <code>≈110 KB</code> in total · zero runtime dependencies</p>
 
-      <svg class="routeline" viewBox="0 0 720 64" role="img" aria-label="Başlangıçtan hedefe, ara noktalardan geçen bir rota çizimi" fill="none">
+      <svg class="routeline" viewBox="0 0 720 64" role="img" aria-label="A route drawing from the start to the destination, passing through waypoints" fill="none">
         <path d="M8 46 C 90 20, 150 58, 232 40 S 380 10, 470 34 S 620 54, 704 22" stroke="var(--line)" stroke-width="2" stroke-dasharray="1 7" stroke-linecap="round"/>
         <path d="M8 46 C 90 20, 150 58, 232 40 S 380 10, 470 34 S 560 48, 620 42" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round"/>
         <circle cx="8" cy="46" r="5" fill="var(--accent)"/>
@@ -206,85 +206,85 @@
       </svg>
     </section>
 
-    <section id="ozellikler" aria-label="Özellikler">
-      <h2>Özellikler</h2>
+    <section id="features" aria-label="Features">
+      <h2>Features</h2>
       <div class="grid">
         <div class="card">
-          <h3>Yürüyüş &amp; koşu kaydı</h3>
-          <p>Filtreli GPS, <span class="k">otomatik duraklatma</span>, canlı tempo
-             ve histerezisli yükseklik kazanımı. Ekran kapansa da kayıt sürer;
-             süreç kesintisinde veri kurtarılır.</p>
+          <h3>Walk &amp; run recording</h3>
+          <p>Filtered GPS, <span class="k">auto-pause</span>, live pace
+             and hysteresis-based elevation gain. Recording continues with the
+             screen off; data is recovered after a process interruption.</p>
         </div>
         <div class="card">
-          <h3>Offline harita</h3>
-          <p>Kendi hattında üretilen <span class="k">MBTiles bölge paketleri</span>:
-             indir, uçak modunda gez. Paket yokken bile iz ve konum çizilir.</p>
+          <h3>Offline maps</h3>
+          <p><span class="k">MBTiles region packs</span> built on its own pipeline:
+             download, then roam in airplane mode. Even without a pack, the track and your position are drawn.</p>
         </div>
         <div class="card">
-          <h3>Pusula + Return to Start</h3>
-          <p><span class="k">Gerçek kuzey</span>, manyetik bozulma uyarısı ve
-             başlangıca dönüş: kerteriz, mesafe, tahmini süre, yön düzeltmesi.</p>
+          <h3>Compass + Return to Start</h3>
+          <p><span class="k">True north</span>, magnetic disturbance warning and
+             the way back to the start: bearing, distance, ETA, course correction.</p>
         </div>
         <div class="card">
           <h3>Waypoint &amp; GPX</h3>
-          <p>Tek dokunuşla nokta bırak; izini <span class="k">GPX</span> olarak al —
-             özet, pil ve filtre telemetrisi dosyanın içinde gider. İçe aktarma da var.</p>
+          <p>Drop a point with a single tap; take your track as <span class="k">GPX</span> —
+             summary, battery and filter telemetry travel inside the file. Import is there too.</p>
         </div>
         <div class="card">
-          <h3>GPS'i ekranda gör</h3>
-          <p>Başlamadan önce <span class="k">"GPS hazır · ± X m"</span> satırı ve
-             uydu sayısı: kör bekleyiş yok, kaydın neden beklediği hep görünür.</p>
+          <h3>See GPS on screen</h3>
+          <p>Before you start, the <span class="k">"GPS ready · ± X m"</span> line and
+             the satellite count: no blind waiting, why the recording is waiting is always visible.</p>
         </div>
         <div class="card">
-          <h3>Pil ölçümü</h3>
-          <p>Her aktivitede başlangıç/bitiş pil yüzdesi ve <span class="k">%/saat</span>
-             oranı geçmişte — tüketimi tahminle değil veriyle konuş.</p>
+          <h3>Battery measurement</h3>
+          <p>Start/end battery percentage and the <span class="k">%/hour</span>
+             rate for every activity in History — talk about drain with data, not guesses.</p>
         </div>
       </div>
     </section>
 
-    <section id="durus" aria-label="Duruş">
-      <h2>Duruş</h2>
+    <section id="stance" aria-label="Stance">
+      <h2>Stance</h2>
       <div class="pillars">
         <div class="pillar">
-          <h3>Temiz iz</h3>
-          <p>Kayda yalnız kalite kapısından geçen <strong>gerçek GNSS noktaları</strong>
-             girer; ağ/WiFi konumu asla ize karışmaz. "Hazır" demesi biraz sürebilir —
-             karşılığı, her noktası gerçek bir izdir.</p>
+          <h3>Clean track</h3>
+          <p>Only <strong>real GNSS points</strong> that pass the quality gate
+             enter the recording; network/WiFi location never mixes into the track. Saying "ready" can take a moment —
+             in return, every point of your track is real.</p>
         </div>
         <div class="pillar">
-          <h3>Cihazında kalır</h3>
-          <p>Konum verisi telefonundan çıkmaz; <strong>telemetri yok, hesap yok,
-             bulut yok</strong>. Ağa dokunan tek şey harita paketi indiricisidir.</p>
+          <h3>Stays on your device</h3>
+          <p>Location data never leaves your phone; <strong>no telemetry, no account,
+             no cloud</strong>. The only thing that touches the network is the map pack downloader.</p>
         </div>
         <div class="pillar">
-          <h3>Sıfır bağımlılık</h3>
-          <p>Yalnız Android SDK + Kotlin. Reklam SDK'sı, analitik, Play Services
-             yok — <strong>≈110 KB</strong> imzalı APK, okunabilir tek depo.</p>
+          <h3>Zero dependencies</h3>
+          <p>Android SDK + Kotlin only. No ad SDK, no analytics, no Play
+             Services — a <strong>≈110 KB</strong> signed APK, one readable repository.</p>
         </div>
       </div>
     </section>
 
-    <section class="maps" aria-label="Harita paketleri">
-      <h2>Harita paketleri</h2>
-      <p>Bölge paketleri bu deponun kendi <strong>GitHub Actions hattında</strong>
-         üretilir, sürümlenir ve SHA-256 ile doğrulanarak indirilir. Paket listesi
-         uygulamanın Haritalar ekranındadır; <a href="https://github.com/aripdcem/norda/releases">Releases</a>
-         üzerinden elle de alınabilir. Harita verisi © OpenStreetMap contributors.</p>
+    <section class="maps" aria-label="Map packs">
+      <h2>Map packs</h2>
+      <p>Region packs are built on this repository's own <strong>GitHub Actions pipeline</strong>,
+         versioned, and downloaded with SHA-256 verification. The pack list is on the
+         app's Maps screen; they can also be fetched by hand from <a href="https://github.com/aripdcem/norda/releases">Releases</a>.
+         Map data © OpenStreetMap contributors.</p>
     </section>
   </main>
 
   <footer>
     <span>© 2026 Norda · <a href="https://github.com/aripdcem/norda/blob/main/LICENSE">MIT</a></span>
-    <a href="https://github.com/aripdcem/norda/blob/main/docs/PRIVACY.md">Gizlilik</a>
-    <a href="https://github.com/aripdcem/norda/releases">Sürümler</a>
-    <a href="https://github.com/aripdcem/norda/blob/main/docs/MVP.md">MVP belgesi</a>
-    <span>Harita verisi © OpenStreetMap contributors (ODbL)</span>
+    <a href="https://github.com/aripdcem/norda/blob/main/docs/PRIVACY.md">Privacy</a>
+    <a href="https://github.com/aripdcem/norda/releases">Releases</a>
+    <a href="https://github.com/aripdcem/norda/blob/main/docs/MVP.md">MVP document</a>
+    <span>Map data © OpenStreetMap contributors (ODbL)</span>
   </footer>
 
 </div>
 <script>
-  // Tek ağ isteği: son sürüm etiketi (başarısızsa sessizce düğme sade kalır).
+  // The only network request: the latest release tag (on failure the button silently stays plain).
   fetch("https://api.github.com/repos/aripdcem/norda/releases/latest")
     .then(function (r) { return r.ok ? r.json() : null; })
     .then(function (d) {

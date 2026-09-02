@@ -1,190 +1,204 @@
-# Saha turu protokolü — Faz 9 (RC)
+# Field tour protocol — Phase 9 (RC)
 
-MVP.md 13.3'teki matrisin yürünebilir hâli. Her tur bu sırayla koşulur;
-bulgular aşağıdaki şablonla raporlanır ve düzeltmeler z-sürümü olarak akar
-(v0.9.1, v0.9.2, …). Cihazda elle doğrulama birim testin *yanına* konur,
-yerine değil (13.1/6).
+The walkable form of the matrix in MVP.md 13.3. Every tour is run in this
+order; findings are reported with the template below and fixes flow out as
+z-releases (v0.9.1, v0.9.2, …). Manual verification on the device sits
+*beside* the unit tests, not in their place (13.1/6).
 
-## Tur öncesi
+## Before the tour
 
-1. Son RC sürümünü kur (Releases'tan imzalı APK), sürümü Ayarlar →
-   Uygulamalar'dan doğrula.
-2. Bir harita paketi indir (Haritalar ekranı) ya da içe aktar.
-3. Pil %100'e yakın, güç tasarrufu **kapalı** başlanır (ilk turlarda;
-   sonraki turlarda bilerek açık denenir).
-4. **GPS'in oturmasını bekle** (v0.9.6'dan beri Home'da): uygulama Home
-   açıkken GPS'i ısıtmaya başlar; START'ın üstündeki satır "GPS aranıyor…"
-   → "GPS hazır · ± X m" olunca başla. Uygulamayı kapatıp açmak çipi
-   etkilemez — kilitlenme çip tarafındadır, beklemek tek çözümdür. Kapalı
-   alan ve 2–3 dk'lık denemeler GPS ısınmasına yetmez; hiç nokta girmezse
-   kayıt nedeniyle birlikte atılır.
-5. **Arama açık havada da uzarsa** (v0.9.8'den beri uydu sayısı ekranda —
-   "uydu 0/9" = görülen çok, kilit yok): Norda yardım verisi (aGPS)
-   enjekte etmez (Play Services yok); yardım bayatsa ham GPS almanağı
-   uydudan indirir, bu 2–15 dk sürebilir. Kestirme: Google Haritalar'ı
-   açıp mavi nokta hassaslaşınca Norda'ya dön — sistemin GNSS yardımı
-   tazelenir, kilit genelde saniyeler içinde gelir. "Uydu 0/0" açık havada
-   sürüyorsa sorun cihazın GNSS/anteni demektir.
+1. Install the latest RC release (signed APK from Releases); verify the
+   version under Settings → Apps.
+2. Download a map pack (Maps screen) or import one.
+3. Start with the battery near 100% and battery saver **off** (on the first
+   tours; on later tours it is deliberately tried on).
+4. **Wait for GPS to settle** (on Home since v0.9.6): the app starts warming
+   up GPS while Home is open; start once the line above START turns from
+   "Searching for GPS…" into "GPS ready · ± X m". Closing and reopening the
+   app does not affect the chip — the lock happens on the chip side, and
+   waiting is the only remedy. Indoor spaces and 2–3 min attempts are not
+   enough for the GPS warm-up; if no point ever enters, the recording is
+   discarded together with the reason.
+5. **If the search drags on even in the open** (satellite count on screen
+   since v0.9.8 — "satellites 0/9" = many seen, no lock): Norda injects no
+   assistance data (aGPS) (no Play Services); if the assistance is stale, the
+   raw GPS almanac is downloaded from the satellites, which can take 2–15
+   min. Shortcut: open Google Maps and, once the blue dot sharpens, return to
+   Norda — the system's GNSS assistance is refreshed and the lock usually
+   arrives within seconds. If "satellites 0/0" persists in the open, the
+   problem is the device's GNSS/antenna.
 
-## Tur adımları
+## Tour steps
 
-| # | Alan | Adım | Beklenen |
+| # | Area | Step | Expected |
 |---|---|---|---|
-| 1 | Permissions | İzinleri Ayarlar'dan geri çek → uygulamayı aç → START | Ret nedeni ekranda; kalıcı rette "Ayarları aç" diyaloğu |
-| 2 | Permissions | Konum servisini kapat → START | "Konumu aç / Yine de başlat" diyaloğu; açınca fix'ler kendiliğinden akar |
-| 3 | Location | Açık alanda 10+ dk yürüyüş kaydı | İz düzgün, çizik yok; Tanılama'da filtre sayaçları makul |
-| 4 | Location | Dar sokak / bina dibi bölüm | Sıçramalar filtrelenir; sayaçlarda doğruluk/ışınlama artar |
-| 5 | Distance | Bilinen mesafede (ör. 400 m pist ×2) kayıt | Sapma ≤ %3 hedef; değeri rapora yaz |
-| 6 | Speed | Yürü → koş → dur geçişleri | Tempo makul gecikmeyle oturur |
-| 7 | Auto-pause | 5–10 dk hareketsiz bekle | Otomatik duraklar (≈20 sn), mesafe/tempo şişmez; hareketle sürer |
-| 8 | Elevation | Bilinen tırmanış (ya da düz yol) | Düz yolda ▲ ≈ 0; tırmanışta profil makul |
-| 9 | Background | Ekran kapat, başka uygulamaya geç, kilitle (30+ dk) | Kayıt sürer; bildirim durum·süre·mesafe gösterir |
-| 10 | Battery | 30 dk / 1 sa / 2 sa turlar | Geçmiş satırındaki 🔋 %/sa değerini rapora yaz |
-| 11 | Compass | Temiz alanda pusula ↔ bilinen yön | Gerçek kuzey etiketi; sapma makul (±5°) |
-| 12 | Compass | Metale/mıknatısa yaklaş | Bozulma uyarısı girer, uzaklaşınca çıkar |
-| 13 | Return to Start | Kayıttan uzaklaş → Pusula | Kerteriz + mesafe + ETA; "yön tutuyor" ±5° |
-| 14 | Waypoints | Kayıtta "+ Nokta", haritada uzun basış, yeniden adlandır/sil | Haritada ve pusulada doğru görünür |
-| 15 | GPX | Dışa aktar → geçmişi sil → aynı dosyayı içe al | İz + noktalar aynen geri gelir |
-| 16 | Offline | Uçak modu: harita, kayıt, pusula, RTS | Hepsi paketle/paketsiz çalışır |
-| 17 | Map | Pan/zoom/önbellek, büyük paket | Takılma yok; paket yokken ızgara |
-| 18 | Recovery | Kayıt sırasında uygulamayı süreçten öldür | Servis geri gelir, kayıt sürer; olmadıysa açılışta kurtarma |
-| 19 | Recovery | Kayıt sırasında yeniden başlat (reboot) | Açılışta yarım kayıt geçmişe kurtarılır |
-| 20 | Battery saver | Güç tasarrufu açıkken 30 dk kayıt | Veri kaybı varsa süre/aralık notuyla rapora |
+| 1 | Permissions | Revoke the permissions in Settings → open the app → START | Denial reason on screen; on permanent denial the "Open settings" dialog |
+| 2 | Permissions | Turn off the location service → START | "Turn on location / Start anyway" dialog; once turned on, fixes flow by themselves |
+| 3 | Location | 10+ min walk recording in the open | Track smooth, no scratches; filter counters in Diagnostics reasonable |
+| 4 | Location | Narrow street / right beside buildings section | Spikes are filtered; accuracy/teleport counters rise |
+| 5 | Distance | Recording over a known distance (e.g. 400 m running track ×2) | Target deviation ≤ 3%; write the value into the report |
+| 6 | Speed | Walk → run → stop transitions | Pace settles with reasonable delay |
+| 7 | Auto-pause | Stand still for 5–10 min | Auto-pauses (≈20 s), distance/pace do not inflate; resumes with movement |
+| 8 | Elevation | Known climb (or flat road) | On flat road ▲ ≈ 0; on the climb the profile is reasonable |
+| 9 | Background | Turn the screen off, switch to another app, lock (30+ min) | Recording continues; the notification shows state · duration · distance |
+| 10 | Battery | 30 min / 1 h / 2 h tours | Write the 🔋 %/h value from the History row into the report |
+| 11 | Compass | Compass ↔ known bearing in a clean area | "True north" label; deviation reasonable (±5°) |
+| 12 | Compass | Approach metal/a magnet | Disturbance warning appears, disappears when moving away |
+| 13 | Return to Start | Walk away during a recording → Compass | Bearing + distance + ETA; "on course" ±5° |
+| 14 | Waypoints | "+ Point" while recording, long-press on the map, rename/delete | Shows correctly on the map and the compass |
+| 15 | GPX | Export → delete from history → import the same file | Track + waypoints come back exactly as they were |
+| 16 | Offline | Airplane mode: map, recording, compass, RTS | Everything works with/without a pack |
+| 17 | Map | Pan/zoom/cache, large pack | No stutter; grid when there is no pack |
+| 18 | Recovery | Kill the app's process during a recording | Service comes back, recording continues; if not, recovery at launch |
+| 19 | Recovery | Restart the device (reboot) during a recording | At launch the unfinished recording is recovered into History |
+| 20 | Battery saver | 30 min recording with battery saver on | If there is data loss, into the report with a duration/interval note |
 
-## Rapor şablonu
+## Report template
 
 ```
-Sürüm: v0.9.x · Cihaz: <model, Android sürümü>
-Tur tarihi/süresi: … · Hava/ortam: …
+Version: v0.9.x · Device: <model, Android version>
+Tour date/duration: … · Weather/environment: …
 
-Adım | Sonuç (✓ / ✗ + not)
+Step | Result (✓ / ✗ + note)
 ...
 
-Ölçümler:
-- Mesafe: bilinen … m ↔ uygulama … m (sapma %…)
-- Pil: 🔋 …% (…%/sa) — ekran kapalı/açık oranı: …
-- Filtre sayaçları (Tanılama; v0.9.2'den beri tur bittikten sonra da
-  "SON KAYIT" olarak okunur): kabul … · doğruluk … · titreme … ·
-  ışınlama … · zaman …
-- Yükseklik: beklenen ▲… ↔ uygulama ▲…
+Measurements:
+- Distance: known … m ↔ app … m (deviation …%)
+- Battery: 🔋 …% (…%/h) — screen off/on ratio: …
+- Filter counters (Diagnostics; since v0.9.2 also readable after the tour
+  ends as "RECORDING FILTER (LAST)"): accepted … · accuracy … · jitter … ·
+  teleport … · time …
+- Elevation: expected ▲… ↔ app ▲…
 ```
 
-Bulgu → issue ya da doğrudan mesaj; her düzeltme kendi z-sürümüyle çıkar,
-tur o sürümle tekrarlanır. Üç temiz tur = v1.0.0 kapısı.
+Finding → issue or a direct message; every fix ships as its own z-release and
+the tour is repeated on that release. Three clean tours = the v1.0.0 gate.
 
-> Kısa yol (v0.9.3+): turu bitir → izi GPX olarak dışa aktar → dosyayı
-> paylaş. Özet, pil ve filtre sayaçları dosyanın içinde (`norda:report`)
-> gelir; şablondaki ölçümlerden yalnız bilinen-mesafe karşılaştırması elle
-> yazılır.
+> Shortcut (v0.9.3+): finish the tour → export the track as GPX → share the
+> file. Summary, battery and filter counters come inside the file
+> (`norda:report`); of the measurements in the template only the
+> known-distance comparison is written by hand.
 
-## Tur günlüğü
+## Tour log
 
-| Tur | Tarih | Sürüm | Sonuç |
+| Tour | Date | Version | Result |
 |---|---|---|---|
-| 1 | 2026-08-25 | v0.9.0 | **Temiz** — sorun yok. Ölçümler: 2,98 km · 28:16 aktif (42:46 duvar) · ▲135 m · 🔋 %2. GPX dışa aktarımı çekirdekle yeniden hesaplandı: 962 nokta + 1 wpt; mesafe ✓ (ham 3513,7 − duraklatma sıçramaları 531,2 ≈ 2982,5), yükseklik ✓ (tam 135,0), süre ✓. Analiz bulgusu **F-1** → v0.9.1 |
-| — | 2026-08-25 | v0.9.3 | *Geçersiz deneme* (tur sayılmaz): tenis kortu içinde 2 dk koşu, **güç tasarrufu AÇIK**. Kök neden F-2 sayaçlarıyla kanıtlı: **hepsi 0** — GPS uygulamaya hiç fix iletmedi (doğruluk sorunu değil); boş kayıt tasarım gereği atıldı. Bulgular **F-4** → v0.9.4 (GPS durumu ekranda canlı, atılma mesajı nedenli) ve **F-5** → v0.9.5 (güç tasarrufu açıkken bu, durum satırında ve atılma mesajında söylenir) |
-| 2 | 2026-08-27 | v0.9.5 | *Bulgulu* (tekrar gerekli): kayıt hattı kusursuz — çapraz doğrulama birebir: mesafe 3513,2 ↔ 3513,2 m (duraklatma sıçraması 13,5 m doğru dışlandı), ▲123/▼144 birebir, 1086 nokta = kabul sayacı, doğruluk/ışınlama reti 0. Beyan veriyle tutarlı: gidiş 1677 m · 7:54/km koşu, dönüş 1850 m · 9:42/km yürüyüş. 🔋 %6 (~11 %/sa, ekran açık — Tur 1'in 4 katı; ekran maliyeti matrisle ayrışacak). Bulgu **F-6**: GPS edinimi — START sonrası 1+ dk kör bekleyiş, uygulama yeniden başlatmaları etkisiz → v0.9.6 ile tekrar |
-| 2t | 2026-08-27 | **v0.9.8** | **Temiz** — çapraz doğrulama 0,1 m hassas: ham 1692,9 − elle-duraklatma sıçraması 22,6 = 1670,3 ↔ uygulama 1670,4 m; ▲141/▼92 birebir; 532 nokta = kabul sayacı. 23,5 dk'lık elle mola doğru dışlandı; iki ~35 sn'lik oto-duraklatma tasarım gereği mesafeye dahil. Doğruluk reti 1, ışınlama 0. 🔋 %3 (~4,0 %/sa). Rapor `app="0.9.8"` taşıdı (F-3+F-6 sahada ✓). Not: GPS kilidi Haritalar açıldıktan sonra geldi — nedensellik doğrulanamadı; uydu satırı (F-9) sonraki turlarda cevabı verecek. İlk fix'in 2. saniyesinde 12,7 m/s'lik tek oturma sıçraması filtre tavanının altında kaldı (etki ~13 m, gözlem olarak not edildi) |
-| 3 | 2026-08-29 | v0.9.8 | **Temiz** — 57:17, güç tasarrufu kapalı. Çapraz doğrulama **SIFIR fark**: 5613,7 ↔ 5613,7 m (elle mola yok; 4 mikro boşluk ≤7 sn); ▲202/▼189 birebir; 1738 nokta = kabul sayacı; doğruluk/ışınlama/zaman reti 0. 🔋 %9 (~9,4 %/sa, **Norda tek başına, ekran çoğunlukla KAPALI** — yalnız 4-5 kısa saat bakışı; Strava paralel koşmadı. Ekran-kapalı için yüksekçe → **izlemede (B-1)**: olası katkılar uzun edinim dönemi [GNSS kilide dek tam güçte], aGPS'siz çip eforu, %99 üst bandı doğrusuzluğu. Güç-tasarrufu turu + bir normal tur üçgenler; 9-10 bandında kalırsa v1.0.x'te örnekleme iyileştirmesi tartışılır). Edinim: uydu satırı sahada ilk görevini yaptı — kullanıcı "GPS 3/22"yi (fix'te/görülen) izleyip kilitle başladı; 22 uydu görülmesi gökyüzünün mükemmel, edinimin aGPS'siz karakterden yavaş olduğunu kesinleştirdi. Kilit öncesi yüründüğü bölüm tasarım gereği kayıtsız (yalnız kaliteli gerçek GPS yazılır; Strava aynı aralığı ağ noktasıyla doldurur). **Strava çapraz doğrulaması:** aynı GPX Strava'da 5,62 km · 56:36 — Norda 5,61 km, nokta aralığı 56:36 → üç kaynak mutabık ✓ |
+| 1 | 2026-08-25 | v0.9.0 | **Clean** — no issues. Measurements: 2.98 km · 28:16 active (42:46 wall clock) · ▲135 m · 🔋 2%. The GPX export was recomputed with the core: 962 points + 1 wpt; distance ✓ (raw 3513.7 − pause spikes 531.2 ≈ 2982.5), elevation ✓ (exactly 135.0), duration ✓. Analysis finding **F-1** → v0.9.1 |
+| — | 2026-08-25 | v0.9.3 | *Invalid attempt* (does not count as a tour): 2 min run inside a tennis court, **battery saver ON**. Root cause proven by the F-2 counters: **all 0** — GPS never delivered a fix to the app (not an accuracy problem); the empty recording was discarded by design. Findings **F-4** → v0.9.4 (GPS state live on screen, discard message states the reason) and **F-5** → v0.9.5 (when battery saver is on, this is said in the status line and in the discard message) |
+| 2 | 2026-08-27 | v0.9.5 | *With findings* (repeat required): the recording pipeline was flawless — cross-validation matched exactly: distance 3513.2 ↔ 3513.2 m (a 13.5 m pause spike correctly excluded), ▲123/▼144 exact, 1086 points = accepted counter, accuracy/teleport rejections 0. The user's report is consistent with the data: out 1677 m · 7:54/km run, back 1850 m · 9:42/km walk. 🔋 6% (~11 %/h, screen on — 4× Tour 1; the screen cost will be separated out with the matrix). Finding **F-6**: GPS acquisition — 1+ min of blind waiting after START, app restarts ineffective → repeat with v0.9.6 |
+| 2r (repeat) | 2026-08-27 | **v0.9.8** | **Clean** — cross-validation accurate to 0.1 m: raw 1692.9 − manual-pause spike 22.6 = 1670.3 ↔ app 1670.4 m; ▲141/▼92 exact; 532 points = accepted counter. The 23.5 min manual break was correctly excluded; two ~35 s auto-pauses are included in the distance by design. Accuracy rejections 1, teleport 0. 🔋 3% (~4.0 %/h). The report carried `app="0.9.8"` (F-3+F-6 ✓ in the field). Note: the GPS lock came after Google Maps was opened — causality could not be verified; the satellite line (F-9) will give the answer on the next tours. A single settling spike of 12.7 m/s in the 2nd second of the first fix stayed under the filter ceiling (impact ~13 m, noted as an observation) |
+| 3 | 2026-08-29 | v0.9.8 | **Clean** — 57:17, battery saver off. Cross-validation **ZERO difference**: 5613.7 ↔ 5613.7 m (no manual break; 4 micro gaps ≤7 s); ▲202/▼189 exact; 1738 points = accepted counter; accuracy/teleport/time rejections 0. 🔋 9% (~9.4 %/h, **Norda alone, screen mostly OFF** — only 4-5 short glances at the clock; Strava did not run in parallel. Highish for screen-off → **watch item (B-1)**: possible contributors are the long acquisition period [full power until the GNSS lock], chip effort without aGPS, non-linearity of the 99% upper band. A battery-saver tour + one normal tour will triangulate; if it stays in the 9-10 band, a sampling improvement is discussed for v1.0.x). Acquisition: the satellite line did its first job in the field — the user watched "GPS 3/22" (in fix/seen) and started with the lock; seeing 22 satellites established that the sky was perfect and that the acquisition is slow by its aGPS-less nature. The section walked before the lock is unrecorded by design (only quality real GPS is written; Strava fills the same interval with a network point). **Strava cross-validation:** the same GPX in Strava 5.62 km · 56:36 — Norda 5.61 km, point span 56:36 → three sources agree ✓ |
 
-| + | 2026-08-30 | v1.0.0 | *1.0 sonrası doğrulama turu, temiz*: SIFIR fark 4621,3 ↔ 4621,3 m; ▲124/▼159 birebir; 1421 nokta = kabul; ret 0/0/0. 🔋 %3 (~4,0 %/sa; ekran çoğunlukla kapalı, tek uygulama, güç tasarrufu kapalı) → **B-1 güncellendi:** normal bant ~4 %/sa (2,8 · 4,0 · 4,0); Tur 3'ün 9,4'ü aykırı değer (uzun edinim + ekran şüpheli). Bulgu **F-10**: 2:30 kilit beklenirken Pusula'ya girip çıkmak kilidi ANINDA getirdi — pusulanın ağ-sağlayıcı isteği GNSS'i tohumluyor (Haritalar kestirmesiyle aynı mekanizma, ikinci saha kanıtı; edinim boşluğu aktif−nokta aralığı = 2:25 ile beyan birebir) → v1.0.1 |
+| + | 2026-08-30 | v1.0.0 | *Post-1.0 verification tour, clean*: ZERO difference 4621.3 ↔ 4621.3 m; ▲124/▼159 exact; 1421 points = accepted; rejections 0/0/0. 🔋 3% (~4.0 %/h; screen mostly off, single app, battery saver off) → **B-1 updated:** normal band ~4 %/h (2.8 · 4.0 · 4.0); Tour 3's 9.4 is an outlier (long acquisition + screen suspected). Finding **F-10**: after waiting 2:30 for a lock, entering and leaving Compass brought the lock INSTANTLY — the compass's network-provider request seeds the GNSS (the same mechanism as the Google Maps shortcut, second field evidence; the acquisition gap of active − point span = 2:25 matches the user's report exactly) → v1.0.1 |
 
-| + | 2026-08-30 | v1.0.1 | *Gece turu (4:45 ısınma yürüyüşü + 30:05 koşu), temiz — **F-10 sahada onaylandı:** kilit beklemesi 2:30'dan saniyelere indi (kullanıcı beyanı; tohumlama kendiliğinden, kestirmesiz). Çapraz doğrulama yine SIFIR fark: 4776,2 ↔ 4776,2 m; ▲174/▼182 birebir; 1372 nokta = kabul; titreme 344 (~1 sn kadansta yürüyüş/duruş doğal), ışınlama 1, doğruluk/zaman 0. 🔋 %3 / 36:02 ≈ 5,0 %/sa (B-1 bandı ~4–5'te tutuyor; kısa turda yüzde kabalığı ±1). **İkinci cihaz karşılaştırması (ilk kez):** birlikte koşulan arkadaşın Strava kaydı yalnız koşuyu tuttu — koşu segmanı Norda 4281,2 ↔ Strava 4379,7 m (fark −%2,25; Strava'nın filtresiz ham toplamı hafif şişer, yön beklenen), rota mutabakatı medyan 2,1 m / p90 6,4 m. Bulgu **F-11**: oturma sıçraması İKİNCİ kez (ilk fix'in 2. sn'sinde 12,85 m/s, 25,7 m; 2t'de 12,7 m/s) → v1.0.2. İzleme **Y-1**: yükseklik ilk kez bağımsız referansla karşılaştırıldı — Norda ham GPS koşu bölümünde ~35 m bant görürken Strava'nın DEM-düzeltmeli izi ~17 m bant veriyor; ham GPS dikey gürültüsü kazanımı yüksek okur, DEM/baro düzeltmesi post-MVP adayı; turlarla veri toplanacak* |
+| + | 2026-08-30 | v1.0.1 | *Night tour (4:45 warm-up walk + 30:05 run), clean — **F-10 confirmed in the field:** the wait for a lock dropped from 2:30 to seconds (the user's report; seeding happened by itself, no shortcut). Cross-validation again ZERO difference: 4776.2 ↔ 4776.2 m; ▲174/▼182 exact; 1372 points = accepted; jitter 344 (natural for walking/standing at ~1 s cadence), teleport 1, accuracy/time 0. 🔋 3% / 36:02 ≈ 5.0 %/h (the B-1 band holds at ~4–5; percentage granularity on a short tour is ±1). **Second-device comparison (first time):** the Strava recording of the friend who ran along captured only the run — run segment Norda 4281.2 ↔ Strava 4379.7 m (difference −2.25%; Strava's unfiltered raw total inflates slightly, the direction is as expected), route agreement median 2.1 m / p90 6.4 m. Finding **F-11**: settling spike for the SECOND time (12.85 m/s, 25.7 m in the 2nd s of the first fix; 12.7 m/s on 2r) → v1.0.2. Watch item **Y-1**: elevation compared against an independent reference for the first time — where Norda's raw GPS sees a ~35 m band on the run section, Strava's DEM-corrected track gives a ~17 m band; raw GPS vertical noise reads the gain high, DEM/baro correction is a post-MVP candidate; data will be collected over the tours* |
 
-| + | 2026-09-01 | v1.0.2 | *Matris 20 (güç tasarrufu AÇIK, 33 dk açık-hava yürüyüşü) — adım tamamlandı, bulgu **F-12**: sistem ekran kapalıyken konumu DURDURDU. 33:28'lik turda 61 nokta kaldı (normal kadansta ~1300 olurdu); >5 sn 6 boşluk toplam 31:39, en uzunu **20:28**. Fix'ler yalnız cihaz uyanıkken aktı: Başlat anı, ekran bakışları ve 13:12'deki 1:24'lük telefon görüşmesi — beyanla birebir örtüşen 54 noktalık küme, "uyanık CPU = akan GPS" kanıtının kendisi. GPS kilidi hızlı (F-10 üçüncü kez ✓); ilk fix temiz, oturma sıçraması yok (F-11 kapısının ilk saha turu). Çapraz doğrulama yine SIFIR fark: 2074,7 ↔ 2074,7 m — ama mesafenin %91'i boşluk bacaklarının hava çizgisi: kayıtlı 2,07 km, gerçek yolun (~2,6–3 km) alt sınırı. 🔋 %2 / 33:31 ≈ 3,6 %/sa (güç tasarrufuyla pil kazancı marjinal, veri kaybı ağır). **Y-1 kanıt topladı:** düz sahil yürüyüşünde ▲132/▼133 — 12:51'deki tek fix'in ele=115 m saçmalığı (çevresi 40 m) dahil; seyrek+kalitesiz fix'lerde dikey gürültü kazanımı domine ediyor. Sahil sonradan beyanla da doğrulandı ve kalibrasyon hediyesi çıktı: deniz kenarında ele medyanı 39 m (%10–90: 38–43) — İstanbul'da WGS84 geoid ayrımı ~+37 m olduğundan bu, deniz seviyesinin ta kendisi: cihaz `getAltitude`'un belgelediği gibi ELİPSOİD yüksekliği bildiriyor, geoid düzeltmesi uygulamıyor. Sabit kayma ▲/▼'yi etkilemez ama mutlak rakım ekranda/GPX'te ~37 m yüksek okunur; 115'lik fix ~75 m'lik tek-fix dikey hata demek. Gelecek düzeltme iki katman (post-MVP): mutlak için geoid ayrımı, kazanım için DEM/baro. → v1.0.3* |
+| + | 2026-09-01 | v1.0.2 | *Matrix 20 (battery saver ON, 33 min open-air walk) — step completed, finding **F-12**: the system STOPPED location while the screen was off. 61 points remained from the 33:28 tour (at normal cadence it would be ~1300); 6 gaps >5 s totalling 31:39, the longest **20:28**. Fixes flowed only while the device was awake: the moment of START, glances at the screen and the 1:24 phone call at 13:12 — a 54-point cluster coinciding exactly with the user's report, the very proof of "awake CPU = flowing GPS". GPS lock fast (F-10 ✓ for the third time); first fix clean, no settling spike (first field tour of the F-11 gate). Cross-validation again ZERO difference: 2074.7 ↔ 2074.7 m — but 91% of the distance is the straight line of the gap legs: recorded 2.07 km, a lower bound of the real path (~2.6–3 km). 🔋 2% / 33:31 ≈ 3.6 %/h (the battery gain from battery saver is marginal, the data loss heavy). **Y-1 gathered evidence:** ▲132/▼133 on a flat seaside walk — including the absurd ele=115 m of a single fix at 12:51 (its surroundings 40 m); with sparse+poor fixes, vertical noise dominates the gain. The seaside was later confirmed by the user's report too, and a calibration gift fell out of it: median ele at the water's edge 39 m (10th–90th percentile: 38–43) — since the WGS84 geoid separation in Istanbul is ~+37 m, this is sea level itself: the device reports ELLIPSOID height, as `getAltitude` documents, and applies no geoid correction. A constant offset does not affect ▲/▼, but absolute altitude reads ~37 m high on screen/in the GPX; the 115 fix means a ~75 m single-fix vertical error. The future fix is two layers (post-MVP): geoid separation for absolute altitude, DEM/baro for gain. → v1.0.3* |
 
-| + | 2026-09-02 | v1.0.3 | *Serbest dönemin ilk turu (tempolu yürüyüş 6,27 km, 58:52 nokta aralığı / 61:38 aktif), temiz — kayıt hattında bulgu yok. Çapraz doğrulama SIFIR fark: 6268,6 ↔ 6268,6 m; ▲215/▼244 birebir; 1885 nokta = kabul. Edinim 2:46 (beyan "~2 dk" + Bitir kuyruğu): kayıt kapalı alandan çıkarken başlatıldı — gökyüzü kapalıyken ağ tohumu fiziği değiştiremez (F-10 almanak açlığını çözer, duvarı çözmez), tasarım gereği beklenen. **Kapalı alan geçişi (09:03–09:05 beyanı) veride birebir:** nokta yoğunluğu 33→12/dk inceldi, 48 sn'lik boşluk 102 m hava çizgisiyle köprülendi (2,13 m/s, makul) — içeride cihaz kötü fix üretmek yerine sustu (doğruluk reti tüm turda 1), filtre+köprü geçişi zarifçe taşıdı. Başlangıçta tavan-altı oturma kıpırtısı: ilk adım 8,73 m/s (turun maksimumu, etki ~10 m) — F-11 kapısının belgeli artık bandı; ışınlama reti 1. 🔋 %6 / 61:38 ≈ 5,8 %/sa — başlangıç %100'dü: üst-bant doğrusuzluğu şüphesi (B-1 notu: tam şarjla başlayan turlar yüksek okuyabilir), bant kaydı sürüyor* |
+| + | 2026-09-02 | v1.0.3 | *First tour of the free period (brisk walk 6.27 km, 58:52 point span / 61:38 active), clean — no finding in the recording pipeline. Cross-validation ZERO difference: 6268.6 ↔ 6268.6 m; ▲215/▼244 exact; 1885 points = accepted. Acquisition 2:46 (the user's report "~2 min" + the Finish tail): the recording was started while leaving an indoor space — with the sky blocked, network seeding cannot change the physics (F-10 solves almanac starvation, not the wall), expected by design. **The indoor passage (reported at 09:03–09:05) matches the data exactly:** point density thinned 33→12/min, a 48 s gap was bridged with a 102 m straight line (2.13 m/s, plausible) — inside, the device went quiet instead of producing bad fixes (accuracy rejections 1 over the whole tour); filter+bridge carried the passage gracefully. A below-ceiling settling jitter at the start: first step 8.73 m/s (the tour's maximum, impact ~10 m) — the documented residual band of the F-11 gate; teleport rejections 1. 🔋 6% / 61:38 ≈ 5.8 %/h — the start was at 100%: upper-band non-linearity suspected (B-1 note: tours starting from a full charge may read high), band recording continues* |
 
-Kapı durumu: **3/3 temiz tur — v1.0.0 KESİLDİ (29 Ağu).**
+Gate status: **3/3 clean tours — v1.0.0 CUT (Aug 29).**
 
-> Matris 1 Eylül'de tamamlandı: son adım 20 (güç tasarrufu açık) F-12'yi
-> çıkardı ve v1.0.3'le kapandı — 20 adımın tamamı sahada koşuldu.
+> The matrix was completed on September 1: the last step, 20 (battery saver
+> on), surfaced F-12 and was closed with v1.0.3 — all 20 steps have been run
+> in the field.
 
-### Bulgular
+### Findings
 
-- **F-1** (Tur 1 analizi, giderildi → v0.9.1): geçmişteki pil oranı aktif
-  süreye bölünüyordu; GPS duraklatmada da açık kaldığından pil duvar
-  saatiyle akar. Turda 4,2 %/sa görünen gerçekte 2,8 %/sa idi. Payda artık
-  kayıt başı→sonu duvar saati; saha verisi regresyon testi olarak çekirdeğe
-  eklendi.
-- **F-2** (Tur 1 sonrası, giderildi → v0.9.2): filtre sayaçları yalnız
-  kayıt sürerken görünüyordu — sahada bulması ve not alması zor. Kayıt
-  bitince son kaydın sayaçları kalıcı saklanır (süreç ölümüne dayanır) ve
-  Tanılama'da "KAYIT FİLTRESİ (SON KAYIT)" olarak görünmeye devam eder;
-  boş/atılan kayıtta da yazılır ("kayıt neden boş"un cevabı çoğu zaman
-  buradadır).
-- **F-3** (Tur 1 sonrası, giderildi → v0.9.3): tur raporu için hiçbir şeyi
-  elle not etmeye gerek kalmasın diye telemetri GPX'in içinde gider:
-  uygulama özeti + pil + filtre sayaçları `extensions`/`norda:report`
-  bloğuna gömülür. GPX'i paylaşmak = tur raporunu paylaşmak.
-- **F-4** (kort denemesi, giderildi → v0.9.4): GPS oturmadan geçen süre
-  ekranda görünmüyordu — 2 dk'lık deneme sessizce boş kalıp atıldı ve
-  neden anlaşılamadı. Kayda nokta girmemişken durum satırı canlı GPS
-  kalitesini gösterir ("Fix bekleniyor…" / "GPS ± X m"); atılma mesajı
-  nedenli: "hiç fix gelmedi" ↔ "doğruluk hiç eşiğin altına inmedi
-  (en iyi ± X m)". Filtre eşiği değişmedi — 30 m kalite kapısı bilinçli.
-- **F-5** (aynı deneme, giderildi → v0.9.5): denemede güç tasarrufu da
-  açıktı ve birçok cihaz bu modda GPS'i kısar — uygulama bunu görüyor
-  (`isPowerSaveMode`) ama söylemiyordu. Artık GPS oturmamışken durum
-  satırına "· güç tasarrufu açık" eklenir; boş kaydın atılma mesajı da
-  "Güç tasarrufu açıktı — GPS'i kısıtlamış olabilir." notunu taşır.
-  Mod engellenmez: matristeki 20. adım (güç tasarrufu açıkken kayıt)
-  desteklenen bir senaryodur, yalnızca görünür kılınır.
-- **F-10** (1.0 sonrası tur, giderildi → v1.0.1): kilit beklerken Pusula
-  ekranına girip çıkmak kilidi anında getirdi — pusula, sapma için ağ
-  sağlayıcısını da dinler ve bu istek birçok cihazda GNSS motoruna kaba
-  konum tohumlayıp kilidi dakikalardan saniyelere indirir (Haritalar
-  kestirmesiyle aynı mekanizma; iki bağımsız saha kanıtı). Aynı tohumlama
-  artık bilinçli: Home ısıtması ve kayıt servisi ağı YALNIZ tohum olarak
-  dinler — ağ fix'i sağlayıcı süzgeciyle ne göstergeye ne ize girebilir
-  (temiz iz duruşu korunur) ve ilk gerçek GPS fix'iyle bırakılır (pil
-  kuralı). Gece turunda sahada onaylandı: kilit 2:30 yerine saniyelerde.
-- **F-11** (2t + gece turu, giderildi → v1.0.2): ilk fix "oturma" sırasında
-  iki turda 13–26 m sapık geldi (12,7 ve 12,85 m/s — eski 15 m/s tavanının
-  hemen altı) ve çapa yapıldığı için hayalet mesafe, sıçrayan nokta
-  reddedilse bile bir sonraki noktayla yine sayılıyordu. İki parça çözüm:
-  hız tavanı sahayla 10 m/s'ye kalibre edildi (MVP 5.2'nin öngördüğü
-  kalibrasyon; yürüyüş/koşu ürününde 36 km/h üstü hareket koşu değildir)
-  ve ilk fix artık çapa değil ADAY — ikinci fix'le fiziksel tutarlılık
-  doğrulanana dek kayda girmez, çift ışınlama verirse suçlu ilk fix'tir ve
-  aday değiştirilir. Gece verisiyle beklenen etki: 4776,2 → 4750,5 m
-  (25,7 m'lik hayalet başlangıç hiç doğmazdı). Bedel tek fix'lik gecikme
-  (~1–2 sn).
-- **F-12** (matris 20 turu, giderildi → v1.0.3): güç tasarrufunda sistem
-  (Android 9+ belgeli davranış) ekran kapalıyken konum servisini
-  durdurabiliyor: 33 dk'lık turda fix'ler yalnız cihaz uyanıkken aktı —
-  61 nokta, 20:28'lik tek boşluk; 1:24'lük telefon görüşmesi 54 noktalık
-  kümeyle birebir örtüştü (uyanık CPU = akan GPS). F-5 bunu durum
-  satırında söylüyordu; artık Başlat'a basınca güç tasarrufu açıksa
-  konum-kapalı diyaloğunun ikizi çıkar: "Güç tasarrufu açık. Ekran
-  kapalıyken sistem GPS'i durdurabilir — iz seyrek kaydolabilir." →
-  Pil ayarları / Yine de başlat. Mod desteklenmeye devam eder (matris
-  20 senaryosu); veri kaybı artık sürpriz değil, bilinçli seçim. Boşluk
-  bacakları mesafede hava çizgisi olarak sayılmaya devam eder — gerçek
-  yolun dürüst alt sınırı.
-- **F-9** (0.9.7 sonrası "sürekli GPS arıyor" raporu → v0.9.8): "GPS
-  aranıyor…" tek başına nedeni söylemiyordu — gökyüzü mü yok, kilit mi
-  gelmiyor, cihaz mı arızalı ayırt edilemiyordu. Uydu görünürlüğü eklendi
-  (`GnssStatus`): Home satırı "GPS aranıyor… · uydu 0/7" der, Tanılama'nın
-  konum bölümü "uydu: 0 fix'te / 7 görülen" satırı taşır. Okuma: görülen 0
-  = gökyüzü/anten yok (kapalı alan); görülen çok–fix'te 0 = kilitlenemiyor
-  (bekle ya da cihaz aGPS'i bayat); fix'te ≥4 = fix an meselesi. Not:
-  Tanılama'daki hızlı "fix" ağ sağlayıcısındandır, kayda giremez — kayıt
-  yalnız gerçek GPS ister.
-- **F-7** (saha kullanımı, giderildi → v0.9.7): yüklü sürüm ekranda hiçbir
-  yerde görünmüyordu — "hangi sürümdesin" sorusu Ayarlar'a gidiyordu.
-  Home'un altında artık "v0.9.7" yazar; GPX raporundaki `app` özniteliğiyle
-  birlikte sürüm hem ekranda hem dosyada.
-- **F-8** (saha kullanımı, giderildi → v0.9.7): kayıt sürerken Home'a
-  dönünce düğme hâlâ "BAŞLAT" diyordu — yeni kayıt başlatılıyormuş gibi
-  algılanıyordu (teknikte yeni kayıt açılmıyordu, servis korumalı). Düğme
-  kayıt sürerken "KAYDA DÖN" olur, tip seçimi kilitlenir, dokunuş izin/konum
-  diyaloglarına girmeden doğrudan kayda döner.
-- **F-6** (Tur 2, giderildi → v0.9.6): GPS çipi ancak biri istediğinde
-  aramaya başlar; Home'da beklerken kimse istemiyordu → START sonrası 1+
-  dk kör bekleyiş, uygulama yeniden başlatmaları etkisiz (çip tarafı).
-  Tanılama'daki "fix" ağ sağlayıcısından geldiği için yanıltıcıydı.
-  Düzeltme: Home açıkken GPS ön-ısıtılır (ekrandan ayrılınca bırakılır) ve
-  START'ın üstünde hazırlık satırı görünür: "GPS aranıyor…" → "GPS hazır ·
-  ± X m". GPX raporuna `app` sürümü de eklendi — dosya artık hangi sürümle
-  yazıldığını söyler.
+- **F-1** (Tour 1 analysis, fixed → v0.9.1): the battery rate in History was
+  divided by active time; since GPS stays on during pauses too, battery
+  drains by wall clock. What showed as 4.2 %/h on the tour was really
+  2.8 %/h. The denominator is now the wall clock from recording start→end;
+  the field data was added to the core as a regression test.
+- **F-2** (after Tour 1, fixed → v0.9.2): the filter counters were visible
+  only while a recording was running — hard to find and note down in the
+  field. When a recording ends, the last recording's counters are stored
+  persistently (surviving process death) and stay visible in Diagnostics as
+  "RECORDING FILTER (LAST)"; they are written for an empty/discarded
+  recording too (the answer to "why is the recording empty" is usually
+  found here).
+- **F-3** (after Tour 1, fixed → v0.9.3): so that nothing needs to be noted
+  by hand for the tour report, telemetry travels inside the GPX: the app
+  summary + battery + filter counters are embedded in the
+  `extensions`/`norda:report` block. Sharing the GPX = sharing the tour
+  report.
+- **F-4** (court attempt, fixed → v0.9.4): the time passing while GPS had not
+  settled was not visible on screen — the 2 min attempt silently stayed
+  empty, was discarded, and the reason could not be understood. While no
+  point has entered the recording, the status line shows live GPS quality
+  ("Waiting for a fix…" / "GPS ± X m"); the discard message states the
+  reason: "GPS never delivered a fix" ↔ "GPS accuracy never got under the
+  threshold (best ± X m)". The filter threshold did not change — the 30 m
+  quality gate is deliberate.
+- **F-5** (same attempt, fixed → v0.9.5): battery saver was on during the
+  attempt as well, and many devices throttle GPS in this mode — the app could
+  see this (`isPowerSaveMode`) but did not say so. Now, while GPS has not
+  settled, "· battery saver on" is appended to the status line; the empty
+  recording's discard message also carries the note
+  "Battery saver was on — it can restrict GPS." The mode is not blocked:
+  step 20 of the matrix (recording with battery saver on) is a supported
+  scenario; it is only made visible.
+- **F-10** (post-1.0 tour, fixed → v1.0.1): entering and leaving the Compass
+  screen while waiting for a lock brought the lock instantly — the compass
+  also listens to the network provider for declination, and on many devices
+  this request seeds the GNSS engine with a coarse position, cutting the lock
+  from minutes to seconds (the same mechanism as the Google Maps shortcut;
+  two independent pieces of field evidence). The same seeding is now
+  deliberate: the Home warm-up and the recording service listen to the
+  network ONLY as a seed — a provider filter keeps a network fix out of both
+  the indicator and the track (the clean-track stance is preserved), and the
+  seed is released with the first real GPS fix (battery rule). Confirmed in
+  the field on the night tour: lock in seconds instead of 2:30.
+- **F-11** (2r + night tour, fixed → v1.0.2): during first-fix "settling" the
+  first fix came in 13–26 m off on two tours (12.7 and 12.85 m/s — just
+  under the old 15 m/s ceiling), and because it was made the anchor, the
+  phantom distance was still counted with the next point even when the
+  jumping point was rejected. Two-part fix: the speed ceiling was calibrated
+  to 10 m/s with field data (the calibration MVP 5.2 foresaw; in a
+  walking/running product, movement above 36 km/h is not running), and the
+  first fix is now a CANDIDATE, not an anchor — it does not enter the
+  recording until physical consistency is confirmed by the second fix; if
+  that yields a double teleport, the culprit is the first fix and the
+  candidate is replaced. Expected effect on the night data: 4776.2 → 4750.5 m
+  (the 25.7 m phantom start would never have been born). The cost is a
+  one-fix delay (~1–2 s).
+- **F-12** (matrix 20 tour, fixed → v1.0.3): in battery saver the system
+  (documented Android 9+ behavior) can stop the location service while the
+  screen is off: on the 33 min tour fixes flowed only while the device was
+  awake — 61 points, a single 20:28 gap; the 1:24 phone call coincided
+  exactly with a 54-point cluster (awake CPU = flowing GPS). F-5 said this in
+  the status line; now, if battery saver is on when START is pressed, a twin
+  of the location-off dialog appears: "Battery saver is on. While the screen
+  is off the system can stop GPS — the track may come out sparse." →
+  Battery settings / Start anyway. The mode remains supported (the matrix 20
+  scenario); data loss is no longer a surprise but a conscious choice. Gap
+  legs continue to count in the distance as a straight line — an honest
+  lower bound of the real path.
+- **F-9** ("keeps searching for GPS" report after 0.9.7 → v0.9.8):
+  "Searching for GPS…" alone did not say why — no sky, a lock not arriving,
+  or a faulty device could not be told apart. Satellite visibility was added
+  (`GnssStatus`): the Home line says "Searching for GPS… · satellites 0/7",
+  and the location section of Diagnostics carries a
+  "satellites: 0 in fix / 7 seen" line. How to read it: 0 seen = no
+  sky/antenna (indoors); many seen–0 in fix = cannot lock (wait, or the
+  device's aGPS is stale); ≥4 in fix = a fix is moments away. Note: the quick
+  "fix" in Diagnostics comes from the network provider and cannot enter the
+  recording — recording wants real GPS only.
+- **F-7** (field use, fixed → v0.9.7): the installed version was not shown
+  anywhere on screen — the question "which version are you on" went to
+  Settings. The bottom of Home now reads "v0.9.7"; together with the `app`
+  attribute in the GPX report, the version is both on screen and in the file.
+- **F-8** (field use, fixed → v0.9.7): returning to Home while a recording
+  was running, the button still said "START" — it was perceived as starting a
+  new recording (technically no new recording was opened; the service is
+  protected). While a recording is running the button becomes
+  "BACK TO RECORDING", the type selection is locked, and a tap returns
+  straight to the recording without entering the permission/location dialogs.
+- **F-6** (Tour 2, fixed → v0.9.6): the GPS chip only starts searching when
+  someone asks for it; while waiting on Home nobody was asking → 1+ min of
+  blind waiting after START, app restarts ineffective (chip side). The "fix"
+  in Diagnostics was misleading because it came from the network provider.
+  Fix: GPS is pre-warmed while Home is open (released on leaving the screen)
+  and a readiness line appears above START: "Searching for GPS…" →
+  "GPS ready · ± X m". The `app` version was also added to the GPX report —
+  the file now says which version wrote it.

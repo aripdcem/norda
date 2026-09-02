@@ -1,46 +1,49 @@
 # Norda
 
-**Walk. Run. Explore.** — Minimalist, offline-first outdoor navigasyon
-uygulaması (Android, Kotlin, sıfır çalışma zamanı bağımlılığı).
+**Walk. Run. Explore.** — Minimalist, offline-first outdoor navigation app
+(Android, Kotlin, zero runtime dependencies).
 
-Yürüyüş ve koşu kaydını pusula, offline harita, waypoint'ler ve "Return to
-Start" navigasyonuyla birleştirir.
+Combines walk and run recording with a compass, offline maps, waypoints and
+"Return to Start" navigation.
 
-- Ürün kapsamı, teknik tasarım ve yol haritası: **[docs/MVP.md](docs/MVP.md)**
-- Süreç: SemVer, her uygulama-etkileyen değişikliğe etiket + release,
-  TDD (kırmızı → yeşil → refactor). Ayrıntı: MVP belgesi, 13. ve 15. bölümler.
+- Product scope, technical design and roadmap: **[docs/MVP.md](docs/MVP.md)**
+- Process: SemVer, a tag + release for every app-affecting change,
+  TDD (red → green → refactor). Details: MVP document, sections 13 and 15.
 
-**Ağ kuralı:** ağa dokunan tek sınıf `TileDownloader`'dır (harita paketi
-indirme). Tracking, pusula, navigasyon ve GPX internetsiz çalışır; konum
-verisi cihazda kalır, telemetri yoktur. Ayrıntı: [docs/PRIVACY.md](docs/PRIVACY.md).
+**Network rule:** the only class that touches the network is `TileDownloader`
+(map pack download). Tracking, compass, navigation and GPX work without
+internet; location data stays on the device, there is no telemetry.
+Details: [docs/PRIVACY.md](docs/PRIVACY.md).
 
-**Temiz iz duruşu:** kayda yalnız kalite kapısından geçen **gerçek GNSS
-noktaları** girer; ağ/WiFi konumu asla ize karışmaz. "Hazır" demesi
-asistanlı uygulamalardan geç olabilir — ekrandaki GPS hazırlık satırı ve
-uydu sayısı bekleyişi görünür kılar; karşılığı, izin her noktasının gerçek
-olmasıdır (saha günlüğündeki sıfır-fark doğrulamaları: `docs/SAHA.md`).
+**Clean-track stance:** only **real GNSS points** that pass the quality gate
+enter the recording; network/WiFi location never mixes into the track. It
+may say "ready" later than assisted apps do — the GPS readiness line and the
+satellite count on screen make the wait visible; in return, every point of
+your track is real (the zero-difference validations in the field log:
+`docs/SAHA.md`).
 
-Saha turu protokolü (Faz 9 · RC): [docs/SAHA.md](docs/SAHA.md).
+Field tour protocol (Phase 9 · RC): [docs/SAHA.md](docs/SAHA.md).
 
-## Testler diş geçiriyor mu?
+## Do the tests bite?
 
-MVP.md 13.1/5 gereği çekirdeğe kasıtlı hatalar sokulur, hangi testlerin
-düştüğü kaydedilir ve hepsi geri alınır. Son tur: **v0.9.0** — 96 test,
-**8/8 mutasyon yakalandı**.
+As MVP.md 13.1/5 requires, deliberate bugs are injected into the core, the
+tests that fail are recorded, and all of them are reverted. Last round:
+**v0.9.0** — 96 tests, **8/8 mutations caught**.
 
-| Kasıtlı hata | Isıran test(ler) |
+| Deliberate bug | Test(s) that bit |
 |---|---|
-| Kerterizde Δλ işareti ters (taslaktaki tarihi hata) | `bearingDueEastOnEquator` `bearingDueWestOnEquator` `bearingIstanbulToKaaba` `bearingAndDistanceToEastStart` |
-| `yTile` sınır kelepçesi kaldırıldı | `latitudeIsClampedToProjectionDomain` |
-| GPS doğruluk eşiği 30 m → 300 m | `poorAccuracyIsRejected` `evaluateNamesTheRejectionReason` `poorAccuracyCannotResume` `filterCountsFeedCalibration` |
-| Yükseklik histerezisi 4 m → 0 | `flatNoiseAccumulatesNothing` |
-| GPX yazıcıda XML kaçışı kaldırıldı | `roundTripPreservesTrackAndWaypoints` |
-| `waypoint` göç yolundan düşürüldü (0.7.0 hatasının tekrarı) | `upgradeFromV1CreatesWaypointTable` |
-| Şarjda negatif pil "tüketimi" raporlandı | `chargingDuringRecordingGivesNoDrain` |
-| Return to Start kerterizi ters yön | `bearingAndDistanceToEastStart` |
+| Δλ sign reversed in the bearing (the historical bug from the draft) | `bearingDueEastOnEquator` `bearingDueWestOnEquator` `bearingIstanbulToKaaba` `bearingAndDistanceToEastStart` |
+| `yTile` boundary clamp removed | `latitudeIsClampedToProjectionDomain` |
+| GPS accuracy threshold 30 m → 300 m | `poorAccuracyIsRejected` `evaluateNamesTheRejectionReason` `poorAccuracyCannotResume` `filterCountsFeedCalibration` |
+| Elevation hysteresis 4 m → 0 | `flatNoiseAccumulatesNothing` |
+| XML escaping removed from the GPX writer | `roundTripPreservesTrackAndWaypoints` |
+| `waypoint` dropped from the migration path (repeat of the 0.7.0 bug) | `upgradeFromV1CreatesWaypointTable` |
+| Negative battery "drain" reported while charging | `chargingDuringRecordingGivesNoDrain` |
+| Return to Start bearing in the reverse direction | `bearingAndDistanceToEastStart` |
 
-Turun kendi bulgusu da kapatıldı: şema taban listesine sızan DDL'yi parite
-testi göremiyordu (iki taraf birlikte kirleniyor); sürüm başına ifade
-sayısını donduran `statementCountPerVersionIsFrozen` eklendi.
+The round's own finding was closed as well: DDL leaking into the schema
+baseline list was invisible to the parity test (both sides get polluted
+together); `statementCountPerVersionIsFrozen`, which freezes the statement
+count per version, was added.
 
-Lisans: [MIT](LICENSE). Harita verisi: © OpenStreetMap contributors (ODbL).
+License: [MIT](LICENSE). Map data: © OpenStreetMap contributors (ODbL).
