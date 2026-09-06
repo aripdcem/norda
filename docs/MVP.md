@@ -407,9 +407,10 @@ map-pack.yml  (workflow_dispatch: region name + bbox + zoom range)
 - `index.json` schema: `[{id, name, bbox, minZoom, maxZoom, sizeBytes,
   sha256, url, version}]` — the app reads it, downloads the pack and verifies
   it.
-- Zoom range in practice: z8–z13; the app draws up to three levels past the
-  pack ceiling by scaling the ceiling tiles (over-zoom, F-13). The renderer
-  runs in minutes in CI at this range.
+- Zoom range in practice: z8–z14; the app zooms continuously (fractional
+  zoom, F-14) and draws up to two levels past the pack ceiling by scaling
+  the ceiling tiles (over-zoom, F-13). The renderer runs in minutes in CI
+  at this range.
 - **Attribution is mandatory**: "© OpenStreetMap contributors" on the Maps
   screen and in About; the ODbL license note in the README.
 

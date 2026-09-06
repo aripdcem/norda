@@ -27,14 +27,15 @@ class OverzoomTest {
     }
 
     @Test
-    fun threeLevelsAboveReadsA32PixelPatch() {
-        val s = Overzoom.source(16, 8 * 4756 + 5, 8 * 3071 + 7, 13, 256)
-        assertEquals(Overzoom.Source(13, 4756, 3071, 5 * 32, 7 * 32, 32), s)
+    fun twoLevelsAboveReadsA64PixelPatch() {
+        val s = Overzoom.source(15, 4 * 4756 + 3, 4 * 3071 + 2, 13, 256)
+        assertEquals(Overzoom.Source(13, 4756, 3071, 3 * 64, 2 * 64, 64), s)
     }
 
     @Test
     fun ceilingIsThePackMaximumPlusTheOverzoomLevels() {
-        assertEquals(16, Overzoom.ceiling(13))
+        assertEquals(15, Overzoom.ceiling(13))
+        assertEquals(16, Overzoom.ceiling(14))
         assertEquals(20, Overzoom.ceiling(19))   // never past the Web Mercator practical cap
     }
 }

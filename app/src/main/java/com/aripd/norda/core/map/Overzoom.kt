@@ -5,13 +5,16 @@ package com.aripd.norda.core.map
  * 19 m per pixel — fine for orientation, useless for "which side of the
  * street am I on". Instead of shipping four times the tiles per extra level,
  * the map keeps zooming and draws each ceiling tile scaled up: at z+1 a
- * quarter of it, at z+3 a 32-pixel patch stretched to a full tile. Lines get
+ * quarter of it, at z+2 a 64-pixel patch stretched to a full tile. Lines get
  * softer with every level, which is the honest cost of not having the data.
  */
 object Overzoom {
 
-    /** Levels above the pack ceiling the map may zoom (8× magnification at +3). */
-    const val LEVELS = 3
+    /**
+     * Levels above the pack ceiling the map may zoom. Two: 4× magnification is
+     * soft, 8× (the first field look at +3) read as pixels.
+     */
+    const val LEVELS = 2
 
     /** Web Mercator's practical cap; nothing is stored or drawn beyond it. */
     const val MAX_ZOOM = 20

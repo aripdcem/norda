@@ -212,3 +212,12 @@ Gate status: **3/3 clean tours — v1.0.0 CUT (Aug 29).**
   tiles (`core/map/Overzoom`, JVM-tested); lines soften with each level —
   the honest cost of not having the data. Rendering packs to z14 stays a
   candidate if the field asks for sharper streets.
+- **F-14** (v1.0.5 map test, fixed → v1.1.0): "zooming is not smooth, it
+  goes step by step, and once zoomed in the pixels are very visible". Two
+  separate causes. The pinch handler jumped a whole level once the fingers
+  had moved 1.4× — the map now carries a fractional zoom and draws tiles
+  scaled between 0.71× and 1.41× around the fingers (`core/map/
+  ContinuousZoom`, JVM-tested). The pixels were the +3 over-zoom (8× of a
+  z13 tile); the cap is now +2 and the Istanbul pack is rendered to z14, so
+  the map reaches z16 with at most 4× magnification and is crisp up to z14
+  (pack ~4× larger). A z14 pack alone would not have smoothed the gesture.
