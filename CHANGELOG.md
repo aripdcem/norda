@@ -4,6 +4,19 @@ Format follows [Keep a Changelog](https://keepachangelog.com/), versioning
 follows [SemVer](https://semver.org/) — see `docs/MVP.md` section 15 for
 the rules.
 
+## [1.0.5] - 2026-09-06
+
+### Fixed
+
+- F-13 (field, first look at the OSM pack: "the colors are nice but I
+  could not zoom"): the map locked its zoom to the pack's range, and a pack
+  ends at z13 — about 19 m per pixel, too coarse for street level. The map
+  now zooms up to three levels past the pack ceiling by scaling the
+  ceiling tiles (a quarter tile at +1, a 32-pixel patch at +3, with bitmap
+  filtering); lines soften with each level, the honest cost of not having
+  the data. Pure tile mapping in `core/map/Overzoom` with 4 new JVM tests
+  (core: 111).
+
 ## [1.0.4] - 2026-09-02
 
 ### Changed
