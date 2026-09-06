@@ -4,6 +4,25 @@ Format follows [Keep a Changelog](https://keepachangelog.com/), versioning
 follows [SemVer](https://semver.org/) — see `docs/MVP.md` section 15 for
 the rules.
 
+## [1.1.0] - 2026-09-06
+
+### Added
+
+- F-14 (field, v1.0.5: "zooming is not smooth, it goes step by step"):
+  continuous zoom. Pinching used to jump a whole level once the fingers
+  had moved 1.4×; the map now carries a fractional zoom, reads tiles from
+  the nearest integer level and draws them scaled between 0.71× and
+  1.41×, magnifying around the fingers so the point under them stays put.
+  Double-tap zooms one level around the tap. Pure arithmetic in
+  `core/map/ContinuousZoom` (4 JVM tests; core: 115).
+
+### Changed
+
+- Over-zoom capped at +2 levels above the pack ceiling (was +3): 8×
+  magnification read as pixels in the field, 4× is soft. Together with
+  the Istanbul pack rendered to z14 the map reaches z16 with at most 4×
+  magnification and is crisp up to z14.
+
 ## [1.0.5] - 2026-09-06
 
 ### Fixed
