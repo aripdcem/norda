@@ -5,6 +5,8 @@ import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.graphics.Rect
+import android.graphics.RectF
 import android.graphics.Path
 import android.os.Handler
 import android.os.HandlerThread
@@ -14,6 +16,7 @@ import android.view.MotionEvent
 import android.view.ScaleGestureDetector
 import android.view.View
 import com.aripd.norda.R
+import com.aripd.norda.core.map.Overzoom
 import com.aripd.norda.core.map.WebMercator
 import com.aripd.norda.core.map.WebMercator.TILE_SIZE
 import com.aripd.norda.core.nav.Waypoint
@@ -41,7 +44,10 @@ class MapView @JvmOverloads constructor(
 
     private var store: TileStore? = null
     private var minZoom = 3
+    // Gesture ceiling; with a pack it is the pack ceiling + Overzoom.LEVELS —
+    // levels above the pack are drawn by scaling the pack's top tiles (F-13).
     private var maxZoom = 16
+    private var packMaxZoom = 16
     private var zoom = 14
     private var centerX = WebMercator.xTile(0.0, 14)
     private var centerY = WebMercator.yTile(0.0, 14)
@@ -61,7 +67,9 @@ class MapView @JvmOverloads constructor(
     private var decodeThread: HandlerThread? = null
     private var decodeHandler: Handler? = null
 
-    private val tilePaint = Paint()
+    private val tilePaint = Paint().apply { isFilterBitmap = true }   // smooth overzoom
+    private val overzoomSrc = Rect()
+    private val overzoomDst = RectF()
     private val gridBgEven = Paint().apply { color = Color.rgb(232, 235, 230) }
     private val gridBgOdd = Paint().apply { color = Color.rgb(222, 227, 220) }
     private val gridLine = Paint().apply {
@@ -109,8 +117,9 @@ class MapView @JvmOverloads constructor(
         store?.close()
         store = newStore
         if (newStore != null) {
-            minZoom = newStore.minZoom.coerceIn(0, 20)
-            maxZoom = newStore.maxZoom.coerceIn(minZoom, 20)
+            minZoom = newStore.minZoom.coerceIn(0, Overzoom.MAX_ZOOM)
+            packMaxZoom = newStore.maxZoom.coerceIn(minZoom, Overzoom.MAX_ZOOM)
+            maxZoom = Overzoom.ceiling(packMaxZoom)
             zoom = zoom.coerceIn(minZoom, maxZoom)
         }
         missing.clear()
@@ -250,13 +259,29 @@ class MapView @JvmOverloads constructor(
                     drawGridTile(canvas, sx, sy, tx, ty)
                     continue
                 }
-                val key = TileCache.key(zoom, tx, ty)
-                val bitmap = cache.get(key)
-                if (bitmap != null) {
-                    canvas.drawBitmap(bitmap, sx, sy, tilePaint)
+                if (zoom <= packMaxZoom) {
+                    val key = TileCache.key(zoom, tx, ty)
+                    val bitmap = cache.get(key)
+                    if (bitmap != null) {
+                        canvas.drawBitmap(bitmap, sx, sy, tilePaint)
+                    } else {
+                        drawGridTile(canvas, sx, sy, tx, ty)
+                        requestDecode(key, zoom, tx, ty)
+                    }
                 } else {
-                    drawGridTile(canvas, sx, sy, tx, ty)
-                    requestDecode(key, zoom, tx, ty)
+                    // Overzoom: read the pack's top tile and stretch the patch
+                    // that covers this tile (F-13).
+                    val src = Overzoom.source(zoom, tx, ty, packMaxZoom, TILE_SIZE)
+                    val key = TileCache.key(src.zoom, src.x, src.y)
+                    val bitmap = cache.get(key)
+                    if (bitmap != null) {
+                        overzoomSrc.set(src.offsetX, src.offsetY, src.offsetX + src.size, src.offsetY + src.size)
+                        overzoomDst.set(sx, sy, sx + TILE_SIZE, sy + TILE_SIZE)
+                        canvas.drawBitmap(bitmap, overzoomSrc, overzoomDst, tilePaint)
+                    } else {
+                        drawGridTile(canvas, sx, sy, tx, ty)
+                        requestDecode(key, src.zoom, src.x, src.y)
+                    }
                 }
             }
         }

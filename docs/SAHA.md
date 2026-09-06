@@ -97,7 +97,7 @@ the tour is repeated on that release. Three clean tours = the v1.0.0 gate.
 
 | + | 2026-09-02 | v1.0.3 | *First tour of the free period (brisk walk 6.27 km, 58:52 point span / 61:38 active), clean — no finding in the recording pipeline. Cross-validation ZERO difference: 6268.6 ↔ 6268.6 m; ▲215/▼244 exact; 1885 points = accepted. Acquisition 2:46 (the user's report "~2 min" + the Finish tail): the recording was started while leaving an indoor space — with the sky blocked, network seeding cannot change the physics (F-10 solves almanac starvation, not the wall), expected by design. **The indoor passage (reported at 09:03–09:05) matches the data exactly:** point density thinned 33→12/min, a 48 s gap was bridged with a 102 m straight line (2.13 m/s, plausible) — inside, the device went quiet instead of producing bad fixes (accuracy rejections 1 over the whole tour); filter+bridge carried the passage gracefully. A below-ceiling settling jitter at the start: first step 8.73 m/s (the tour's maximum, impact ~10 m) — the documented residual band of the F-11 gate; teleport rejections 1. 🔋 6% / 61:38 ≈ 5.8 %/h — the start was at 100%: upper-band non-linearity suspected (B-1 note: tours starting from a full charge may read high), band recording continues* |
 
-| + | 2026-09-06 | v1.0.4 | *Morning walk (4.32 km, 44:29 point span / 46:42 active), clean — no finding. Cross-validation ZERO difference: 4317.4 ↔ 4317.4 m; ▲113/▼138 exact; 1360 points = accepted; rejections: accuracy 1, teleport 0 (jitter 931 — the usual ~1 s cadence alternation, no distance lost). Start clean: first steps 2.6–3.9 m at walking pace, no settling spike (second field tour of the F-11 gate). Acquisition + finish tail 2:13 (active − point span). Five micro gaps of 6–9 s, longest 9 s. 🔋 4% / 46:42 ≈ 5.1 %/h — mid band (B-1: 2.8 · 4.0 · 4.0 · 5.0 · 5.8 · 5.1). One waypoint. First recording made with the OSM map pack available (Istanbul v2) — map feedback still pending* |
+| + | 2026-09-06 | v1.0.4 | *Morning walk (4.32 km, 44:29 point span / 46:42 active), clean — no finding. Cross-validation ZERO difference: 4317.4 ↔ 4317.4 m; ▲113/▼138 exact; 1360 points = accepted; rejections: accuracy 1, teleport 0 (jitter 931 — the usual ~1 s cadence alternation, no distance lost). Start clean: first steps 2.6–3.9 m at walking pace, no settling spike (second field tour of the F-11 gate). Acquisition + finish tail 2:13 (active − point span). Five micro gaps of 6–9 s, longest 9 s. 🔋 4% / 46:42 ≈ 5.1 %/h — mid band (B-1: 2.8 · 4.0 · 4.0 · 5.0 · 5.8 · 5.1). One waypoint. First recording made with the OSM map pack available (Istanbul v2); map feedback: "the colors are nice but I could not zoom" → **F-13** → v1.0.5* |
 
 Gate status: **3/3 clean tours — v1.0.0 CUT (Aug 29).**
 
@@ -204,3 +204,11 @@ Gate status: **3/3 clean tours — v1.0.0 CUT (Aug 29).**
   and a readiness line appears above START: "Searching for GPS…" →
   "GPS ready · ± X m". The `app` version was also added to the GPX report —
   the file now says which version wrote it.
+- **F-13** (first look at the OSM pack, fixed → v1.0.5): "the colors are
+  nice but I could not zoom". The map locked its zoom to the pack's range;
+  with the parity grid nobody missed the levels above z13, with real
+  cartography z13 (~19 m/px) is too coarse for street level. The map now
+  zooms up to three levels past the pack ceiling by scaling the ceiling
+  tiles (`core/map/Overzoom`, JVM-tested); lines soften with each level —
+  the honest cost of not having the data. Rendering packs to z14 stays a
+  candidate if the field asks for sharper streets.
