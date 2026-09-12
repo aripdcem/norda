@@ -36,6 +36,8 @@ import urllib.parse
 import urllib.request
 import zlib
 
+import fontdata
+
 TILE = 256
 EPS = 1e-9
 
@@ -99,7 +101,53 @@ STYLE = {
     "road_minor": (255, 255, 255),
     "road_track": (152, 122, 92),
     "rail": (120, 120, 120),
+    "label": (58, 56, 52),
+    "label_water": (70, 110, 140),
+    "label_peak": (92, 72, 50),
+    "halo": (252, 252, 250),
 }
+
+# Labels (v2 of the cartography): place names, peaks and water names from
+# OSM nodes and named water areas. Zoom floor per class; drawn last, with a
+# halo, greedy by priority so nothing overlaps.
+LABEL_MIN_ZOOM = {
+    "sea": 8, "city": 8, "town": 10, "strait": 10, "bay": 10, "island": 11,
+    "peak": 11, "village": 11, "water": 11, "cape": 12, "suburb": 12,
+    "quarter": 12, "neighbourhood": 13, "hamlet": 13, "locality": 13,
+}
+LABEL_PRIORITY = {
+    "sea": 0, "city": 1, "town": 2, "strait": 3, "bay": 4, "island": 5,
+    "village": 6, "peak": 7, "water": 8, "suburb": 9, "quarter": 10,
+    "cape": 11, "neighbourhood": 12, "hamlet": 13, "locality": 14,
+}
+PLACE_CLASSES = {"city", "town", "village", "suburb", "quarter", "neighbourhood",
+                 "hamlet", "locality", "island", "sea"}
+NATURAL_LABELS = {"peak", "bay", "strait", "cape"}
+
+
+def label_style(cls, z):
+    """(font variant, colour, symbol) or None when the class is not labelled at z.
+    Variants are 2× sizes: r20/r24/r28 → 10/12/14 px text, b = bold."""
+    floor = LABEL_MIN_ZOOM.get(cls)
+    if floor is None or z < floor:
+        return None
+    if cls == "sea":
+        return ("b28", STYLE["label_water"], None)
+    if cls == "city":
+        return ("b28" if z <= 11 else "b24", STYLE["label"], "dot")
+    if cls == "town":
+        return ("b24", STYLE["label"], "dot")
+    if cls in ("strait", "bay"):
+        return ("r24", STYLE["label_water"], None)
+    if cls == "water":
+        return ("r20", STYLE["label_water"], None)
+    if cls == "peak":
+        return ("r20", STYLE["label_peak"], "peak")
+    if cls in ("island", "village"):
+        return ("r24", STYLE["label"], "dot" if cls == "village" else None)
+    if cls in ("suburb", "quarter", "cape"):
+        return ("r24" if z >= 13 else "r20", STYLE["label"], None)
+    return ("r20", STYLE["label"], None)
 
 ROAD_CLASS = {
     "motorway": "motorway", "motorway_link": "motorway",
@@ -173,6 +221,61 @@ def waterway_width(kind, z):
 
 # --------------------------------------------------------------------------
 # Raster
+
+_FONT = None
+
+
+def font():
+    global _FONT
+    if _FONT is None:
+        _FONT = fontdata.load()
+    return _FONT
+
+
+def _glyph(table, ch):
+    return table.get(ch) or table.get("?")
+
+
+def text_width(text, variant):
+    table = font()[variant]
+    return sum(_glyph(table, ch)[0] for ch in text)
+
+
+def text_mask(text, variant):
+    """(width, height, top-above-baseline, rows) — rows are ints with bit k =
+    pixel x = k (LSB is the leftmost pixel), built from the glyph bitmaps."""
+    table = font()[variant]
+    glyphs = [_glyph(table, ch) for ch in text]
+    top = max((g[2] for g in glyphs if g[4]), default=0)
+    bottom = max((g[4] - g[2] for g in glyphs if g[4]), default=0)
+    height = top + bottom
+    rows = [0] * height
+    pen = 0.0
+    width = 0
+    for adv, left, gtop, w, h, grows in glyphs:
+        x0 = int(round(pen + left))
+        for r, bits in enumerate(grows):
+            rev = int(format(bits, f"0{w}b")[::-1], 2) if w else 0
+            rows[top - gtop + r] |= rev << max(0, x0)
+        width = max(width, x0 + w)
+        pen += adv
+    return (max(width, int(round(pen))), height, top, rows)
+
+
+def _dilate(rows, radius):
+    out = []
+    n = len(rows)
+    for i in range(n):
+        acc = 0
+        for dy in range(-radius, radius + 1):
+            j = i + dy
+            if 0 <= j < n:
+                acc |= rows[j]
+        for dx in range(1, radius + 1):
+            acc |= acc << dx | acc >> dx
+        out.append(acc)
+    return out
+
 
 def _png_chunk(tag, data):
     return (struct.pack(">I", len(data)) + tag + data
@@ -269,6 +372,36 @@ class Raster:
             for (x, y) in points:
                 self.fill_polygon([[(x + half * math.cos(a), y + half * math.sin(a))
                                     for a in (k * math.pi / 4 for k in range(8))]], color)
+
+    def _blit_rows(self, x0, y0, rows, color):
+        w, h = self.w, self.h
+        buf = self.buf
+        px = bytes(color)
+        for r, bits in enumerate(rows):
+            y = y0 + r
+            if y < 0 or y >= h or not bits:
+                continue
+            base = y * w
+            while bits:
+                lsb = bits & -bits
+                x = x0 + lsb.bit_length() - 1
+                if 0 <= x < w:
+                    buf[(base + x) * 3:(base + x) * 3 + 3] = px
+                bits ^= lsb
+
+    def draw_text(self, x, y, text, variant, color, halo=None, halo_radius=2):
+        """Text centred on x with its baseline at y (pixel space)."""
+        width, height, top, rows = text_mask(text, variant)
+        x0 = int(round(x - width / 2.0))
+        y0 = int(round(y - top))
+        if halo is not None:
+            self._blit_rows(x0 - halo_radius, y0 - halo_radius,
+                            [0] * halo_radius + _dilate(rows, halo_radius) + [0] * halo_radius, halo)
+        self._blit_rows(x0, y0, rows, color)
+
+    def fill_dot(self, x, y, radius, color):
+        self.fill_polygon([[(x + radius * math.cos(a), y + radius * math.sin(a))
+                            for a in (k * math.pi / 6 for k in range(12))]], color)
 
     def downsample(self, factor):
         w, h = self.w // factor, self.h // factor
@@ -566,13 +699,15 @@ def sea_rings(chains, rect):
 # Overpass → features
 
 class Feature:
-    __slots__ = ("layer", "cls", "geom", "nodes", "bbox")
+    __slots__ = ("layer", "cls", "geom", "nodes", "bbox", "name", "ele")
 
-    def __init__(self, layer, cls, geom, nodes=None):
-        self.layer = layer      # coastline | water | green | waterway | road | rail
-        self.cls = cls          # road class, waterway kind or green kind
-        self.geom = geom        # line: [(lon,lat)…]; area: [ring, …]; coastline: line
+    def __init__(self, layer, cls, geom, nodes=None, name=None, ele=None):
+        self.layer = layer      # coastline | water | green | waterway | road | rail | label
+        self.cls = cls          # road class, waterway kind, green kind or label class
+        self.geom = geom        # line: [(lon,lat)…]; area: [ring, …]; label: [(lon,lat)]
         self.nodes = nodes
+        self.name = name
+        self.ele = ele
         pts = geom if layer != "water" and layer != "green" else [p for r in geom for p in r]
         xs = [p[0] for p in pts]
         ys = [p[1] for p in pts]
@@ -602,6 +737,19 @@ def parse_overpass(js):
     features = []
     for el in js.get("elements", []):
         tags = el.get("tags") or {}
+        if el.get("type") == "node":
+            name = tags.get("name")
+            if not name or el.get("lat") is None:
+                continue
+            cls = None
+            if tags.get("place") in PLACE_CLASSES:
+                cls = tags["place"]
+            elif tags.get("natural") in NATURAL_LABELS:
+                cls = tags["natural"]
+            if cls:
+                features.append(Feature("label", cls, [(el["lon"], el["lat"])],
+                                        name=name, ele=tags.get("ele")))
+            continue
         if el.get("type") == "way":
             pts = _geometry(el)
             if len(pts) < 2:
@@ -611,7 +759,7 @@ def parse_overpass(js):
                 continue
             area = _area_kind(tags)
             if area and _same(pts[0], pts[-1]) and len(pts) >= 4:
-                features.append(Feature(area[0], area[1], [pts]))
+                features.append(Feature(area[0], area[1], [pts], name=tags.get("name")))
                 continue
             hw = tags.get("highway")
             if hw in ROAD_CLASS:
@@ -631,7 +779,7 @@ def parse_overpass(js):
                       if m.get("type") == "way" and m.get("role", "outer") in ("outer", "")]
             rings = assemble_rings(outers)
             if rings:
-                features.append(Feature(area[0], area[1], rings))
+                features.append(Feature(area[0], area[1], rings, name=tags.get("name")))
     return MapData(features)
 
 
@@ -667,6 +815,8 @@ def overpass_query(bbox, group, timeout=180):
             f'way["waterway"~"^(river|canal|stream)$"]{bb};'
             f'way["highway"~"^({_MAJOR})$"]{bb};'
             f'way["railway"="rail"]{bb};'
+            f'node["place"~"^(city|town|village|suburb|quarter|neighbourhood|hamlet|locality|island|sea)$"]["name"]{bb};'
+            f'node["natural"~"^(peak|bay|strait|cape)$"]["name"]{bb};'
         )
     elif group == "minor":
         body = f'way["highway"~"^({_MINOR})$"]{bb};'
@@ -743,6 +893,48 @@ def fetch_region(bbox, coast_bbox, endpoint=DEFAULT_ENDPOINT, minor=True, log=pr
 
 
 # --------------------------------------------------------------------------
+# Label placement
+
+class LabelCandidate:
+    __slots__ = ("priority", "name", "x", "y", "variant", "color", "symbol", "box")
+
+    def __init__(self, priority, name, x, y, variant, color=None, symbol=None):
+        self.priority = priority
+        self.name = name
+        self.x = x              # anchor, pixel space (2× tile)
+        self.y = y
+        self.variant = variant
+        self.color = color
+        self.symbol = symbol
+        self.box = None
+
+    def layout(self):
+        """Text box in pixel space: below the anchor for symbols, centred otherwise."""
+        width, height, top, _ = text_mask(self.name, self.variant)
+        baseline = self.y + (top + 8) if self.symbol else self.y + top / 2.0
+        pad = 4
+        self.box = (self.x - width / 2.0 - pad, baseline - top - pad,
+                    self.x + width / 2.0 + pad, baseline - top + height + pad)
+        return baseline
+
+
+def _overlaps(a, b):
+    return not (a[2] < b[0] or a[0] > b[2] or a[3] < b[1] or a[1] > b[3])
+
+
+def place_labels(candidates):
+    """Greedy by priority then name: a label is placed only if its box is free.
+    Deterministic, so neighbouring tiles agree on what they share."""
+    placed = []
+    for cand in sorted(candidates, key=lambda c: (c.priority, c.name, c.x, c.y)):
+        cand.layout()
+        if any(_overlaps(cand.box, p.box) for p in placed):
+            continue
+        placed.append(cand)
+    return placed
+
+
+# --------------------------------------------------------------------------
 # Scene: features → tiles
 
 def _bbox_overlaps(a, b):
@@ -762,6 +954,13 @@ class Scene:
         self.roads = sorted((f for f in data.features if f.layer == "road"),
                             key=lambda f: ROAD_RANK[f.cls])
         self.rails = [f for f in data.features if f.layer == "rail"]
+        self.labels = [f for f in data.features if f.layer == "label"]
+        for f in self.water:
+            if f.name:
+                l, b, r, t = f.bbox
+                self.labels.append(Feature("label", "water", [((l + r) / 2, (b + t) / 2)],
+                                           name=f.name, ele=None))
+                self.labels[-1].bbox = f.bbox
 
     def render_tile(self, z, x, y):
         ss = self.ss
@@ -805,4 +1004,40 @@ class Scene:
             for f in self.rails:
                 if _bbox_overlaps(f.bbox, view):
                     r.stroke_polyline(project(f.geom), rw * ss, STYLE["rail"])
+        self._draw_labels(r, z, x, y, size, project, view)
         return r.downsample(ss).to_png() if ss > 1 else r.to_png()
+
+    def _draw_labels(self, r, z, x, y, size, project, view):
+        # Candidates from a window one tile wider than the tile itself so that
+        # placement decisions agree across tile edges (same neighbours seen).
+        left, bottom, right, top = tile_bounds(z, x, y)
+        wide = (left - (right - left), bottom - (top - bottom),
+                right + (right - left), top + (top - bottom))
+        candidates = []
+        for f in self.labels:
+            st = label_style(f.cls, z)
+            if st is None:
+                continue
+            lon, lat = f.geom[0]
+            if not (wide[0] <= lon <= wide[2] and wide[1] <= lat <= wide[3]):
+                continue
+            if f.cls == "water":
+                # a lake gets its name only when it is wide enough on screen
+                bl, bb, br, bt = f.bbox
+                if (x_tile(br, z) - x_tile(bl, z)) * TILE < 40:
+                    continue
+            variant, color, symbol = st
+            px, py = project([(lon, lat)])[0]
+            name = f.name if f.cls != "peak" or not f.ele else f"{f.name} ▲{f.ele}"
+            candidates.append(LabelCandidate(LABEL_PRIORITY.get(f.cls, 20), name, px, py,
+                                             variant, color, symbol))
+        for cand in place_labels(candidates):
+            if cand.box[2] < 0 or cand.box[0] > size or cand.box[3] < 0 or cand.box[1] > size:
+                continue
+            baseline = cand.layout()
+            if cand.symbol == "dot":
+                r.fill_dot(cand.x, cand.y, 4.0, STYLE["halo"])
+                r.fill_dot(cand.x, cand.y, 2.6, cand.color)
+            elif cand.symbol == "peak":
+                r.fill_polygon([[(cand.x, cand.y - 6), (cand.x + 5.5, cand.y + 4), (cand.x - 5.5, cand.y + 4)]], cand.color)
+            r.draw_text(cand.x, baseline, cand.name, cand.variant, cand.color, halo=STYLE["halo"])

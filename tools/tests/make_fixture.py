@@ -42,7 +42,7 @@ elements = [
         [(29.07, 41.022), (29.09, 41.020), (29.20, 41.023)],
         nodes=[1004, 1102, 1103]),
     way(2, {"natural": "coastline"}, ring(29.05, 41.008, 0.003, ccw=True)),
-    way(3, {"natural": "water"}, square(29.015, 41.036, 29.025, 41.044)),
+    way(3, {"natural": "water", "name": "Göl"}, square(29.015, 41.036, 29.025, 41.044)),
     way(4, {"landuse": "forest"}, square(29.075, 41.036, 29.095, 41.048)),
     {"type": "relation", "id": 5,
      "tags": {"type": "multipolygon", "natural": "water"},
@@ -59,6 +59,8 @@ elements = [
     way(8, {"waterway": "river"}, [(29.09, 41.050), (29.09, 41.031)]),
     way(9, {"railway": "rail"}, [(29.00, 41.035), (29.10, 41.035)]),
     way(10, {"highway": "track"}, [(29.04, 41.024), (29.05, 41.032)]),
+    {"type": "node", "id": 900, "lat": 41.041, "lon": 29.045, "tags": {"place": "town", "name": "Kadıköy"}},
+    {"type": "node", "id": 901, "lat": 41.028, "lon": 29.090, "tags": {"natural": "peak", "name": "Aydos", "ele": "537"}},
 ]
 
 out = os.path.join(os.path.dirname(__file__), "fixtures", "mini.osm.json")

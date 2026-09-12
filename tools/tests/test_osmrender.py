@@ -192,7 +192,8 @@ class RenderTest(unittest.TestCase):
         self.assertEqual(self.pixel_at(29.05, 41.008, 13), R.STYLE["land"])
 
     def test_lake_forest_and_multipolygon(self):
-        self.assertEqual(self.pixel_at(29.020, 41.040, 13), R.STYLE["water"])
+        # off-centre: the lake is named now and its label sits at the centroid
+        self.assertEqual(self.pixel_at(29.017, 41.0375, 13), R.STYLE["water"])
         self.assertEqual(self.pixel_at(29.085, 41.042, 13), R.STYLE["green"])
         self.assertEqual(self.pixel_at(29.0615, 41.0365, 13), R.STYLE["water"])
 
@@ -226,3 +227,59 @@ class MakeMapPackTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class LabelTest(unittest.TestCase):
+    def test_text_width_and_mask(self):
+        self.assertAlmostEqual(R.text_width("Ağ", "r24"), 31.65, delta=1.0)
+        w, h, top, rows = R.text_mask("Ağ", "r24")
+        self.assertGreater(h, 10)
+        self.assertGreater(top, 10)
+        self.assertEqual(len(rows), h)
+
+    def test_draw_text_paints_the_colour_and_a_halo(self):
+        r = R.Raster(120, 60, (0, 0, 0))
+        r.draw_text(60, 40, "Ağ", "r24", (255, 0, 0), halo=(0, 255, 0))
+        px = [r.get(x, y) for y in range(60) for x in range(120)]
+        self.assertIn((255, 0, 0), px)
+        self.assertIn((0, 255, 0), px)
+        self.assertEqual(r.get(2, 2), (0, 0, 0))
+
+    def test_label_style_zoom_policy(self):
+        self.assertIsNone(R.label_style("neighbourhood", 12))
+        self.assertIsNotNone(R.label_style("neighbourhood", 13))
+        self.assertEqual(R.label_style("city", 8)[0], "b28")
+        self.assertIsNone(R.label_style("peak", 10))
+        self.assertIsNotNone(R.label_style("peak", 11))
+
+    def test_place_labels_skips_overlaps(self):
+        a = R.LabelCandidate(priority=1, name="A", x=100.0, y=100.0, variant="r24")
+        b = R.LabelCandidate(priority=2, name="B", x=104.0, y=102.0, variant="r24")
+        c = R.LabelCandidate(priority=3, name="C", x=400.0, y=100.0, variant="r24")
+        placed = R.place_labels([c, b, a])
+        self.assertEqual([p.name for p in placed], ["A", "C"])
+
+    def test_fixture_labels_are_parsed(self):
+        with open(FIXTURE, encoding="utf-8") as f:
+            data = R.parse_overpass(json.load(f))
+        labels = {(f.cls, f.name) for f in data.features if f.layer == "label"}
+        self.assertIn(("town", "Kadıköy"), labels)
+        self.assertIn(("peak", "Aydos"), labels)
+        lake = [f for f in data.features if f.layer == "water" and f.name == "Göl"]
+        self.assertEqual(len(lake), 1)
+
+    def test_render_draws_the_town_label(self):
+        with open(FIXTURE, encoding="utf-8") as f:
+            scene = R.Scene(R.parse_overpass(json.load(f)), BBOX, minzoom=12)
+        z, lon, lat = 13, 29.045, 41.041
+        x, y = int(R.x_tile(lon, z)), int(R.y_tile(lat, z))
+        w, h, rows = png_pixels(scene.render_tile(z, x, y))
+        px = int((R.x_tile(lon, z) - x) * w)
+        py = int((R.y_tile(lat, z) - y) * h)
+        dark = 0
+        for yy in range(max(0, py - 4), min(h, py + 30)):
+            row = rows[yy]
+            for xx in range(max(0, px - 50), min(w, px + 50)):
+                if max(row[xx * 3:xx * 3 + 3]) < 100:
+                    dark += 1
+        self.assertGreater(dark, 5)

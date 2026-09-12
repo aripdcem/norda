@@ -99,7 +99,8 @@
    "type": "way",
    "id": 3,
    "tags": {
-    "natural": "water"
+    "natural": "water",
+    "name": "G\u00f6l"
    },
    "nodes": [
     300,
@@ -319,6 +320,27 @@
      "lat": 41.032
     }
    ]
+  },
+  {
+   "type": "node",
+   "id": 900,
+   "lat": 41.041,
+   "lon": 29.045,
+   "tags": {
+    "place": "town",
+    "name": "Kad\u0131k\u00f6y"
+   }
+  },
+  {
+   "type": "node",
+   "id": 901,
+   "lat": 41.028,
+   "lon": 29.09,
+   "tags": {
+    "natural": "peak",
+    "name": "Aydos",
+    "ele": "537"
+   }
   }
  ]
 }
