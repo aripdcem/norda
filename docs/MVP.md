@@ -659,9 +659,11 @@ on screen, CI green, the first signed APK in Releases.*
 ### 13.2 Unit test areas
 
 Filters, statistics, elevation hysteresis, auto-pause decisions, stopwatch,
-smoothing, disturbance hysteresis, bearing/distance/ETA, Web Mercator and tile
-math (including the TMS flip), GPX generation/parsing, row↔model mappers,
-waypoint naming.
+smoothing, disturbance hysteresis, bearing/distance/ETA, trail guidance
+(nearest point, look-back, off-trail), Web Mercator and tile math (including
+the TMS flip), over-zoom and continuous-zoom arithmetic, solar altitude and
+the night-mode decision, GPX generation/parsing, row↔model mappers, waypoint
+naming.
 
 ### 13.3 Field test matrix
 
