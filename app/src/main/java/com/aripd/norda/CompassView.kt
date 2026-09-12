@@ -22,6 +22,7 @@ class CompassView @JvmOverloads constructor(
     private var headingDeg = 0.0
     private var targetBearingDeg: Double? = null
     private var waypointBearingDeg: Double? = null
+    private var trailBearingDeg: Double? = null
     private var cardinals: Array<String> =
         resources.getStringArray(R.array.cardinals_8).let {
             arrayOf(it[0], it[2], it[4], it[6])
@@ -51,6 +52,10 @@ class CompassView @JvmOverloads constructor(
         color = Color.rgb(232, 196, 104)
         isAntiAlias = true
     }
+    private val trailPaint = Paint().apply {
+        color = context.getColor(R.color.norda_green)
+        isAntiAlias = true
+    }
     private val waypointStroke = Paint().apply {
         style = Paint.Style.STROKE
         strokeWidth = 4f
@@ -78,6 +83,12 @@ class CompassView @JvmOverloads constructor(
 
     fun setTargetBearing(deg: Double?) {
         targetBearingDeg = deg
+        invalidate()
+    }
+
+    /** Breadcrumb bearing — green chevron: the way back along the recorded track. */
+    fun setTrailBearing(deg: Double?) {
+        trailBearingDeg = deg
         invalidate()
     }
 
@@ -136,6 +147,22 @@ class CompassView @JvmOverloads constructor(
             diamondPath.lineTo(cx - r, my)
             diamondPath.close()
             canvas.drawPath(diamondPath, targetPaint)
+            canvas.restore()
+        }
+
+        // Trail marker: green chevron at the breadcrumb bearing, inside the start
+        // diamond's ring so the two never hide each other.
+        trailBearingDeg?.let { bearing ->
+            canvas.save()
+            canvas.rotate(bearing.toFloat(), cx, cy)
+            val my = cy - radius * 0.76f
+            val r = radius * 0.06f
+            diamondPath.rewind()
+            diamondPath.moveTo(cx, my - r)
+            diamondPath.lineTo(cx + r, my + r)
+            diamondPath.lineTo(cx - r, my + r)
+            diamondPath.close()
+            canvas.drawPath(diamondPath, trailPaint)
             canvas.restore()
         }
 

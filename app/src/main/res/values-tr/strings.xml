@@ -109,6 +109,9 @@
     <string name="rts_turn_left">%1$d° sola</string>
     <string name="rts_no_start">Henüz başlangıç noktası yok — bir kayıt başlat.</string>
     <string name="rts_waiting_fix">Fix bekleniyor…</string>
+    <string name="trail_line">İz %1$d° · geri %2$s</string>
+    <string name="trail_off">İz dışı — %1$d° · ize dönüş %2$s</string>
+    <string name="trail_arrived">Başlangıçtasın — iz tamamlandı.</string>
 
     <string name="maps">Haritalar</string>
     <string name="map_import">Paket içe aktar</string>

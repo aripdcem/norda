@@ -52,6 +52,7 @@ z-releases (v0.9.1, v0.9.2, …). Manual verification on the device sits
 | 18 | Recovery | Kill the app's process during a recording | Service comes back, recording continues; if not, recovery at launch |
 | 19 | Recovery | Restart the device (reboot) during a recording | At launch the unfinished recording is recovered into History |
 | 20 | Battery saver | 30 min recording with battery saver on | If there is data loss, into the report with a duration/interval note |
+| 21 | Breadcrumb (v1.2.0) | Record 300+ m out, then walk back following the Compass trail line; step 40 m off the trail once | The chevron and "Trail … back …" follow the recorded track (not the straight line); off the trail the line switches to "Off the trail … back to it"; near the start: "trail complete" |
 
 ## Report template
 

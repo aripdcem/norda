@@ -109,6 +109,9 @@
     <string name="rts_turn_left">%1$d° left</string>
     <string name="rts_no_start">No start point yet — start a recording.</string>
     <string name="rts_waiting_fix">Waiting for a fix…</string>
+    <string name="trail_line">Trail %1$d° · back %2$s</string>
+    <string name="trail_off">Off the trail — %1$d° · %2$s back to it</string>
+    <string name="trail_arrived">At the start — trail complete.</string>
 
     <string name="maps">Maps</string>
     <string name="map_import">Import package</string>

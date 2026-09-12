@@ -63,6 +63,14 @@
         android:textSize="17sp" />
 
     <TextView
+        android:id="@+id/compassTrail"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:textSize="15sp"
+        android:visibility="gone" />
+
+    <TextView
         android:id="@+id/compassWaypoints"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

@@ -79,7 +79,7 @@ The MVP's focus:
 | GPX import/export | Yes | `<trk>` + `<wpt>` together; file exchange via SAF |
 | Activity history | Yes | Local SQLite |
 | Download by free area selection | Next release | Ready-made region packs in the MVP (7.2) |
-| Breadcrumb navigation | Next release | Follow the recorded track in reverse |
+| Breadcrumb navigation | Yes (v1.2.0) | Follow the recorded track back to the start (9.3) |
 | Daylight budget | Next release | Sunset time × return pace warning |
 | Night mode | Next release | Red palette, automatic at dusk |
 | Voice announcements / records / weekly summary | Next release | |
@@ -495,6 +495,27 @@ Sanity check: on the equator, if the start is due east (`λs > λc`) →
 The limitation is deliberate: this is not a road-network route. It requires no
 routing engine, works offline, works even without a map pack, has low
 technical risk, and delivers value to the outdoor user immediately.
+
+### 9.3 Breadcrumb navigation (v1.2.0)
+
+The straight line is the promise; the recorded track is the path you know
+exists. Breadcrumb guidance (`core/nav/Breadcrumb`) lives on the Compass under
+the Return to Start line and uses the active recording as the trail:
+
+- `Trail` keeps the accepted points with their cumulative distance; per fix it
+  finds the nearest recorded point.
+- On the trail (≤ 25 m from the nearest point) the pointer aims at the point
+  about 20 m back along the trail — far enough that GPS jitter does not make
+  it twitch, near enough to follow — and the line reads the trail distance
+  that remains to the start plus the ETA at the current pace.
+- Off the trail (> 25 m) the pointer and the line switch to the way back onto
+  it: bearing and distance to the nearest recorded point.
+- Within 15 m of the start: "trail complete".
+- Loops: the nearest point wins, so a shortcut across a loop is taken
+  naturally, as a walker would.
+
+No routing engine, no map required; the trail is the data the recording
+already produces. The Return to Start line stays as it is.
 
 ## 10. GPX exchange
 

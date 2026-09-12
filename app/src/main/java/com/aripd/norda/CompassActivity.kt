@@ -10,11 +10,13 @@ import android.os.Build
 import android.os.Bundle
 import android.os.SystemClock
 import android.view.Surface
+import android.view.View
 import android.widget.TextView
 import com.aripd.norda.compasshw.DeclinationCache
 import com.aripd.norda.compasshw.HeadingProvider
 import com.aripd.norda.core.geo.Geo
 import com.aripd.norda.core.heading.DisturbanceDetector
+import com.aripd.norda.core.nav.Breadcrumb
 import com.aripd.norda.core.nav.ReturnToStart
 import com.aripd.norda.core.track.Format
 import com.aripd.norda.core.track.Stats
@@ -41,6 +43,7 @@ class CompassActivity : Activity(), LocationListener {
     private lateinit var headingLabel: TextView
     private lateinit var statusText: TextView
     private lateinit var targetText: TextView
+    private lateinit var trailText: TextView
     private lateinit var waypointText: TextView
     private var waypoints: List<Waypoint> = emptyList()
 
@@ -52,6 +55,14 @@ class CompassActivity : Activity(), LocationListener {
     private var startPoint: TrackPoint? = null
     private var lastFix: Location? = null
 
+    // Breadcrumb (MVP 9.3): the trail is the active recording. Guidance is
+    // recomputed only when the fix or the point count changes — the heading
+    // callback fires many times a second and must not walk the whole track.
+    private var trail: Breadcrumb.Trail? = null
+    private var trailPointCount = -1
+    private var trailGuidance: Breadcrumb.Guidance? = null
+    private var trailFixTime = 0L
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_compass)
@@ -62,6 +73,7 @@ class CompassActivity : Activity(), LocationListener {
         headingLabel = findViewById(R.id.compassLabel)
         statusText = findViewById(R.id.compassStatus)
         targetText = findViewById(R.id.compassTarget)
+        trailText = findViewById(R.id.compassTrail)
         waypointText = findViewById(R.id.compassWaypoints)
         waypointText.setOnClickListener {
             startActivity(android.content.Intent(this, WaypointsActivity::class.java))
@@ -197,6 +209,7 @@ class CompassActivity : Activity(), LocationListener {
     }
 
     private fun renderTarget(headingDeg: Double) {
+        renderTrail(headingDeg)
         val start = startPoint
         val fix = lastFix
         if (start == null || fix == null) {
@@ -223,6 +236,52 @@ class CompassActivity : Activity(), LocationListener {
         }
         targetText.text = "$line\n$steer"
     }
+
+    private fun renderTrail(headingDeg: Double) {
+        val points = TrackingService.session?.points
+        val fix = lastFix
+        if (points == null || points.size < 2 || fix == null) {
+            trailText.visibility = View.GONE
+            compassView.setTrailBearing(null)
+            trailGuidance = null
+            return
+        }
+        if (points.size != trailPointCount) {
+            trail = Breadcrumb.Trail(points.toList())
+            trailPointCount = points.size
+            trailGuidance = null
+        }
+        if (trailGuidance == null || fix.time != trailFixTime) {
+            trailGuidance = trail?.guidance(fix.latitude, fix.longitude, currentPace())
+            trailFixTime = fix.time
+        }
+        val g = trailGuidance ?: return
+        trailText.visibility = View.VISIBLE
+        if (g.arrived) {
+            trailText.text = getString(R.string.trail_arrived)
+            compassView.setTrailBearing(null)
+            return
+        }
+        compassView.setTrailBearing(g.bearingDeg)
+        val bearing = g.bearingDeg.roundToInt() % 360
+        var line = if (g.onTrail) {
+            getString(R.string.trail_line, bearing, formatDistance(g.remainingM))
+        } else {
+            getString(R.string.trail_off, bearing, formatDistance(g.offTrailM))
+        }
+        if (g.onTrail) g.etaMillis?.let { line += getString(R.string.rts_eta, Format.duration(it)) }
+        val relative = ReturnToStart.relativeAngleDeg(headingDeg, g.bearingDeg)
+        val steer = when {
+            abs(relative) <= 5.0 -> getString(R.string.rts_on_course)
+            relative > 0 -> getString(R.string.rts_turn_right, relative.roundToInt())
+            else -> getString(R.string.rts_turn_left, (-relative).roundToInt())
+        }
+        trailText.text = "$line · $steer"
+    }
+
+    private fun formatDistance(m: Double): String =
+        if (m < 1000) getString(R.string.distance_m, m.toInt())
+        else getString(R.string.distance_km, m / 1000.0)
 
     private fun currentPace(): Double? =
         TrackingService.session?.let { session ->
