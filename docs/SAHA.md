@@ -223,3 +223,5 @@ Gate status: **3/3 clean tours — v1.0.0 CUT (Aug 29).**
   z13 tile); the cap is now +2 and the Istanbul pack is rendered to z14, so
   the map reaches z16 with at most 4× magnification and is crisp up to z14
   (pack ~4× larger). A z14 pack alone would not have smoothed the gesture.
+  Confirmed in the field (Sept 12, v1.1.0 + Istanbul v3): "the sharpness of
+  the v3 pack is quite good, the pinch smoothness is very nice".
