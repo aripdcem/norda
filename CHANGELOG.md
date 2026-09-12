@@ -4,6 +4,20 @@ Format follows [Keep a Changelog](https://keepachangelog.com/), versioning
 follows [SemVer](https://semver.org/) — see `docs/MVP.md` section 15 for
 the rules.
 
+## [1.2.0] - 2026-09-12
+
+### Added
+
+- Breadcrumb navigation (MVP 9.3): the Compass now guides you back along
+  the recorded track, not only in a straight line. A second line under
+  Return to Start reads "Trail 187° · back 2.1 km · ~24 min" with the
+  usual left/right steer, and a green chevron on the dial points about
+  20 m back along the trail; stray more than 25 m from the trail and the
+  line becomes "Off the trail — 271° · 40 m back to it"; within 15 m of
+  the start it says the trail is complete. Available while a recording is
+  running (the trail is the recording). Pure core in `core/nav/Breadcrumb`
+  with 7 JVM tests (core: 122).
+
 ## [1.1.0] - 2026-09-06
 
 ### Added
