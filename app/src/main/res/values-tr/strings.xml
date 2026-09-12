@@ -39,6 +39,9 @@
     <string name="version_label">v%1$s</string>
     <string name="history">Geçmiş</string>
     <string name="diagnostics">Sensör tanılama</string>
+    <string name="night_mode_auto">Gece modu: otomatik</string>
+    <string name="night_mode_on">Gece modu: açık</string>
+    <string name="night_mode_off">Gece modu: kapalı</string>
 
     <string name="location_disabled">Konum kapalı — açılmadıkça kayıt hiç nokta alamaz.</string>
     <string name="location_enable">Konumu aç</string>

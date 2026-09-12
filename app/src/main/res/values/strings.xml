@@ -39,6 +39,9 @@
     <string name="version_label">v%1$s</string>
     <string name="history">History</string>
     <string name="diagnostics">Sensor diagnostics</string>
+    <string name="night_mode_auto">Night mode: automatic</string>
+    <string name="night_mode_on">Night mode: on</string>
+    <string name="night_mode_off">Night mode: off</string>
 
     <string name="location_disabled">Location is off — the recording won\'t receive any fixes until it\'s turned on.</string>
     <string name="location_enable">Turn on location</string>

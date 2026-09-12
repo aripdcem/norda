@@ -81,7 +81,7 @@ The MVP's focus:
 | Download by free area selection | Next release | Ready-made region packs in the MVP (7.2) |
 | Breadcrumb navigation | Yes (v1.2.0) | Follow the recorded track back to the start (9.3) |
 | Daylight budget | Next release | Sunset time × return pace warning |
-| Night mode | Next release | Red palette, automatic at dusk |
+| Night mode | Yes (v1.3.0) | Red filter over every screen, automatic at civil dusk (3.7) |
 | Voice announcements / records / weekly summary | Next release | |
 | Turn-by-turn routing | No | Out of scope |
 | Account / Cloud / Social | No | Out of scope |
@@ -202,6 +202,41 @@ One tap away from every screen while recording. Straight-line bearing +
 distance + estimated time from the recent pace window. This is not a
 road-network route; that is a deliberate design decision (no routing engine,
 works offline, works even without a map pack).
+
+### 3.7 Night mode (v1.3.0)
+
+```
+  Night mode: automatic     ← foot of Home; one tap cycles
+                               automatic → on → off
+```
+
+Eyes that have adapted to the dark lose that adaptation to a bright screen in
+a second and take twenty minutes to get it back. Red light costs the least:
+the rod cells that carry night vision are nearly blind to it. So night mode
+does not repaint the screens — it lays a single filter over the window that
+multiplies everything beneath it by a dark red (`NightMode`). White turns red,
+black stays black, green and blue all but vanish. Every screen keeps one
+palette, and the map tiles, the compass dial and the buttons pass through the
+filter exactly as they are drawn by day.
+
+- **Automatic** is the default: night begins at **civil dusk**, the moment the
+  sun drops 6° below the horizon, and ends at civil dawn. The sun's altitude
+  is computed in the pure core (`core/sun/Sun`, low-precision solar position,
+  well under a degree — minutes of dusk), the decision in
+  `core/sun/NightPolicy`.
+- The altitude needs a rough position: the running recording's last point, the
+  system's last known location, or the last point ever recorded, in that
+  order. Without any of them the screen stays in daylight — a filter that
+  appears for no visible reason is worse than one switched on by hand.
+- **On** and **off** are the user's word and ignore the sun.
+- The decision is re-made on every screen resume and once a minute while a
+  screen stays open, so dusk falling mid-recording tints the screen without
+  anyone leaving it.
+- Outside the filter: dialogs, which live in their own windows, and the system
+  status bar, which SystemUI draws over the app.
+
+No extra permission, no network, no new sensor: a date, a position and
+arithmetic.
 
 ## 4. Technical architecture
 
@@ -645,6 +680,7 @@ waypoint naming.
 | Map | Pan / zoom / cache / large pack |
 | Recovery | Process kill, reboot, service interruption |
 | Permissions | Deny / revoke / change from settings |
+| Night mode | Walking past dusk with "automatic"; the red filter and the toggle |
 
 ## 14. Non-functional requirements
 
@@ -722,10 +758,8 @@ discipline.
 
 | Feature | Value |
 |---|---|
-| Breadcrumb navigation | Follow the recorded track in reverse — the strong continuation of Return to Start, offline |
 | Download by free area selection | Rectangular area selection beyond the pack list |
 | Daylight budget | Sunset time × return pace → "caught in the dark" warning |
-| Night mode | Red palette, automatic at dusk |
 | Get/share coordinates | `geo:`/text/map-link parser |
 | Elevation profile | Cross-section chart in the activity detail |
 | Voice announcements | Kilometer + split pace (TTS) |

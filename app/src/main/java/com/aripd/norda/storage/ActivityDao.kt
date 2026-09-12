@@ -103,6 +103,16 @@ class ActivityDao(private val helper: AppDatabase) {
             out
         }
 
+    /**
+     * The most recently stored point of any activity — a rough position for
+     * night mode's sun arithmetic when nothing fresher is known (NightMode).
+     */
+    fun lastKnownPosition(): Pair<Double, Double>? =
+        helper.readableDatabase.query(
+            "track_point", arrayOf("latitude", "longitude"),
+            null, null, null, null, "id DESC", "1"
+        ).use { c -> if (c.moveToFirst()) c.getDouble(0) to c.getDouble(1) else null }
+
     /** Altitudes of the points that reported a valid altitude, in time order. */
     fun altitudesFor(activityId: Long): List<Double> =
         helper.readableDatabase.query(

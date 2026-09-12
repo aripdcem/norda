@@ -4,6 +4,26 @@ Format follows [Keep a Changelog](https://keepachangelog.com/), versioning
 follows [SemVer](https://semver.org/) — see `docs/MVP.md` section 15 for
 the rules.
 
+## [1.3.0] - 2026-09-12
+
+### Added
+
+- Night mode (MVP 3.7): a red low-light filter over every screen, so that
+  eyes adapted to the dark are not reset by a bright phone — red light is
+  the light night vision is least sensitive to. The filter multiplies
+  whatever lies beneath it by a dark red: white turns red, black stays
+  black, and the screens themselves keep a single palette, map tiles and
+  compass dial included. A line at the foot of Home cycles **automatic →
+  on → off**. Automatic is the default and follows the sun: night begins
+  at civil dusk, the moment the sun is 6° below the horizon, and is
+  re-checked on every screen resume and once a minute while a screen stays
+  open, so dusk arriving mid-recording tints the screen without anyone
+  leaving it. The sun's altitude needs only a rough position (the
+  recording's last point, the system's last known location, or the last
+  point ever recorded) — no new permission, no network. Solar position and
+  the mode decision are pure core in `core/sun/Sun` and
+  `core/sun/NightPolicy` with 13 JVM tests (core: 135).
+
 ## [1.2.0] - 2026-09-12
 
 ### Added

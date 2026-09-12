@@ -21,6 +21,7 @@ import android.widget.Button
 import android.widget.RadioButton
 import android.widget.TextView
 import android.widget.Toast
+import com.aripd.norda.core.sun.NightPolicy
 import com.aripd.norda.core.track.ActivityType
 import com.aripd.norda.core.track.ElevationTracker
 import com.aripd.norda.core.track.GpsFilter
@@ -53,6 +54,7 @@ class MainActivity : Activity(), LocationListener {
     private lateinit var startButton: Button
     private lateinit var permissionHint: TextView
     private lateinit var gpsHint: TextView
+    private lateinit var nightToggle: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -84,6 +86,25 @@ class MainActivity : Activity(), LocationListener {
         findViewById<TextView>(R.id.diagnosticsLink).setOnClickListener {
             startActivity(Intent(this, DiagnosticsActivity::class.java))
         }
+        // Night mode (MVP 3.7): one line at the foot of Home cycles
+        // Auto → Night → Day. The filter itself follows on every screen.
+        nightToggle = findViewById(R.id.nightToggle)
+        nightToggle.setOnClickListener {
+            NightMode.setMode(this, NightMode.mode(this).next())
+            NightMode.apply(this)
+            renderNightToggle()
+        }
+        renderNightToggle()
+    }
+
+    private fun renderNightToggle() {
+        nightToggle.setText(
+            when (NightMode.mode(this)) {
+                NightPolicy.Mode.AUTO -> R.string.night_mode_auto
+                NightPolicy.Mode.ON -> R.string.night_mode_on
+                NightPolicy.Mode.OFF -> R.string.night_mode_off
+            }
+        )
     }
 
     override fun onResume() {

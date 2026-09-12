@@ -53,6 +53,7 @@ z-releases (v0.9.1, v0.9.2, …). Manual verification on the device sits
 | 19 | Recovery | Restart the device (reboot) during a recording | At launch the unfinished recording is recovered into History |
 | 20 | Battery saver | 30 min recording with battery saver on | If there is data loss, into the report with a duration/interval note |
 | 21 | Breadcrumb (v1.2.0) | Record 300+ m out, then walk back following the Compass trail line; step 40 m off the trail once | The chevron and "Trail … back …" follow the recorded track (not the straight line); off the trail the line switches to "Off the trail … back to it"; near the start: "trail complete" |
+| 22 | Night mode (v1.3.0) | Set the Home line to "Night mode: automatic" and walk from before civil dusk until after it; then try "on" and "off" | Within a minute of civil dusk the screen reddens by itself, without leaving the screen; the map, the compass and the stats stay legible; the toggle forces the filter on and off immediately |
 
 ## Report template
 

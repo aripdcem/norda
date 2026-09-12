@@ -98,6 +98,16 @@
         android:layout_weight="1" />
 
     <TextView
+        android:id="@+id/nightToggle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:minHeight="48dp"
+        android:gravity="center"
+        android:padding="12dp"
+        android:textColor="@color/norda_green"
+        android:textSize="14sp" />
+
+    <TextView
         android:id="@+id/diagnosticsLink"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
