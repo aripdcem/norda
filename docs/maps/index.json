@@ -11,10 +11,10 @@
       ],
       "minZoom": 8,
       "maxZoom": 14,
-      "sizeBytes": 15761408,
-      "sha256": "e22cae2e11a5ccefb0176b323a41530465e300fd8f3d72c278e2b4b129160685",
-      "url": "https://github.com/aripdcem/norda/releases/download/maps/istanbul-v3/istanbul.mbtiles",
-      "version": 3
+      "sizeBytes": 16392192,
+      "sha256": "8f602fe35919abbcec9b6a34f5e2beb3d21bb206797bd3586ce8508c18f1879e",
+      "url": "https://github.com/aripdcem/norda/releases/download/maps/istanbul-v4/istanbul.mbtiles",
+      "version": 4
     }
   ]
 }
