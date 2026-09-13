@@ -79,6 +79,18 @@
         <TextView
             style="@style/Norda.SectionLabel"
             android:layout_marginTop="24dp"
+            android:text="@string/section_map" />
+
+        <TextView
+            android:id="@+id/mapText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:textSize="14sp" />
+
+        <TextView
+            style="@style/Norda.SectionLabel"
+            android:layout_marginTop="24dp"
             android:text="@string/section_permission" />
 
         <TextView

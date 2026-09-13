@@ -102,6 +102,7 @@ the tour is repeated on that release. Three clean tours = the v1.0.0 gate.
 | + | 2026-09-06 | v1.0.4 | *Morning walk (4.32 km, 44:29 point span / 46:42 active), clean — no finding. Cross-validation ZERO difference: 4317.4 ↔ 4317.4 m; ▲113/▼138 exact; 1360 points = accepted; rejections: accuracy 1, teleport 0 (jitter 931 — the usual ~1 s cadence alternation, no distance lost). Start clean: first steps 2.6–3.9 m at walking pace, no settling spike (second field tour of the F-11 gate). Acquisition + finish tail 2:13 (active − point span). Five micro gaps of 6–9 s, longest 9 s. 🔋 4% / 46:42 ≈ 5.1 %/h — mid band (B-1: 2.8 · 4.0 · 4.0 · 5.0 · 5.8 · 5.1). One waypoint. First recording made with the OSM map pack available (Istanbul v2); map feedback: "the colors are nice but I could not zoom" → **F-13** → v1.0.5* |
 
 | + | 2026-09-12 | v1.1.0 | *Night walk (3.42 km, 36:21 point span / 38:50 active), clean pipeline — first field tour of v1.1.0 (continuous zoom; map impressions still pending). Cross-validation ZERO difference: 3420.8 ↔ 3420.8 m; ▲79/▼71 exact; 1074 points = accepted; rejections: accuracy 1, teleport 0 (jitter 727, ~1 s cadence). Start clean: first steps 2.6–4.6 m at 2 s (F-11 gate, third field tour). Acquisition + finish tail 2:29; one 6 s gap. 🔋 80% → 80% over 38:50 — a 0 %/h reading is a gauge plateau, not physics (B-1 note: some phones hold 80% for a while; the band stays ~4–5 %/h). **Second-device comparison (companion's Strava, walking, no timestamps in the export):** the route is a loop, so start/end were matched by distance consistency — Norda idx 85→920 (22:47:26→23:14:57, 27.5 min): **Norda 2652.1 ↔ Strava 2866.2 m (−7.5%)**; Norda recorded a further 290 m before and 479 m after the companion's window. Route agreement median 3.5 m / p90 7.9 m / max 14.7 m — the tracks lie on each other; the gap is in the per-step sum: at ~1 Hz walking pace a raw sum adds every metre of GPS wobble, the 2 m jitter gate does not. Which is closer to the truth cannot be decided from two phones — **open item D-1:** a hand-measured reference (matrix step 5, e.g. a 400 m track ×2 or a marked seaside kilometre) to calibrate the distance once and for all. Elevation: Strava DEM 102–119 m vs Norda 135–165 m (the ~37 m ellipsoid offset again, Y-1)* |
+| + | 2026-09-13 | v1.3.0 | *Morning walk (3.04 km, 29:10 point span / 32:58 active), clean pipeline — cross-validation ZERO difference: 3044.0 ↔ 3044.0 m; ▲92/▼74 exact; 823 points = accepted; rejections: accuracy 7, teleport 4, jitter 504. Median step 1.80 m/s (6.5 km/h, brisk walk). **3:37 GPS outage mid-walk** (08:45:54→08:49:31 local, 317 m crossed as an air line — the honest lower bound of a covered stretch, as in F-12). **Settling spikes past the first fix (Y-2):** the first nine seconds hold 9.1 m in 1 s, **48.3 m in 5 s (9.65 m/s)** and 7.2 m in 1 s — about 52 m of phantom distance that the F-11 gate does not catch, because it validates the first fix only and the 10 m/s cap is a running cap. Over the whole walk 48 steps are faster than 3 m/s, 251 m in total (8% of the distance) on a track whose median step is 1.8 m/s. 🔋 84% → 81% over 32:58 ≈ 5.5 %/h (B-1 band ~4–5, slightly above). **Report: "the map does not show during use" → F-15.** Night mode could not be tested: the walk was 08:43–09:12 local with the sun at +22°, so automatic mode was correctly in daylight — checked by running `core/sun/Sun` against the file's own timestamps (that day: sunrise 06:45, civil dusk 19:45 local)*
 
 Gate status: **3/3 clean tours — v1.0.0 CUT (Aug 29).**
 
@@ -216,6 +217,37 @@ Gate status: **3/3 clean tours — v1.0.0 CUT (Aug 29).**
   tiles (`core/map/Overzoom`, JVM-tested); lines soften with each level —
   the honest cost of not having the data. Rendering packs to z14 stays a
   candidate if the field asks for sharper streets.
+- **F-15** (v1.3.0 field report, fixed → v1.3.1): "the map does not show
+  during use". The renderer draws its grid wherever a tile is missing, and
+  that grid is the same picture for three causes — no pack installed, a pack
+  whose bounds end before this area, a tile the pack never got — so the report
+  could not be narrowed down afterwards. From this version the screen names
+  the cause instead: a one-line hint over the map on both the recording screen
+  and the map screen ("No map package — download one from the Maps screen", "X
+  doesn't cover this area", "X has no tile for this spot (z14)"), and
+  Diagnostics lists the installed packs with zoom range, size and bounds. The
+  decision is pure (`core/map/MapCoverage`, 6 JVM tests). Two real defects
+  that produce exactly this symptom and never recover were fixed with it: the
+  map view closed its pack when detached from the window and never reopened it
+  (grid for the rest of the outing), and the recording screen opened a pack
+  only once per recording, so a pack downloaded in the middle of an outing was
+  ignored until the next recording. The tour data itself was clean (zero
+  difference), which is consistent with the map being a display problem only.
+
+- **Y-2** (watch item, v1.3.0 walk): the filter is calibrated for running,
+  and a walk shows it. The 10 m/s cap (F-11) let a **48.3 m step in 5 s
+  (9.65 m/s)** through four seconds after the first fix — settling drift that
+  the F-11 gate does not see, because that gate validates the first fix
+  against the second and says nothing about the third. Over the same walk 48
+  steps were faster than 3 m/s, 251 m in total (8% of the distance) where the
+  median step was 1.8 m/s. Two candidates: a type-aware cap (walk ~4 m/s, run
+  ~7 m/s) and an accuracy-proportional gate for the acquisition phase, when
+  fixes sit near the 30 m accuracy limit. Both wait for **D-1**: the
+  known-distance calibration decides whether the distance error is dominated
+  by these spikes or by the 2 m jitter gate, and the second-device comparison
+  said Norda reads *lower* than an unfiltered sum — so tightening blindly
+  would be a guess, not a fix.
+
 - **F-14** (v1.0.5 map test, fixed → v1.1.0): "zooming is not smooth, it
   goes step by step, and once zoomed in the pixels are very visible". Two
   separate causes. The pinch handler jumped a whole level once the fingers

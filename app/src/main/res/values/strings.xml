@@ -130,6 +130,14 @@
     <string name="maps_index_offline">Couldn\'t fetch the package list — you may be offline. Imported packages still work.</string>
     <string name="map_import_failed">Could not import the package.</string>
     <string name="map_delete_confirm">Delete %1$s?</string>
+    <string name="map_hint_no_package">No map package — download one from the Maps screen.</string>
+    <string name="map_hint_out_of_bounds">%1$s doesn\'t cover this area — the grid is all there is here.</string>
+    <string name="map_hint_no_cover">No map package covers this area.</string>
+    <string name="map_hint_missing_tiles">%1$s has no tile for this spot (z%2$d).</string>
+    <string name="section_map">MAP PACKAGES</string>
+    <string name="map_none">No map package installed.</string>
+    <string name="map_pack_line">%1$s · z%2$d–%3$d · %4$.1f MB · %5$s</string>
+    <string name="map_pack_unreadable">%1$s · unreadable</string>
     <string name="attribution_osm">© OpenStreetMap contributors</string>
 
     <string name="notif_channel_name">Recording</string>

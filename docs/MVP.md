@@ -466,6 +466,31 @@ be opened and verified with desktop tools. Packs are separate from the app
 database: they can be deleted and re-downloaded without affecting activity
 data.
 
+### 7.4 An empty map says why
+
+The renderer draws a procedural grid wherever a tile is missing, and that grid
+looks identical for three different reasons: no pack is installed, a pack is
+installed but its bounds end before this area, or the pack covers the area and
+the tile itself is missing. From the field those three are indistinguishable —
+"the map doesn't show" is all one can report. So the screen names the cause,
+the same discipline as the GPS status line (F-4, F-5, F-9):
+
+- The decision is pure (`core/map/MapCoverage`): installed pack count, whether
+  the open pack claims the view centre, tiles the last frame needed and tiles
+  it actually painted. A single painted tile means OK — the rest are decoding,
+  and a half-drawn map is not a fault to report.
+- The recording screen and the map screen show the same one-line hint over the
+  map; `MapHint` turns the state into the sentence.
+- Diagnostics lists the installed packs with their zoom range, size and
+  bounds, so "which pack am I looking at, and how far up does it go" is
+  answered on the device.
+
+Two mechanics belong with it. The map view closes its pack when it is detached
+from the window, so it reopens the same file when it is attached again instead
+of showing the grid for the rest of the outing. And the recording screen opens
+a pack whenever it has none rather than once per recording, so a pack
+downloaded in the middle of an outing appears on the next fix.
+
 ## 8. Data model
 
 ### 8.1 app.db (SQLite, WAL)
@@ -661,8 +686,8 @@ on screen, CI green, the first signed APK in Releases.*
 Filters, statistics, elevation hysteresis, auto-pause decisions, stopwatch,
 smoothing, disturbance hysteresis, bearing/distance/ETA, trail guidance
 (nearest point, look-back, off-trail), Web Mercator and tile math (including
-the TMS flip), over-zoom and continuous-zoom arithmetic, solar altitude and
-the night-mode decision, GPX generation/parsing, row↔model mappers, waypoint
+the TMS flip), over-zoom and continuous-zoom arithmetic, the empty-map
+reason, solar altitude and the night-mode decision, GPX generation/parsing, row↔model mappers, waypoint
 naming.
 
 ### 13.3 Field test matrix

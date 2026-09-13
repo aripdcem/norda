@@ -19,6 +19,18 @@
             android:layout_height="match_parent"
             android:importantForAccessibility="no" />
 
+        <TextView
+            android:id="@+id/mapHint"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top|start"
+            android:layout_margin="10dp"
+            android:layout_marginEnd="110dp"
+            android:background="@color/norda_scrim"
+            android:padding="8dp"
+            android:textSize="13sp"
+            android:visibility="gone" />
+
         <Button
             android:id="@+id/addWaypointButton"
             android:layout_width="wrap_content"

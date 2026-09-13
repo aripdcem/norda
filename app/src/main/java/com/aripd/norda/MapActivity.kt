@@ -7,9 +7,11 @@ import android.os.Bundle
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
+import android.widget.TextView
 import android.widget.Toast
 import com.aripd.norda.core.io.Gpx
 import com.aripd.norda.core.nav.WaypointNaming
+import com.aripd.norda.map.MapHint
 import com.aripd.norda.map.MapPackages
 import com.aripd.norda.map.MapView
 import com.aripd.norda.map.TileStore
@@ -37,6 +39,14 @@ class MapActivity : Activity() {
         Insets.apply(findViewById(R.id.root))
         mapView = findViewById(R.id.mapView)
         waypointDao = WaypointDao(AppDatabase.get(this))
+
+        // Why the map is empty, in one line (F-15, MVP 7.4).
+        val mapHint = findViewById<TextView>(R.id.mapHint)
+        mapView.onCoverage = { state ->
+            val text = MapHint.text(this, state, mapView.packageName, mapView.currentZoom)
+            mapHint.text = text.orEmpty()
+            mapHint.visibility = if (text == null) View.GONE else View.VISIBLE
+        }
 
         activityId = intent.getLongExtra(EXTRA_ACTIVITY_ID, -1L)
         if (activityId > 0) {

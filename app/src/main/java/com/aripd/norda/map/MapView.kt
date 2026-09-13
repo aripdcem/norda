@@ -10,6 +10,7 @@ import android.graphics.RectF
 import android.graphics.Path
 import android.os.Handler
 import android.os.HandlerThread
+import android.os.SystemClock
 import android.util.AttributeSet
 import android.view.GestureDetector
 import android.view.MotionEvent
@@ -17,11 +18,13 @@ import android.view.ScaleGestureDetector
 import android.view.View
 import com.aripd.norda.R
 import com.aripd.norda.core.map.ContinuousZoom
+import com.aripd.norda.core.map.MapCoverage
 import com.aripd.norda.core.map.Overzoom
 import com.aripd.norda.core.map.WebMercator
 import com.aripd.norda.core.map.WebMercator.TILE_SIZE
 import com.aripd.norda.core.nav.Waypoint
 import com.aripd.norda.core.track.TrackPoint
+import java.io.File
 import kotlin.math.floor
 
 /**
@@ -44,6 +47,14 @@ class MapView @JvmOverloads constructor(
     var follow = false
 
     private var store: TileStore? = null
+    // The package the store was opened from: a view that is detached closes
+    // its store, and on re-attach the same package is reopened instead of
+    // showing the grid for the rest of the outing (F-15).
+    private var storeFile: File? = null
+    // −1 until the first package probe: before that the map says nothing,
+    // because "no package" and "no fix yet" are different screens' business.
+    private var packageCount = -1
+    private var lastProbeMillis = 0L
     private var minZoom = 3
     // Gesture ceiling; with a pack it is the pack ceiling + Overzoom.LEVELS —
     // levels above the pack are drawn by scaling the pack's top tiles (F-13).
@@ -65,6 +76,24 @@ class MapView @JvmOverloads constructor(
 
     /** Long-press on the interactive map: waypoint-adding hook (lat, lon). */
     var onLongPressLatLon: ((Double, Double) -> Unit)? = null
+
+    /**
+     * Why the map is empty, whenever the answer changes (MapCoverage). The
+     * grid looks the same for every reason; the screen says which one it is.
+     */
+    var onCoverage: ((MapCoverage.State) -> Unit)? = null
+
+    /** The package currently drawn from, for the hint and for Diagnostics. */
+    val packageName: String?
+        get() = store?.name
+
+    /** The integer tile level on screen, for the "no tile here" hint. */
+    val currentZoom: Int
+        get() = zoom
+
+    private var coverage = MapCoverage.State.OK
+    private var tilesRequested = 0
+    private var tilesDrawn = 0
 
     private val cache = TileCache()
     private val pending = HashSet<Long>()
@@ -121,6 +150,8 @@ class MapView @JvmOverloads constructor(
     fun setStore(newStore: TileStore?) {
         store?.close()
         store = newStore
+        storeFile = newStore?.file
+        packageCount = MapPackages.list(context).size
         if (newStore != null) {
             minZoom = newStore.minZoom.coerceIn(0, Overzoom.MAX_ZOOM)
             packMaxZoom = newStore.maxZoom.coerceIn(minZoom, Overzoom.MAX_ZOOM)
@@ -130,6 +161,21 @@ class MapView @JvmOverloads constructor(
         }
         missing.clear()
         invalidate()
+    }
+
+    /**
+     * Opens the package covering (lat, lon) if this view has none. The
+     * recording screen calls it per fix, so a package installed in the middle
+     * of an outing is picked up and a store lost to a detach comes back. File
+     * probing is throttled: with no package at all this would otherwise list a
+     * directory every second.
+     */
+    fun ensurePackage(latDeg: Double, lonDeg: Double) {
+        if (store != null) return
+        val now = SystemClock.elapsedRealtime()
+        if (lastProbeMillis != 0L && now - lastProbeMillis < PROBE_MILLIS) return
+        lastProbeMillis = now
+        setStore(MapPackages.openBest(context, latDeg, lonDeg))
     }
 
     fun setCenter(latDeg: Double, lonDeg: Double) {
@@ -269,6 +315,8 @@ class MapView @JvmOverloads constructor(
     // ---- Drawing ----
 
     override fun onDraw(canvas: Canvas) {
+        tilesRequested = 0
+        tilesDrawn = 0
         val world = WebMercator.worldTiles(zoom)
         val p = pxPerTile
         val size = p.toFloat()
@@ -287,10 +335,12 @@ class MapView @JvmOverloads constructor(
                     drawGridTile(canvas, sx, sy, tx, ty)
                     continue
                 }
+                tilesRequested++
                 if (zoom <= packMaxZoom) {
                     val key = TileCache.key(zoom, tx, ty)
                     val bitmap = cache.get(key)
                     if (bitmap != null) {
+                        tilesDrawn++
                         tileDst.set(sx, sy, sx + size, sy + size)
                         canvas.drawBitmap(bitmap, null, tileDst, tilePaint)
                     } else {
@@ -304,6 +354,7 @@ class MapView @JvmOverloads constructor(
                     val key = TileCache.key(src.zoom, src.x, src.y)
                     val bitmap = cache.get(key)
                     if (bitmap != null) {
+                        tilesDrawn++
                         overzoomSrc.set(src.offsetX, src.offsetY, src.offsetX + src.size, src.offsetY + src.size)
                         tileDst.set(sx, sy, sx + size, sy + size)
                         canvas.drawBitmap(bitmap, overzoomSrc, tileDst, tilePaint)
@@ -318,6 +369,26 @@ class MapView @JvmOverloads constructor(
         drawTrack(canvas, topLeftX, topLeftY)
         drawWaypoints(canvas, topLeftX, topLeftY)
         drawMarker(canvas, topLeftX, topLeftY)
+        reportCoverage()
+    }
+
+    /**
+     * Reports the reason for an empty map when it changes. Nothing is computed
+     * per frame beyond two integer comparisons; the callback is posted, since
+     * the listener touches views and a view must not be laid out from inside
+     * a draw pass.
+     */
+    private fun reportCoverage() {
+        if (packageCount < 0) return
+        val s = store
+        val covered = s != null && s.contains(
+            WebMercator.latDeg(centerY, zoom), WebMercator.lonDeg(centerX, zoom)
+        )
+        val state = MapCoverage.state(packageCount, covered, tilesRequested, tilesDrawn)
+        if (state == coverage) return
+        coverage = state
+        val callback = onCoverage ?: return
+        post { callback(state) }
     }
 
     private fun drawWaypoints(canvas: Canvas, topLeftX: Double, topLeftY: Double) {
@@ -397,6 +468,13 @@ class MapView @JvmOverloads constructor(
         return Handler(thread.looper).also { decodeHandler = it }
     }
 
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        // Detach closed the store; reopen the same package (F-15).
+        val file = storeFile
+        if (store == null && file != null && file.exists()) setStore(TileStore.open(file))
+    }
+
     override fun onDetachedFromWindow() {
         super.onDetachedFromWindow()
         decodeThread?.quitSafely()
@@ -404,5 +482,10 @@ class MapView @JvmOverloads constructor(
         decodeHandler = null
         store?.close()
         store = null
+    }
+
+    private companion object {
+        /** Minimum wait between two package probes (file I/O). */
+        const val PROBE_MILLIS = 5_000L
     }
 }

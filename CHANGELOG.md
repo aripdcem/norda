@@ -4,6 +4,28 @@ Format follows [Keep a Changelog](https://keepachangelog.com/), versioning
 follows [SemVer](https://semver.org/) — see `docs/MVP.md` section 15 for
 the rules.
 
+## [1.3.1] - 2026-09-13
+
+### Fixed
+
+- F-15 (field, v1.3.0: "the map does not show during use"): an empty map now
+  says why it is empty. The renderer draws its grid wherever a tile is
+  missing, and that grid looked identical for three causes — no pack
+  installed, a pack whose bounds end before this area, or a tile the pack
+  never got — so the report could not be narrowed down after the fact. The
+  recording screen and the map screen now carry a one-line hint over the map
+  ("No map package — download one from the Maps screen", "Istanbul doesn't
+  cover this area", "Istanbul has no tile for this spot (z14)"), and
+  Diagnostics lists the installed packs with their zoom range, size and
+  bounds. The decision is pure core in `core/map/MapCoverage` with 6 JVM
+  tests (core: 141).
+- Two defects that produce exactly that symptom and never recover: the map
+  view closed its pack when it was detached from the window and never
+  reopened it, leaving the grid for the rest of the outing; and the recording
+  screen picked a pack once per recording, so a pack downloaded in the middle
+  of an outing was ignored until the next one. The view reopens its pack on
+  re-attach, and the recording screen opens one whenever it has none.
+
 ## [1.3.0] - 2026-09-12
 
 ### Added

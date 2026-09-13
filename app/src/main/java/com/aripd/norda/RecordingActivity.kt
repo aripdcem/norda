@@ -7,13 +7,14 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
+import android.view.View
 import android.widget.Button
 import android.widget.TextView
 import com.aripd.norda.core.track.Format
 import com.aripd.norda.core.track.RecordingSession
 import android.widget.Toast
 import com.aripd.norda.core.nav.WaypointNaming
-import com.aripd.norda.map.MapPackages
+import com.aripd.norda.map.MapHint
 import com.aripd.norda.map.MapView
 import com.aripd.norda.storage.AppDatabase
 import com.aripd.norda.storage.WaypointDao
@@ -34,7 +35,7 @@ class RecordingActivity : Activity() {
     private lateinit var pauseButton: Button
     private lateinit var stopButton: Button
     private lateinit var liveMap: MapView
-    private var mapStoreLoaded = false
+    private lateinit var mapHint: TextView
 
     private val handler = Handler(Looper.getMainLooper())
     private val ticker = object : Runnable {
@@ -59,6 +60,15 @@ class RecordingActivity : Activity() {
         liveMap = findViewById(R.id.liveMap)
         liveMap.follow = true
         liveMap.interactive = false
+        // An empty map says why it is empty (F-15, MVP 7.4): without this line
+        // a missing package, an area outside the package and a missing tile all
+        // look like the same grey grid.
+        mapHint = findViewById(R.id.mapHint)
+        liveMap.onCoverage = { state ->
+            val text = MapHint.text(this, state, liveMap.packageName, liveMap.currentZoom)
+            mapHint.text = text.orEmpty()
+            mapHint.visibility = if (text == null) View.GONE else View.VISIBLE
+        }
 
         // If the service is already recording (returning from the notification
         // or from Home) no new recording is opened; it is only displayed.
@@ -123,11 +133,10 @@ class RecordingActivity : Activity() {
         val points = session.points
         liveMap.setTrack(points)
         points.lastOrNull()?.let { last ->
-            if (!mapStoreLoaded) {
-                // With the first location, the package covering it is chosen.
-                mapStoreLoaded = true
-                liveMap.setStore(MapPackages.openBest(this, last.latitude, last.longitude))
-            }
+            // The package covering the position is opened as soon as there is
+            // one: a package downloaded in the middle of an outing is picked up
+            // on the next fix instead of waiting for the next recording (F-15).
+            liveMap.ensurePackage(last.latitude, last.longitude)
             liveMap.setCurrentLocation(last.latitude, last.longitude)
         }
         durationText.text = Format.duration(session.durationMillis(now))

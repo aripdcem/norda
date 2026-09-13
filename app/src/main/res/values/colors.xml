@@ -1,4 +1,6 @@
 <resources>
     <color name="norda_green">#2F6B4C</color>
     <color name="ic_launcher_background">#2F6B4C</color>
+    <!-- Near-opaque backing for text over map tiles (map hint, MVP 7.4). -->
+    <color name="norda_scrim">#E6F6F7F3</color>
 </resources>

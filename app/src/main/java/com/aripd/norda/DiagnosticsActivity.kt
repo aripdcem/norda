@@ -25,6 +25,8 @@ import android.widget.Button
 import android.widget.TextView
 import com.aripd.norda.core.geo.Geo
 import com.aripd.norda.core.track.GpsFilter
+import com.aripd.norda.map.MapPackages
+import com.aripd.norda.map.TileStore
 import com.aripd.norda.tracking.TrackingService
 
 /**
@@ -46,6 +48,7 @@ class DiagnosticsActivity : Activity(), LocationListener, SensorEventListener {
     private lateinit var startText: TextView
     private lateinit var filterLabel: TextView
     private lateinit var filterText: TextView
+    private lateinit var mapText: TextView
     private lateinit var permissionText: TextView
     private lateinit var permissionButton: Button
 
@@ -83,6 +86,7 @@ class DiagnosticsActivity : Activity(), LocationListener, SensorEventListener {
         startText = findViewById(R.id.startText)
         filterLabel = findViewById(R.id.filterLabel)
         filterText = findViewById(R.id.filterText)
+        mapText = findViewById(R.id.mapText)
         permissionText = findViewById(R.id.permissionText)
         permissionButton = findViewById(R.id.permissionButton)
 
@@ -121,6 +125,7 @@ class DiagnosticsActivity : Activity(), LocationListener, SensorEventListener {
         renderLocation()
         renderStart()
         renderFilter()
+        renderMapPackages()
         handler.post(ageTicker)
     }
 
@@ -181,6 +186,36 @@ class DiagnosticsActivity : Activity(), LocationListener, SensorEventListener {
                 if (deniedForever) R.string.open_settings else R.string.grant_permission
             )
             permissionButton.visibility = View.VISIBLE
+        }
+    }
+
+    /**
+     * Installed map packages with their zoom range and bounds (F-15). "The map
+     * does not show" is answered here: whether a package is installed at all,
+     * how far up its zoom goes, and whether its bounds hold the area walked.
+     */
+    private fun renderMapPackages() {
+        val files = MapPackages.list(this)
+        if (files.isEmpty()) {
+            mapText.setText(R.string.map_none)
+            return
+        }
+        mapText.text = files.joinToString("\n") { file ->
+            val store = TileStore.open(file)
+            val line = if (store == null) {
+                getString(R.string.map_pack_unreadable, file.name)
+            } else {
+                getString(
+                    R.string.map_pack_line,
+                    store.name,
+                    store.minZoom,
+                    store.maxZoom,
+                    file.length() / (1024.0 * 1024.0),
+                    store.metadata["bounds"] ?: getString(R.string.placeholder_dash)
+                )
+            }
+            store?.close()
+            line
         }
     }
 
