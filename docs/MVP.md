@@ -322,7 +322,9 @@ from the last anchored value by the threshold (start: 4 m; calibrated in the
 field within the 3–5 m range); once it diverges, the difference is applied in
 a single step and the anchor is updated. Test: a noisy series at constant
 altitude → gain 0; a known staircase profile → the expected total.
-Barometric refinement is post-MVP.
+Barometric refinement is post-MVP. Gain and loss are computed from the raw
+ellipsoid heights; the geoid correction (5.7) is a near-constant offset and
+cancels in a difference.
 
 ### 5.5 Auto-pause
 
@@ -340,6 +342,32 @@ notification. Recording continues while the screen is off and the app is in
 the background. Recording is not lost on process death (8.3). The Android 10+
 service type, the Android 13+ notification permission and the current Play
 policies are re-verified during development together with the target SDK.
+
+### 5.7 Absolute altitude: the geoid correction (v1.5.0)
+
+The receiver reports height above the **WGS84 ellipsoid**, a smooth
+mathematical figure. Maps, signposts, DEMs and every other tool use height
+above the **geoid**, which is mean sea level. The two differ by up to ±107 m
+on Earth and by about 37 m in Istanbul, so Norda used to read 39 m at the
+water's edge (field item Y-1, measured on two separate seaside walks, the same
+median twice).
+
+- The separation comes from a table of the **EGM96** model at a 1° step,
+  shipped as a resource and interpolated bilinearly in the pure core
+  (`core/geo/Geoid`). Provenance and the reason for 1° are in
+  `tools/geoid/EGM96-PROVENANCE.md`: measured against the 15′ grid, 1° costs
+  0.76 m RMS where the app is used and 130 KB of data, which the APK
+  compresses to ~84 KB. That is an order of magnitude below GNSS vertical
+  noise and two orders below the error it removes.
+- **The database keeps the raw ellipsoid height**, exactly as the receiver
+  reported it. The correction is applied at the edges where a human or another
+  tool reads the number: the Diagnostics screen and GPX. So elevation gain and
+  loss (5.4) are untouched — a near-constant offset cancels in a difference —
+  past recordings gain the correction for free, and the raw record stays raw.
+- Without the table nothing is corrected and the screen says "ellipsoid": a
+  wrong correction would be worse than none.
+- Single-fix vertical noise is a different problem and stays with the DEM and
+  barometer candidate (5.4).
 
 ## 6. Compass / Heading Engine
 
@@ -622,7 +650,10 @@ already produces. The Return to Start line stays as it is.
 
 - **Export**: activity → `<trk>/<trkseg>/<trkpt>` (with `ele`, `time`);
   waypoints → `<wpt name=...>`. Track + points in a single file. Saved via SAF
-  (`ACTION_CREATE_DOCUMENT`).
+  (`ACTION_CREATE_DOCUMENT`). `ele` is written as height above **mean sea
+  level**, which is what other tools read it as: the geoid correction (5.7) is
+  applied on the way out and undone on the way in, so a round trip returns the
+  same recording.
 - **Telemetry** (F-3): the app's summary (distance/active time/elevation),
   battery and filter counters are embedded as `norda:report` inside GPX 1.1
   `extensions` — the field report is a single file. Other tools ignore the
@@ -721,7 +752,7 @@ Filters, statistics, elevation hysteresis, auto-pause decisions, stopwatch,
 smoothing, disturbance hysteresis, bearing/distance/ETA, trail guidance
 (nearest point, look-back, off-trail), Web Mercator and tile math (including
 the TMS flip), over-zoom and continuous-zoom arithmetic, the empty-map
-reason, solar altitude and the night-mode decision, GPX generation/parsing, row↔model mappers, waypoint
+reason, geoid interpolation, solar altitude and the night-mode decision, GPX generation/parsing, row↔model mappers, waypoint
 naming.
 
 ### 13.3 Field test matrix

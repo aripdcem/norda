@@ -17,7 +17,8 @@
     <string name="location_needs_permission">Konum izni gerekli.</string>
     <string name="location_coords">%1$.5f°  %2$.5f°</string>
     <string name="location_accuracy">± %1$d m</string>
-    <string name="location_altitude">yükseklik %1$d m</string>
+    <string name="location_altitude">yükseklik %1$d m (elipsoit)</string>
+    <string name="location_altitude_msl">yükseklik %1$d m · elipsoit %2$d m</string>
     <string name="location_speed">%1$.1f km/sa</string>
     <string name="location_meta">%1$s · %2$d sn önce</string>
 

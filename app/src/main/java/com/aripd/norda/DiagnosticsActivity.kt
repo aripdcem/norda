@@ -27,6 +27,7 @@ import android.widget.TextView
 import com.aripd.norda.core.geo.Geo
 import com.aripd.norda.core.track.Battery
 import com.aripd.norda.core.track.GpsFilter
+import com.aripd.norda.geo.Geoids
 import com.aripd.norda.map.MapPackages
 import com.aripd.norda.map.TileStore
 import com.aripd.norda.tracking.TrackingService
@@ -195,6 +196,22 @@ class DiagnosticsActivity : Activity(), LocationListener, SensorEventListener {
     }
 
     /**
+     * Altitude both ways (Y-1, MVP 5.7): the height above mean sea level,
+     * which is what maps and signposts show, and the raw ellipsoid height the
+     * receiver reported. Without the geoid table only the raw value exists,
+     * and it says so.
+     */
+    private fun altitudeLine(fix: Location): String {
+        val separation = Geoids.separationM(this, fix.latitude, fix.longitude)
+            ?: return getString(R.string.location_altitude, fix.altitude.toInt())
+        return getString(
+            R.string.location_altitude_msl,
+            (fix.altitude - separation).toInt(),
+            fix.altitude.toInt()
+        )
+    }
+
+    /**
      * Battery measurement sources (B-1): the level the system reports, and
      * whether this device serves the µAh charge counter at all. The counter is
      * what gives a half-hour outing a real consumption figure; if it is
@@ -323,7 +340,7 @@ class DiagnosticsActivity : Activity(), LocationListener, SensorEventListener {
         locationText.text = listOf(
             getString(R.string.location_coords, fix.latitude, fix.longitude),
             getString(R.string.location_accuracy, fix.accuracy.toInt()),
-            getString(R.string.location_altitude, fix.altitude.toInt()),
+            altitudeLine(fix),
             getString(R.string.location_speed, speedKmh),
             getString(R.string.location_meta, fix.provider ?: "?", ageSec),
             satellites

@@ -4,6 +4,31 @@ Format follows [Keep a Changelog](https://keepachangelog.com/), versioning
 follows [SemVer](https://semver.org/) — see `docs/MVP.md` section 15 for
 the rules.
 
+## [1.5.0] - 2026-09-13
+
+### Added
+
+- Y-1: absolute altitude is corrected to height above mean sea level. The
+  receiver reports height above the WGS84 ellipsoid, while maps, signposts
+  and DEMs use mean sea level, and in Istanbul the two differ by about 37 m —
+  two seaside walks put the median elevation at the water's edge at 39 m, the
+  same number twice. A table of the EGM96 model at a 1° step now ships with
+  the app and is interpolated in the pure core (`core/geo/Geoid`, 6 JVM tests,
+  core: 157; plus 4 stdlib tests guarding the data file, tooling: 31). On the
+  seaside walk the table gives a separation of 37.4 m, turning that 39 m into
+  1.6 m.
+- The correction is applied where a human or another tool reads the number:
+  Diagnostics shows "altitude 2 m · ellipsoid 39 m", and GPX export writes
+  `ele` as mean sea level, which is what other tools read it as. Import
+  converts back, so a round trip returns the same recording. The database
+  keeps the raw ellipsoid height, so elevation gain and loss are unchanged and
+  past recordings gain the correction for free. Without the table nothing is
+  corrected and the screen says "ellipsoid".
+- The grid step was measured before it was chosen: against the 15′ EGM96
+  reference, 1° costs 0.76 m RMS in Turkey for 130 KB of data (~84 KB inside
+  the APK), where 2° would cost 1.90 m and 0.5° would cost 520 KB. Provenance
+  and the one-shot import script are in `tools/geoid/`. Documented in MVP 5.7.
+
 ## [1.4.1] - 2026-09-13
 
 ### Fixed

@@ -11,6 +11,7 @@ import android.widget.TextView
 import android.widget.Toast
 import com.aripd.norda.core.io.Gpx
 import com.aripd.norda.core.nav.WaypointNaming
+import com.aripd.norda.geo.Geoids
 import com.aripd.norda.map.MapHint
 import com.aripd.norda.map.MapPackages
 import com.aripd.norda.map.MapView
@@ -129,11 +130,34 @@ class MapActivity : Activity() {
         try {
             val dao = ActivityDao(AppDatabase.get(this))
             val detailed = dao.pointsDetailed(activityId)
+            // Every other tool reads GPX <ele> as height above mean sea level,
+            // while the database keeps the receiver's ellipsoid height — in
+            // Istanbul the two differ by ~37 m (Y-1, MVP 5.7). The conversion
+            // happens here, at the edge.
+            val points = detailed.map { (point, hasAltitude) ->
+                if (hasAltitude) {
+                    point.copy(
+                        altitude = Geoids.toMsl(
+                            this, point.latitude, point.longitude, point.altitude
+                        )
+                    )
+                } else {
+                    point
+                }
+            }
+            val waypoints = waypointDao.list().map { w ->
+                val altitude = w.altitude
+                if (altitude != null) {
+                    w.copy(altitude = Geoids.toMsl(this, w.latitude, w.longitude, altitude))
+                } else {
+                    w
+                }
+            }
             val xml = Gpx.write(
                 trackName = "Norda ${SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())}",
-                points = detailed.map { it.first },
+                points = points,
                 altitudeValid = detailed.map { it.second },
-                waypoints = waypointDao.list(),
+                waypoints = waypoints,
                 report = buildReport(dao)
             )
             contentResolver.openOutputStream(uri)?.use { out ->

@@ -19,6 +19,7 @@ import com.aripd.norda.core.track.ActivityType
 import com.aripd.norda.core.track.ElevationTracker
 import com.aripd.norda.core.track.Format
 import com.aripd.norda.core.track.Stats
+import com.aripd.norda.geo.Geoids
 import com.aripd.norda.storage.ActivityDao
 import com.aripd.norda.storage.AppDatabase
 import com.aripd.norda.storage.WaypointDao
@@ -160,8 +161,20 @@ class HistoryActivity : Activity() {
                 val id = dao.startActivity(ActivityType.WALK, startTime)
                 val elevation = ElevationTracker()
                 for (p in parsed.points) {
-                    dao.appendPoint(id, p.point, p.hasAltitude)
-                    if (p.hasAltitude) elevation.onAltitude(p.point.altitude)
+                    // GPX elevations are heights above mean sea level; the
+                    // database keeps ellipsoid heights, as the receiver
+                    // reports them (Y-1, MVP 5.7).
+                    val point = if (p.hasAltitude) {
+                        p.point.copy(
+                            altitude = Geoids.toEllipsoid(
+                                this, p.point.latitude, p.point.longitude, p.point.altitude
+                            )
+                        )
+                    } else {
+                        p.point
+                    }
+                    dao.appendPoint(id, point, p.hasAltitude)
+                    if (p.hasAltitude) elevation.onAltitude(point.altitude)
                 }
                 val duration =
                     if (first.timeMillis > 0 && last.timeMillis > first.timeMillis)
@@ -186,8 +199,11 @@ class HistoryActivity : Activity() {
                 val name = WaypointNaming.sanitize(w.name) ?: WaypointNaming.nextDefaultName(
                     waypointDao.names(), getString(R.string.waypoint_prefix)
                 )
+                val altitude = w.altitude?.let {
+                    Geoids.toEllipsoid(this, w.latitude, w.longitude, it)
+                }
                 waypointDao.insert(
-                    name, w.latitude, w.longitude, w.altitude, System.currentTimeMillis()
+                    name, w.latitude, w.longitude, altitude, System.currentTimeMillis()
                 )
             }
 

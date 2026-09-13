@@ -218,23 +218,26 @@ Gate status: **3/3 clean tours — v1.0.0 CUT (Aug 29).**
   tiles (`core/map/Overzoom`, JVM-tested); lines soften with each level —
   the honest cost of not having the data. Rendering packs to z14 stays a
   candidate if the field asks for sharper streets.
-- **Y-1** (elevation, diagnosed — fix awaiting a decision): absolute altitude
-  reads about 37 m high. Three independent measurements agree. Two seaside
-  walks (Sept 1 and Sept 13) put the median elevation at the water's edge at
-  **39 m**, the same number twice, with a 9 m wide p5–p95 band — bias, not
-  noise. A companion's DEM-corrected Strava track read 102–119 m where Norda
-  read 135–165 m on the same path. And the cause is documented behaviour: the
-  platform's `getAltitude` returns height above the **WGS84 ellipsoid**, while
-  maps, DEMs and signposts use height above the geoid (mean sea level); the
-  separation in Istanbul is ~+37 m. A constant offset does not touch ▲/▼, so
-  gain and loss are unaffected; what reads high is the number on screen and in
-  the GPX. Three candidate fixes, in increasing cost: label the screen honestly
-  ("ellipsoid"), carry a geoid separation value per map pack (computed in CI,
-  where a geoid model can be fetched), or embed a coarse global geoid grid in
-  the core (a 2° grid with bilinear interpolation lands within a few metres and
-  costs tens of kilobytes). Vertical noise on single fixes (the 115 m fix on
-  Sept 1, ~75 m off) is a separate problem and stays with the DEM/baro
-  candidate.
+- **Y-1** (elevation, fixed → v1.5.0): absolute altitude read about 37 m
+  high. Three independent measurements agreed. Two seaside walks (Sept 1 and
+  Sept 13) put the median elevation at the water's edge at **39 m**, the same
+  number twice, with a 9 m wide p5–p95 band — bias, not noise. A companion's
+  DEM-corrected Strava track read 102–119 m where Norda read 135–165 m on the
+  same path. And the cause is documented behaviour: the platform's
+  `getAltitude` returns height above the **WGS84 ellipsoid**, while maps, DEMs
+  and signposts use height above the geoid, which is mean sea level.
+  Four options were weighed on accuracy, coverage, size and runtime cost
+  (labelling only; the receiver's own NMEA value; a value per map pack; an
+  embedded global table). The geoid grid was chosen and measured before being
+  built: against the 15′ EGM96 reference, a 1° table costs **0.76 m RMS** in
+  Turkey and 130 KB of data, while 2° would be 1.90 m for 33 KB and 0.5° would
+  be 0.21 m for 520 KB. On the Sept 13 seaside walk the shipped table gives a
+  separation of **37.4 m**, turning the 39 m median into **1.6 m** — the
+  water's edge, which is where the walk was. The database still stores raw
+  ellipsoid heights; the correction is applied on the Diagnostics screen and in
+  GPX, so gain and loss are untouched and past recordings are corrected too.
+  Single-fix vertical noise (the 115 m fix of Sept 1, ~75 m off) is a separate
+  problem and stays with the DEM/baro candidate.
 
 - **B-1** (battery measurement, sharpened → v1.4.0): the whole-percent gauge
   cannot measure an outing. The band collected over the tours is ~4–5 %/h
