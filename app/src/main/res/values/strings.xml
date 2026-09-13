@@ -82,6 +82,7 @@
     <string name="history_row_charge">" · 🔋 %1$.1f%% · %2$d mAh"</string>
     <string name="history_row_charge_rate">" · 🔋 %1$.1f%% · %2$d mAh · %3$.1f%%/h"</string>
     <string name="history_row_charge_mah">" · 🔋 %1$d mAh"</string>
+    <string name="history_row_charging">" · 🔋 charging"</string>
     <string name="history_empty">No activities yet.</string>
     <string name="delete_confirm">Delete this activity?</string>
     <string name="delete">Delete</string>

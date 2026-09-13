@@ -103,6 +103,7 @@ the tour is repeated on that release. Three clean tours = the v1.0.0 gate.
 
 | + | 2026-09-12 | v1.1.0 | *Night walk (3.42 km, 36:21 point span / 38:50 active), clean pipeline — first field tour of v1.1.0 (continuous zoom; map impressions still pending). Cross-validation ZERO difference: 3420.8 ↔ 3420.8 m; ▲79/▼71 exact; 1074 points = accepted; rejections: accuracy 1, teleport 0 (jitter 727, ~1 s cadence). Start clean: first steps 2.6–4.6 m at 2 s (F-11 gate, third field tour). Acquisition + finish tail 2:29; one 6 s gap. 🔋 80% → 80% over 38:50 — a 0 %/h reading is a gauge plateau, not physics (B-1 note: some phones hold 80% for a while; the band stays ~4–5 %/h). **Second-device comparison (companion's Strava, walking, no timestamps in the export):** the route is a loop, so start/end were matched by distance consistency — Norda idx 85→920 (22:47:26→23:14:57, 27.5 min): **Norda 2652.1 ↔ Strava 2866.2 m (−7.5%)**; Norda recorded a further 290 m before and 479 m after the companion's window. Route agreement median 3.5 m / p90 7.9 m / max 14.7 m — the tracks lie on each other; the gap is in the per-step sum: at ~1 Hz walking pace a raw sum adds every metre of GPS wobble, the 2 m jitter gate does not. Which is closer to the truth cannot be decided from two phones — **open item D-1:** a hand-measured reference (matrix step 5, e.g. a 400 m track ×2 or a marked seaside kilometre) to calibrate the distance once and for all. Elevation: Strava DEM 102–119 m vs Norda 135–165 m (the ~37 m ellipsoid offset again, Y-1)* |
 | + | 2026-09-13 | v1.3.0 | *Morning walk (3.04 km, 29:10 point span / 32:58 active), clean pipeline — cross-validation ZERO difference: 3044.0 ↔ 3044.0 m; ▲92/▼74 exact; 823 points = accepted; rejections: accuracy 7, teleport 4, jitter 504. Median step 1.80 m/s (6.5 km/h, brisk walk). **3:37 GPS outage mid-walk** (08:45:54→08:49:31 local, 317 m crossed as an air line — the honest lower bound of a covered stretch, as in F-12). **Settling spikes past the first fix (Y-2):** the first nine seconds hold 9.1 m in 1 s, **48.3 m in 5 s (9.65 m/s)** and 7.2 m in 1 s — about 52 m of phantom distance that the F-11 gate does not catch, because it validates the first fix only and the 10 m/s cap is a running cap. Over the whole walk 48 steps are faster than 3 m/s, 251 m in total (8% of the distance) on a track whose median step is 1.8 m/s. 🔋 84% → 81% over 32:58 ≈ 5.5 %/h (B-1 band ~4–5, slightly above). **Report: "the map does not show during use" → F-15.** Night mode could not be tested: the walk was 08:43–09:12 local with the sun at +22°, so automatic mode was correctly in daylight — checked by running `core/sun/Sun` against the file's own timestamps (that day: sunrise 06:45, civil dusk 19:45 local)*
+| + | 2026-09-13 | v1.4.0 | *Second walk of the day, seaside (3.21 km, 34:49 point span / 35:11 active) — **the cleanest tour so far.** Cross-validation ZERO difference: 3212.1 ↔ 3212.1 m; ▲68/▼71 exact; 983 points = accepted; rejections **accuracy 0, teleport 0** (jitter 814). Acquisition + finish tail **22 s** — the fastest lock recorded (F-10 seeding plus open sky at the water). One 21 s gap while standing (2 m of movement), two gaps over 5 s totalling 27 s. Max step 5.04 m/s, and only 3 steps above 3 m/s totalling 16.7 m (0.5% of the distance) — **Y-2: the morning walk's 48 m settling jump did not repeat**, the first four seconds here hold 7.4 + 4.2 + 5.0 m and then settle; the spike is episodic, not a constant. **Y-1 confirmed a second time, same number:** median elevation at the water's edge **39 m** (p5–p95 34–43, mean 38.6) — identical to the Sept 1 seaside median, and the band is only 9 m wide, so this is bias and not noise. Sea level is a few metres, the Istanbul geoid separation is ~+37 m: the device reports ellipsoid height, exactly as `getAltitude` documents. **The charge counter works on this device (B-1, first v1.4.0 recording):** 627 165 µAh at 16% and 2 174 172 µAh at 57% — two independent readings give a full charge of 3920 and 3814 mAh, 2.7% apart, so the capacity estimator holds. No consumption number, and correctly so: the phone was fed during the walk (16% → 57%, counter +1547 mAh). That silence was itself a finding → v1.4.1 shows "🔋 charging" instead of an empty line*
 
 Gate status: **3/3 clean tours — v1.0.0 CUT (Aug 29).**
 
@@ -217,6 +218,24 @@ Gate status: **3/3 clean tours — v1.0.0 CUT (Aug 29).**
   tiles (`core/map/Overzoom`, JVM-tested); lines soften with each level —
   the honest cost of not having the data. Rendering packs to z14 stays a
   candidate if the field asks for sharper streets.
+- **Y-1** (elevation, diagnosed — fix awaiting a decision): absolute altitude
+  reads about 37 m high. Three independent measurements agree. Two seaside
+  walks (Sept 1 and Sept 13) put the median elevation at the water's edge at
+  **39 m**, the same number twice, with a 9 m wide p5–p95 band — bias, not
+  noise. A companion's DEM-corrected Strava track read 102–119 m where Norda
+  read 135–165 m on the same path. And the cause is documented behaviour: the
+  platform's `getAltitude` returns height above the **WGS84 ellipsoid**, while
+  maps, DEMs and signposts use height above the geoid (mean sea level); the
+  separation in Istanbul is ~+37 m. A constant offset does not touch ▲/▼, so
+  gain and loss are unaffected; what reads high is the number on screen and in
+  the GPX. Three candidate fixes, in increasing cost: label the screen honestly
+  ("ellipsoid"), carry a geoid separation value per map pack (computed in CI,
+  where a geoid model can be fetched), or embed a coarse global geoid grid in
+  the core (a 2° grid with bilinear interpolation lands within a few metres and
+  costs tens of kilobytes). Vertical noise on single fixes (the 115 m fix on
+  Sept 1, ~75 m off) is a separate problem and stays with the DEM/baro
+  candidate.
+
 - **B-1** (battery measurement, sharpened → v1.4.0): the whole-percent gauge
   cannot measure an outing. The band collected over the tours is ~4–5 %/h
   (2.8 · 4.0 · 4.0 · 5.0 · 5.8 · 5.1 · 5.5), but two readings were useless:
@@ -259,7 +278,10 @@ Gate status: **3/3 clean tours — v1.0.0 CUT (Aug 29).**
   steps were faster than 3 m/s, 251 m in total (8% of the distance) where the
   median step was 1.8 m/s. Two candidates: a type-aware cap (walk ~4 m/s, run
   ~7 m/s) and an accuracy-proportional gate for the acquisition phase, when
-  fixes sit near the 30 m accuracy limit. Both wait for **D-1**: the
+  fixes sit near the 30 m accuracy limit. The seaside walk the same afternoon
+  did **not** repeat it — 3 steps above 3 m/s, 16.7 m in total (0.5%), maximum
+  5.04 m/s — so the pattern is episodic and tied to a poor acquisition, not a
+  constant tax on every walk. Both candidates wait for **D-1**: the
   known-distance calibration decides whether the distance error is dominated
   by these spikes or by the 2 m jitter gate, and the second-device comparison
   said Norda reads *lower* than an unfiltered sum — so tightening blindly

@@ -82,6 +82,7 @@
     <string name="history_row_charge">" · 🔋 %1$.1f%% · %2$d mAh"</string>
     <string name="history_row_charge_rate">" · 🔋 %1$.1f%% · %2$d mAh · %3$.1f%%/sa"</string>
     <string name="history_row_charge_mah">" · 🔋 %1$d mAh"</string>
+    <string name="history_row_charging">" · 🔋 şarjda"</string>
     <string name="history_empty">Henüz kayıt yok.</string>
     <string name="delete_confirm">Bu kayıt silinsin mi?</string>
     <string name="delete">Sil</string>

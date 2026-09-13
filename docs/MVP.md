@@ -562,6 +562,9 @@ start and end, which moves with every milliamp-hour.
   value. Without a counter the whole percent remains the source — and so it is
   when the counter does not move at all while the gauge does, because a
   counter that is not live on that device is not a measurement either.
+- A recording made on the charger has no consumption to report, and the
+  History row says "charging" rather than leaving the line empty — an empty
+  line reads as "not measured" (field tour, Sept 13: 16% → 57%).
 - Diagnostics shows the level, the counter and the capacity estimate, so
   whether a device serves the counter at all is visible on that device.
 - Both readings travel inside the GPX report (`norda:battery`), so a tour can

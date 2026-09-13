@@ -4,6 +4,19 @@ Format follows [Keep a Changelog](https://keepachangelog.com/), versioning
 follows [SemVer](https://semver.org/) — see `docs/MVP.md` section 15 for
 the rules.
 
+## [1.4.1] - 2026-09-13
+
+### Fixed
+
+- A recording made while the phone was charging showed an empty battery
+  line, which reads as "not measured" rather than "there is nothing to
+  measure". The field tour that surfaced it went 16% → 57% on the charger,
+  so both sources correctly refused a number (a "drain" of −41% is not
+  data). The History row now says "🔋 charging" instead, the same discipline
+  the GPS and map lines follow: name the reason on screen. Detection is in
+  `core/track/Battery` and takes either source — the counter moves before
+  the whole percent does (core: 151).
+
 ## [1.4.0] - 2026-09-13
 
 ### Added

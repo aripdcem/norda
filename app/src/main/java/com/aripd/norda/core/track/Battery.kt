@@ -79,6 +79,21 @@ object Battery {
     }
 
     /**
+     * Whether the battery gained charge during the recording. Either source
+     * going up means the phone was fed, and then no consumption exists to
+     * report — but the screen should say that instead of leaving an empty
+     * line, the way the GPS lines name their reasons (F-4, F-5, F-15).
+     */
+    fun wasCharging(startPct: Int?, endPct: Int?, startUah: Long?, endUah: Long?): Boolean {
+        val startCharge = counter(startUah)
+        val endCharge = counter(endUah)
+        if (startCharge != null && endCharge != null && endCharge > startCharge) return true
+        if (startPct == null || endPct == null) return false
+        if (startPct !in 0..100 || endPct !in 0..100) return false
+        return endPct > startPct
+    }
+
+    /**
      * Which source to believe for this recording. The counter, normally — it
      * is finer and it is why this exists. The exception: a counter that did
      * not move at all while the percentage gauge did is not live on this

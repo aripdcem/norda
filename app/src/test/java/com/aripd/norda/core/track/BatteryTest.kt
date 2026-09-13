@@ -148,4 +148,24 @@ class BatteryTest {
         // Counter flat while the gauge dropped 3 points: the counter is dead.
         assertFalse(Battery.preferCharge(3_250_000L, 3_250_000L, 84, 81))
     }
+
+    /**
+     * Field tour (Sept 13 seaside walk, v1.4.0): the phone was fed during the
+     * recording — gauge 16% → 57%, counter 627 165 → 2 174 172 µAh. Both
+     * sources correctly refuse to produce a number, and the screen should say
+     * why rather than showing an empty line.
+     */
+    @Test
+    fun chargingDuringTheRecordingIsDetectableFromEitherSource() {
+        assertTrue(Battery.wasCharging(16, 57, 627_165L, 2_174_172L))
+        // The gauge alone is enough — older recordings have no counter.
+        assertTrue(Battery.wasCharging(16, 57, null, null))
+        // The counter alone is enough — it moves before the whole percent does.
+        assertTrue(Battery.wasCharging(57, 57, 2_174_172L, 2_200_000L))
+        // A normal outing is not charging.
+        assertFalse(Battery.wasCharging(84, 81, 3_250_000L, 3_130_000L))
+        assertFalse(Battery.wasCharging(80, 80, 3_250_000L, 3_250_000L))
+        // Nothing measured is not a claim about charging.
+        assertFalse(Battery.wasCharging(null, null, null, null))
+    }
 }

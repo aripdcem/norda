@@ -94,6 +94,15 @@ class HistoryActivity : Activity() {
                 // No level to scale by: the mAh still stands on its own.
                 return getString(R.string.history_row_charge_mah, mah.toInt())
             }
+            // Fed during the recording: there is no consumption to report, and
+            // an empty line would read as "not measured" (field tour, Sept 13
+            // seaside walk: 16% → 57%).
+            if (Battery.wasCharging(
+                    a.startBatteryPct, a.endBatteryPct, a.startChargeUah, a.endChargeUah
+                )
+            ) {
+                return getString(R.string.history_row_charging)
+            }
             val drain = Battery.drainPercent(a.startBatteryPct, a.endBatteryPct) ?: return ""
             val rate = Battery.drainPerHour(drain, wallSpan)
             return if (rate != null) getString(R.string.history_row_battery_rate, drain, rate)
