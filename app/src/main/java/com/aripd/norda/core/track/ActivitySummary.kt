@@ -15,5 +15,8 @@ data class ActivitySummary(
     val elevationGainM: Double,
     val elevationLossM: Double,
     val startBatteryPct: Int? = null,
-    val endBatteryPct: Int? = null
+    val endBatteryPct: Int? = null,
+    /** Battery charge counter in µAh at start/end (B-1); null if unavailable. */
+    val startChargeUah: Long? = null,
+    val endChargeUah: Long? = null
 )

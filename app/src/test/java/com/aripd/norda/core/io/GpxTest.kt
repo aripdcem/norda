@@ -87,6 +87,7 @@ class GpxTest {
             Gpx.Report(
                 filter = Gpx.FilterCounts(950, 3, 41, 1, 0),
                 startBatteryPct = 93, endBatteryPct = 91,
+                startChargeUah = 3_250_000L, endChargeUah = 3_130_000L,
                 distanceM = 2980.5, activeMillis = 1_696_000,
                 gainM = 135.0, lossM = 142.0,
                 appVersion = "0.9.6"
@@ -103,6 +104,9 @@ class GpxTest {
         assertEquals(0, f.nonMonotonic)
         assertEquals(93, r.startBatteryPct)
         assertEquals(91, r.endBatteryPct)
+        // The charge counter rides along (B-1): the field GPX carries µAh too.
+        assertEquals(3_250_000L, r.startChargeUah)
+        assertEquals(3_130_000L, r.endChargeUah)
         assertEquals(2980.5, r.distanceM, 1e-9)
         assertEquals(1_696_000, r.activeMillis)
         assertEquals(135.0, r.gainM, 1e-9)
@@ -120,7 +124,10 @@ class GpxTest {
     fun unknownBatteryAndFilterAreOmittedFromReport() {
         val xml = Gpx.write(
             "Ad", emptyList(), emptyList(), emptyList(),
-            Gpx.Report(null, null, null, 1000.0, 600_000, 0.0, 0.0)
+            Gpx.Report(
+                filter = null, startBatteryPct = null, endBatteryPct = null,
+                distanceM = 1000.0, activeMillis = 600_000, gainM = 0.0, lossM = 0.0
+            )
         )
         assertFalse(xml.contains("norda:battery"))
         assertFalse(xml.contains("norda:filter"))

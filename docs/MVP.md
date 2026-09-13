@@ -508,12 +508,14 @@ elevation_gain_m REAL         accuracy REAL
 elevation_loss_m REAL         speed REAL
 start_battery INT NULL        bearing REAL
 end_battery INT NULL
+start_charge_uah INT NULL
+end_charge_uah INT NULL
 ```
 
 Waypoints are global, not tied to a recording. The DDL and migration plan live
 in the pure `core/db/Schema` module and are JVM-tested (schema version 1:
 activity + track_point; version 2: + waypoint; version 3: battery columns on
-activity). A fresh install is produced as the v1 base + the migration chain,
+activity; version 4: the battery charge counter in µAh on activity). A fresh install is produced as the v1 base + the migration chain,
 and a parity test guarantees that both paths arrive at the same schema — a
 table cannot make it into create and be forgotten in the migration.
 
@@ -535,6 +537,35 @@ A single `INSERT` per fix, WAL mode. An activity with `end_time NULL` = an
 unfinished recording; it is found at launch and either the recording is
 resumed or it is recovered to History. The recovery scenarios in section 13
 (process kill, reboot) verify this.
+
+### 8.4 Battery measurement
+
+Consumption is a field metric, so it is measured twice. The level the system
+reports (`BATTERY_PROPERTY_CAPACITY`) is a whole percent, and the gauge sits on
+a level for a long stretch before dropping several points at once: on the
+September 12 night walk it read 80% at both ends of 38:50, so History showed
+0 %/h — a true reading of a useless number (field item B-1). So the recording
+also stores the **charge counter** (`BATTERY_PROPERTY_CHARGE_COUNTER`, µAh) at
+start and end, which moves with every milliamp-hour.
+
+- Consumption in mAh is the counter difference. The percentage is that
+  difference over a full-charge estimate, and the estimate comes from one
+  counter reading at a known level: 3 200 000 µAh at 80% is a ~4000 mAh
+  battery. No system capacity value is needed, and the percentage becomes
+  fractional instead of integer.
+- The rate's denominator is the **wall clock** (F-1), not the active time: GPS
+  drains during pauses too.
+- The cleanliness rule is unchanged (`core/track/Battery`, JVM-tested): a
+  number appears only when it was measured. A missing reading, a counter the
+  device does not serve (it answers 0 or a sentinel), charging during the
+  recording, or a span under five minutes all yield null — never a made-up
+  value. Without a counter the whole percent remains the source — and so it is
+  when the counter does not move at all while the gauge does, because a
+  counter that is not live on that device is not a measurement either.
+- Diagnostics shows the level, the counter and the capacity estimate, so
+  whether a device serves the counter at all is visible on that device.
+- Both readings travel inside the GPX report (`norda:battery`), so a tour can
+  be recomputed afterwards from the file alone.
 
 ## 9. Return to Start math
 
@@ -702,7 +733,7 @@ naming.
 | Elevation | Comparison against a known climb profile; ~0 on flat ground |
 | Compass | Magnetically noisy and clean environments; in the pocket/in the hand |
 | Background | Screen off / another app / lock screen |
-| Battery | 30 min / 1 h / 2 h tracking — the app stores the battery percentage at the start/end of a recording, and the History row shows the consumption and the %/h rate |
+| Battery | 30 min / 1 h / 2 h tracking — the app stores the level and the µAh charge counter at the start/end of a recording; the History row shows the consumption in percent and mAh plus the %/h rate (8.4) |
 | Offline | Airplane mode + downloaded pack; Return to Start without a pack |
 | Map | Pan / zoom / cache / large pack |
 | Recovery | Process kill, reboot, service interruption |

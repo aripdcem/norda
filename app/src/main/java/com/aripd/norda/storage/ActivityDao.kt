@@ -18,12 +18,14 @@ class ActivityDao(private val helper: AppDatabase) {
     fun startActivity(
         type: ActivityType,
         startTimeMillis: Long,
-        startBatteryPct: Int? = null
+        startBatteryPct: Int? = null,
+        startChargeUah: Long? = null
     ): Long =
         helper.writableDatabase.insertOrThrow("activity", null, ContentValues().apply {
             put("type", type.name)
             put("start_time", startTimeMillis)
             if (startBatteryPct != null) put("start_battery", startBatteryPct)
+            if (startChargeUah != null) put("start_charge_uah", startChargeUah)
         })
 
     fun appendPoint(activityId: Long, p: TrackPoint, hasAltitude: Boolean) {
@@ -47,6 +49,7 @@ class ActivityDao(private val helper: AppDatabase) {
             put("elevation_gain_m", summary.elevationGainM)
             put("elevation_loss_m", summary.elevationLossM)
             if (summary.endBatteryPct != null) put("end_battery", summary.endBatteryPct)
+            if (summary.endChargeUah != null) put("end_charge_uah", summary.endChargeUah)
         }, "id = ?", arrayOf(summary.id.toString()))
     }
 
@@ -131,7 +134,8 @@ class ActivityDao(private val helper: AppDatabase) {
             arrayOf(
                 "id", "type", "start_time", "end_time",
                 "distance_m", "duration_ms", "elevation_gain_m", "elevation_loss_m",
-                "start_battery", "end_battery"
+                "start_battery", "end_battery",
+                "start_charge_uah", "end_charge_uah"
             ),
             "id = ? AND end_time IS NOT NULL", arrayOf(activityId.toString()),
             null, null, null, "1"
@@ -147,7 +151,9 @@ class ActivityDao(private val helper: AppDatabase) {
                 elevationGainM = c.getDouble(6),
                 elevationLossM = c.getDouble(7),
                 startBatteryPct = if (c.isNull(8)) null else c.getInt(8),
-                endBatteryPct = if (c.isNull(9)) null else c.getInt(9)
+                endBatteryPct = if (c.isNull(9)) null else c.getInt(9),
+                startChargeUah = if (c.isNull(10)) null else c.getLong(10),
+                endChargeUah = if (c.isNull(11)) null else c.getLong(11)
             )
         }
 
@@ -157,7 +163,8 @@ class ActivityDao(private val helper: AppDatabase) {
             arrayOf(
                 "id", "type", "start_time", "end_time",
                 "distance_m", "duration_ms", "elevation_gain_m", "elevation_loss_m",
-                "start_battery", "end_battery"
+                "start_battery", "end_battery",
+                "start_charge_uah", "end_charge_uah"
             ),
             "end_time IS NOT NULL", null, null, null, "start_time DESC"
         ).use { c ->
@@ -173,7 +180,9 @@ class ActivityDao(private val helper: AppDatabase) {
                     elevationGainM = c.getDouble(6),
                     elevationLossM = c.getDouble(7),
                     startBatteryPct = if (c.isNull(8)) null else c.getInt(8),
-                    endBatteryPct = if (c.isNull(9)) null else c.getInt(9)
+                    endBatteryPct = if (c.isNull(9)) null else c.getInt(9),
+                    startChargeUah = if (c.isNull(10)) null else c.getLong(10),
+                    endChargeUah = if (c.isNull(11)) null else c.getLong(11)
                 )
             }
             out

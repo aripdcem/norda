@@ -47,6 +47,9 @@ object Gpx {
         val filter: FilterCounts?,
         val startBatteryPct: Int?,
         val endBatteryPct: Int?,
+        /** Charge counter in µAh at start/end (B-1); null if the device has none. */
+        val startChargeUah: Long? = null,
+        val endChargeUah: Long? = null,
         val distanceM: Double,
         val activeMillis: Long,
         val gainM: Double,
@@ -101,10 +104,14 @@ object Gpx {
                 .append("\" activeMillis=\"").append(report.activeMillis)
                 .append("\" gainM=\"").append(report.gainM)
                 .append("\" lossM=\"").append(report.lossM).append("\"/>\n")
-            if (report.startBatteryPct != null || report.endBatteryPct != null) {
+            if (report.startBatteryPct != null || report.endBatteryPct != null ||
+                report.startChargeUah != null || report.endChargeUah != null
+            ) {
                 sb.append("<norda:battery")
                 report.startBatteryPct?.let { sb.append(" startPct=\"").append(it).append("\"") }
                 report.endBatteryPct?.let { sb.append(" endPct=\"").append(it).append("\"") }
+                report.startChargeUah?.let { sb.append(" startUah=\"").append(it).append("\"") }
+                report.endChargeUah?.let { sb.append(" endUah=\"").append(it).append("\"") }
                 sb.append("/>\n")
             }
             report.filter?.let { f ->
@@ -184,6 +191,10 @@ object Gpx {
                 ?.getAttribute("startPct")?.toIntOrNull(),
             endBatteryPct = firstChildElement(el, "norda:battery")
                 ?.getAttribute("endPct")?.toIntOrNull(),
+            startChargeUah = firstChildElement(el, "norda:battery")
+                ?.getAttribute("startUah")?.toLongOrNull(),
+            endChargeUah = firstChildElement(el, "norda:battery")
+                ?.getAttribute("endUah")?.toLongOrNull(),
             distanceM = summary.getAttribute("distanceM").toDoubleOrNull() ?: return null,
             activeMillis = summary.getAttribute("activeMillis").toLongOrNull() ?: return null,
             gainM = summary.getAttribute("gainM").toDoubleOrNull() ?: return null,

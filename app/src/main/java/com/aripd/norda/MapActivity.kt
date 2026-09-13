@@ -169,6 +169,8 @@ class MapActivity : Activity() {
             filter = filter,
             startBatteryPct = s.startBatteryPct,
             endBatteryPct = s.endBatteryPct,
+            startChargeUah = s.startChargeUah,
+            endChargeUah = s.endChargeUah,
             distanceM = s.distanceM,
             activeMillis = s.durationMillis,
             gainM = s.elevationGainM,

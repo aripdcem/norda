@@ -78,6 +78,24 @@ class SchemaTest {
         assertEquals(3, Schema.createStatements(1).size)
         assertEquals(4, Schema.createStatements(2).size)
         assertEquals(6, Schema.createStatements(3).size)
+        assertEquals(8, Schema.createStatements(4).size)
+    }
+
+    // v1.4.0: the charge counter in µAh — the version 4 columns (B-1).
+    @Test
+    fun currentSchemaCarriesChargeCounterColumns() {
+        val all = Schema.createStatements().joinToString("\n")
+        assertTrue(all.contains("start_charge_uah"))
+        assertTrue(all.contains("end_charge_uah"))
+    }
+
+    @Test
+    fun upgradeFromV3AddsOnlyChargeCounterColumns() {
+        val ddl = Schema.upgradeStatements(3).joinToString("\n")
+        assertTrue(ddl.contains("start_charge_uah"))
+        assertTrue(ddl.contains("end_charge_uah"))
+        assertFalse(ddl.contains("start_battery"))
+        assertFalse(ddl.contains("CREATE TABLE waypoint("))
     }
 
     @Test

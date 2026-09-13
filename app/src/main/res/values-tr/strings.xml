@@ -79,10 +79,18 @@
     <string name="history_row_stats">%1$s · %2$s · ▲ %3$d m</string>
     <string name="history_row_battery">" · 🔋 %1$d%%"</string>
     <string name="history_row_battery_rate">" · 🔋 %1$d%% · %2$.1f%%/sa"</string>
+    <string name="history_row_charge">" · 🔋 %1$.1f%% · %2$d mAh"</string>
+    <string name="history_row_charge_rate">" · 🔋 %1$.1f%% · %2$d mAh · %3$.1f%%/sa"</string>
+    <string name="history_row_charge_mah">" · 🔋 %1$d mAh"</string>
     <string name="history_empty">Henüz kayıt yok.</string>
     <string name="delete_confirm">Bu kayıt silinsin mi?</string>
     <string name="delete">Sil</string>
     <string name="recovered_toast">Yarım kalan kayıt geçmişe kaydedildi.</string>
+
+    <string name="section_battery">PİL</string>
+    <string name="battery_counter">seviye %1$d%% · şarj sayacı %2$d mAh · tahmini tam kapasite %3$d mAh</string>
+    <string name="battery_no_counter">seviye %1$d%% · bu cihaz şarj sayacı vermiyor — ölçüm tam sayı yüzdeye düşer</string>
+    <string name="battery_unknown">seviye okunamıyor</string>
 
     <string name="compass">Pusula</string>
     <string name="waypoints">Noktalar</string>

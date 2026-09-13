@@ -13,6 +13,7 @@ import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
 import android.net.Uri
+import android.os.BatteryManager
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
@@ -24,6 +25,7 @@ import android.view.View
 import android.widget.Button
 import android.widget.TextView
 import com.aripd.norda.core.geo.Geo
+import com.aripd.norda.core.track.Battery
 import com.aripd.norda.core.track.GpsFilter
 import com.aripd.norda.map.MapPackages
 import com.aripd.norda.map.TileStore
@@ -48,6 +50,7 @@ class DiagnosticsActivity : Activity(), LocationListener, SensorEventListener {
     private lateinit var startText: TextView
     private lateinit var filterLabel: TextView
     private lateinit var filterText: TextView
+    private lateinit var batteryText: TextView
     private lateinit var mapText: TextView
     private lateinit var permissionText: TextView
     private lateinit var permissionButton: Button
@@ -86,6 +89,7 @@ class DiagnosticsActivity : Activity(), LocationListener, SensorEventListener {
         startText = findViewById(R.id.startText)
         filterLabel = findViewById(R.id.filterLabel)
         filterText = findViewById(R.id.filterText)
+        batteryText = findViewById(R.id.batteryText)
         mapText = findViewById(R.id.mapText)
         permissionText = findViewById(R.id.permissionText)
         permissionButton = findViewById(R.id.permissionButton)
@@ -125,6 +129,7 @@ class DiagnosticsActivity : Activity(), LocationListener, SensorEventListener {
         renderLocation()
         renderStart()
         renderFilter()
+        renderBattery()
         renderMapPackages()
         handler.post(ageTicker)
     }
@@ -186,6 +191,32 @@ class DiagnosticsActivity : Activity(), LocationListener, SensorEventListener {
                 if (deniedForever) R.string.open_settings else R.string.grant_permission
             )
             permissionButton.visibility = View.VISIBLE
+        }
+    }
+
+    /**
+     * Battery measurement sources (B-1): the level the system reports, and
+     * whether this device serves the µAh charge counter at all. The counter is
+     * what gives a half-hour outing a real consumption figure; if it is
+     * missing here, History falls back to whole percent and a 0% row is the
+     * gauge sitting still, not the app using no power.
+     */
+    private fun renderBattery() {
+        val manager = getSystemService(BATTERY_SERVICE) as BatteryManager
+        val pct = manager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
+            .takeIf { it in 0..100 }
+        val chargeUah = manager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CHARGE_COUNTER)
+            .takeIf { it > 0 }?.toLong()
+        val full = Battery.fullChargeUah(chargeUah, pct)
+        batteryText.text = when {
+            pct == null -> getString(R.string.battery_unknown)
+            chargeUah == null -> getString(R.string.battery_no_counter, pct)
+            else -> getString(
+                R.string.battery_counter,
+                pct,
+                (chargeUah / 1000L).toInt(),
+                ((full ?: chargeUah) / 1000L).toInt()
+            )
         }
     }
 

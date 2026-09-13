@@ -13,11 +13,12 @@ package com.aripd.norda.core.db
  * was exactly a violation of this invariant.
  *
  * Versions: v1 activity + track_point (+ index), v2 + waypoint,
- * v3 + activity.start_battery/end_battery.
+ * v3 + activity.start_battery/end_battery,
+ * v4 + activity.start_charge_uah/end_charge_uah.
  */
 object Schema {
 
-    const val VERSION = 3
+    const val VERSION = 4
 
     private const val CREATE_ACTIVITY = """CREATE TABLE activity(
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -60,6 +61,13 @@ object Schema {
     private const val ALTER_ACTIVITY_END_BATTERY =
         "ALTER TABLE activity ADD COLUMN end_battery INTEGER"
 
+    // v4: the battery charge counter in µAh (B-1) — far finer than the integer
+    // percentage, and NULL on devices that do not serve it.
+    private const val ALTER_ACTIVITY_START_CHARGE =
+        "ALTER TABLE activity ADD COLUMN start_charge_uah INTEGER"
+    private const val ALTER_ACTIVITY_END_CHARGE =
+        "ALTER TABLE activity ADD COLUMN end_charge_uah INTEGER"
+
     /**
      * Fresh install (onCreate) = the v1 base + the migration chain: both
      * install paths feed from the same definition, so parity is preserved
@@ -82,6 +90,10 @@ object Schema {
         if (oldVersion < 3 && newVersion >= 3) {
             out += ALTER_ACTIVITY_START_BATTERY
             out += ALTER_ACTIVITY_END_BATTERY
+        }
+        if (oldVersion < 4 && newVersion >= 4) {
+            out += ALTER_ACTIVITY_START_CHARGE
+            out += ALTER_ACTIVITY_END_CHARGE
         }
         return out
     }

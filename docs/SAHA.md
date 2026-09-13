@@ -41,7 +41,7 @@ z-releases (v0.9.1, v0.9.2, …). Manual verification on the device sits
 | 7 | Auto-pause | Stand still for 5–10 min | Auto-pauses (≈20 s), distance/pace do not inflate; resumes with movement |
 | 8 | Elevation | Known climb (or flat road) | On flat road ▲ ≈ 0; on the climb the profile is reasonable |
 | 9 | Background | Turn the screen off, switch to another app, lock (30+ min) | Recording continues; the notification shows state · duration · distance |
-| 10 | Battery | 30 min / 1 h / 2 h tours | Write the 🔋 %/h value from the History row into the report |
+| 10 | Battery | 30 min / 1 h / 2 h tours | Write the History row's 🔋 line into the report — since v1.4.0 it reads "2.9% · 116 mAh · 4.5 %/h" from the charge counter; if it shows whole percent only, note what Diagnostics → BATTERY says about the counter |
 | 11 | Compass | Compass ↔ known bearing in a clean area | "True north" label; deviation reasonable (±5°) |
 | 12 | Compass | Approach metal/a magnet | Disturbance warning appears, disappears when moving away |
 | 13 | Return to Start | Walk away during a recording → Compass | Bearing + distance + ETA; "on course" ±5° |
@@ -66,7 +66,7 @@ Step | Result (✓ / ✗ + note)
 
 Measurements:
 - Distance: known … m ↔ app … m (deviation …%)
-- Battery: 🔋 …% (…%/h) — screen off/on ratio: …
+- Battery: 🔋 …% · … mAh (…%/h) — screen off/on ratio: …
 - Filter counters (Diagnostics; since v0.9.2 also readable after the tour
   ends as "RECORDING FILTER (LAST)"): accepted … · accuracy … · jitter … ·
   teleport … · time …
@@ -217,6 +217,23 @@ Gate status: **3/3 clean tours — v1.0.0 CUT (Aug 29).**
   tiles (`core/map/Overzoom`, JVM-tested); lines soften with each level —
   the honest cost of not having the data. Rendering packs to z14 stays a
   candidate if the field asks for sharper streets.
+- **B-1** (battery measurement, sharpened → v1.4.0): the whole-percent gauge
+  cannot measure an outing. The band collected over the tours is ~4–5 %/h
+  (2.8 · 4.0 · 4.0 · 5.0 · 5.8 · 5.1 · 5.5), but two readings were useless:
+  the Sept 12 night walk gave **80% → 80% over 38:50** (0 %/h — the gauge sat
+  on a level and dropped later, in one step), and tours starting from 100%
+  read high. Both are granularity, not physics. From v1.4.0 a recording also
+  stores the **µAh charge counter** at start and end
+  (`BATTERY_PROPERTY_CHARGE_COUNTER`): consumption comes out in mAh, the
+  percentage is fractional (the difference over a full-charge estimate — a
+  counter reading at a known level gives the capacity), and the rate keeps its
+  wall-clock denominator (F-1). The cleanliness rule stands: no counter on the
+  device, charging during the recording or a span under five minutes yields no
+  number. Diagnostics → BATTERY shows the level, the counter and the capacity
+  estimate, so a device without the counter is visible before the tour. The
+  same night walk, had the counter been recorded, would have reported about
+  116 mAh, 2.9% and 4.5 %/h.
+
 - **F-15** (v1.3.0 field report, fixed → v1.3.1): "the map does not show
   during use". The renderer draws its grid wherever a tile is missing, and
   that grid is the same picture for three causes — no pack installed, a pack

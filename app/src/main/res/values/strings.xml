@@ -79,10 +79,18 @@
     <string name="history_row_stats">%1$s · %2$s · ▲ %3$d m</string>
     <string name="history_row_battery">" · 🔋 %1$d%%"</string>
     <string name="history_row_battery_rate">" · 🔋 %1$d%% · %2$.1f%%/h"</string>
+    <string name="history_row_charge">" · 🔋 %1$.1f%% · %2$d mAh"</string>
+    <string name="history_row_charge_rate">" · 🔋 %1$.1f%% · %2$d mAh · %3$.1f%%/h"</string>
+    <string name="history_row_charge_mah">" · 🔋 %1$d mAh"</string>
     <string name="history_empty">No activities yet.</string>
     <string name="delete_confirm">Delete this activity?</string>
     <string name="delete">Delete</string>
     <string name="recovered_toast">Unfinished recording was saved to history.</string>
+
+    <string name="section_battery">BATTERY</string>
+    <string name="battery_counter">level %1$d%% · charge counter %2$d mAh · estimated full %3$d mAh</string>
+    <string name="battery_no_counter">level %1$d%% · this device serves no charge counter — measurement falls back to whole percent</string>
+    <string name="battery_unknown">level unreadable</string>
 
     <string name="compass">Compass</string>
     <string name="waypoints">Waypoints</string>

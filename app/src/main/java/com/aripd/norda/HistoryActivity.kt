@@ -56,19 +56,48 @@ class HistoryActivity : Activity() {
                     distance, Format.duration(a.durationMillis), a.elevationGainM.toInt()
                 )
             )
-            // Battery measurement culture (Phase 8): drain is shown only when it
-            // was measured cleanly. The rate's denominator is the wall clock
-            // (F-1): the battery drains during pauses too.
-            val drain = Battery.drainPercent(a.startBatteryPct, a.endBatteryPct)
-            if (drain != null) {
-                val rate = Battery.drainPerHour(drain, a.endTimeMillis - a.startTimeMillis)
-                stats.append(
-                    if (rate != null) getString(R.string.history_row_battery_rate, drain, rate)
-                    else getString(R.string.history_row_battery, drain)
-                )
-            }
+            stats.append(batteryLine(a))
             row.findViewById<TextView>(R.id.rowStats).text = stats
             return row
+        }
+
+        /**
+         * Battery measurement culture (Phase 8): a number appears only when it
+         * was measured cleanly, and the rate's denominator is the wall clock
+         * (F-1) — the battery drains during pauses too.
+         *
+         * The charge counter comes first when the device serves it (B-1): the
+         * integer percentage sits on a level for a long stretch, so a
+         * half-hour outing can read 0%, as the Sept 12 night walk did. With
+         * µAh the same outing gets a real mAh figure and a fractional
+         * percentage. Without the counter the percentage remains the source.
+         */
+        private fun batteryLine(a: ActivitySummary): String {
+            val wallSpan = a.endTimeMillis - a.startTimeMillis
+            val preferCharge = Battery.preferCharge(
+                a.startChargeUah, a.endChargeUah, a.startBatteryPct, a.endBatteryPct
+            )
+            val mah = if (preferCharge) {
+                Battery.chargeDrainMah(a.startChargeUah, a.endChargeUah)
+            } else null
+            if (mah != null) {
+                val full = Battery.fullChargeUah(a.startChargeUah, a.startBatteryPct)
+                val percent = Battery.chargeDrainPercent(a.startChargeUah, a.endChargeUah, full)
+                if (percent != null) {
+                    val rate = Battery.drainPerHour(percent, wallSpan)
+                    return if (rate != null) {
+                        getString(R.string.history_row_charge_rate, percent, mah.toInt(), rate)
+                    } else {
+                        getString(R.string.history_row_charge, percent, mah.toInt())
+                    }
+                }
+                // No level to scale by: the mAh still stands on its own.
+                return getString(R.string.history_row_charge_mah, mah.toInt())
+            }
+            val drain = Battery.drainPercent(a.startBatteryPct, a.endBatteryPct) ?: return ""
+            val rate = Battery.drainPerHour(drain, wallSpan)
+            return if (rate != null) getString(R.string.history_row_battery_rate, drain, rate)
+            else getString(R.string.history_row_battery, drain)
         }
     }
 

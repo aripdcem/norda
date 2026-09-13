@@ -4,6 +4,29 @@ Format follows [Keep a Changelog](https://keepachangelog.com/), versioning
 follows [SemVer](https://semver.org/) — see `docs/MVP.md` section 15 for
 the rules.
 
+## [1.4.0] - 2026-09-13
+
+### Added
+
+- Battery consumption is now measured with the charge counter (B-1). The
+  system's level is a whole percent and the gauge sits on a level before
+  dropping several points at once, so the September 12 night walk read 80% at
+  both ends of 38:50 and History showed 0 %/h — a true reading of a useless
+  number. A recording now also stores `BATTERY_PROPERTY_CHARGE_COUNTER` (µAh)
+  at start and end, and the History row reads "🔋 2.9% · 116 mAh · 4.5 %/h":
+  consumption in mAh from the counter difference, the percentage from a
+  full-charge estimate (3 200 000 µAh at 80% is a ~4000 mAh battery), the rate
+  over the wall clock as before (F-1). Devices that do not serve the counter
+  fall back to whole percent, and Diagnostics now has a BATTERY section
+  showing the level, the counter and the capacity estimate, so whether a
+  device serves it is visible on the device. Both readings travel inside the
+  GPX report, so a tour can be recomputed from the file alone. Schema v4 (two
+  nullable columns, migrated); the arithmetic and the source rule live in
+  `core/track/Battery` with nine new JVM tests (core: 150). One rule is worth
+  naming: if the counter does not move at all while the gauge does, the
+  counter is not live on that device and the coarse percentage is used
+  instead. Documented in MVP 8.4.
+
 ## [1.3.1] - 2026-09-13
 
 ### Fixed

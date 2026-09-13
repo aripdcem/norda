@@ -73,7 +73,9 @@ class TrackingService : Service(), LocationListener {
             startWallMillis = System.currentTimeMillis(),
             startMonotonicMillis = SystemClock.elapsedRealtime()
         )
-        activityId = dao.startActivity(type, s.startWallMillis, batteryPercent())
+        activityId = dao.startActivity(
+            type, s.startWallMillis, batteryPercent(), batteryChargeUah()
+        )
         session = s
     }
 
@@ -82,6 +84,18 @@ class TrackingService : Service(), LocationListener {
         (getSystemService(BATTERY_SERVICE) as BatteryManager)
             .getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
             .takeIf { it in 0..100 }
+
+    /**
+     * Remaining charge in µAh (B-1): the integer percent is too coarse for a
+     * half-hour outing — on the Sept 12 night walk it read 80% at both ends.
+     * Devices without the counter answer 0 or `Int.MIN_VALUE`; that is not
+     * data, so it becomes null and the percentage stays the source.
+     */
+    private fun batteryChargeUah(): Long? =
+        (getSystemService(BATTERY_SERVICE) as BatteryManager)
+            .getIntProperty(BatteryManager.BATTERY_PROPERTY_CHARGE_COUNTER)
+            .takeIf { it > 0 }
+            ?.toLong()
 
     /**
      * If the system killed and brought the service back: continue the
@@ -218,7 +232,10 @@ class TrackingService : Service(), LocationListener {
             } else {
                 dao.finishActivity(
                     s.summary(activityId, System.currentTimeMillis(), now)
-                        .copy(endBatteryPct = batteryPercent())
+                        .copy(
+                            endBatteryPct = batteryPercent(),
+                            endChargeUah = batteryChargeUah()
+                        )
                 )
             }
         }
