@@ -43,6 +43,11 @@
     <string name="night_mode_auto">Night mode: automatic</string>
     <string name="night_mode_on">Night mode: on</string>
     <string name="night_mode_off">Night mode: off</string>
+    <string name="night_mode_line">%1$s · %2$s</string>
+    <string name="night_strength_title">Night filter strength</string>
+    <string name="night_strength_soft">soft</string>
+    <string name="night_strength_medium">amber</string>
+    <string name="night_strength_strong">deep red</string>
 
     <string name="location_disabled">Location is off — the recording won\'t receive any fixes until it\'s turned on.</string>
     <string name="location_enable">Turn on location</string>

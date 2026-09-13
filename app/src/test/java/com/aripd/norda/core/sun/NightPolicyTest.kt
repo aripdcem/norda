@@ -53,4 +53,33 @@ class NightPolicyTest {
         assertEquals(NightPolicy.Mode.AUTO, NightPolicy.Mode.parse(null))
         assertEquals(NightPolicy.Mode.AUTO, NightPolicy.Mode.parse("garbage"))
     }
+
+    // F-16 (field, v1.5.0): "the screen was blazing red; with astigmatism it
+    // was very hard to read". The deep red that protects dark adaptation best
+    // is the hardest to focus, so the filter gets three strengths and the
+    // gentlest amber is no longer a special case but a choice.
+
+    @Test
+    fun `strengths cycle soft, medium, strong, soft`() {
+        assertEquals(NightPolicy.Strength.MEDIUM, NightPolicy.Strength.SOFT.next())
+        assertEquals(NightPolicy.Strength.STRONG, NightPolicy.Strength.MEDIUM.next())
+        assertEquals(NightPolicy.Strength.SOFT, NightPolicy.Strength.STRONG.next())
+    }
+
+    @Test
+    fun `strengths round-trip through their stored names and default to medium`() {
+        NightPolicy.Strength.values().forEach {
+            assertEquals(it, NightPolicy.Strength.parse(it.name))
+        }
+        assertEquals(NightPolicy.Strength.MEDIUM, NightPolicy.Strength.parse(null))
+        assertEquals(NightPolicy.Strength.MEDIUM, NightPolicy.Strength.parse("garbage"))
+    }
+
+    @Test
+    fun `strength does not decide whether the filter is on`() {
+        // The two settings are independent: when to tint is the mode's
+        // business, how hard to tint is the strength's.
+        assertTrue(NightPolicy.tint(NightPolicy.Mode.ON, lat, lon, noon))
+        assertFalse(NightPolicy.tint(NightPolicy.Mode.OFF, lat, lon, midnight))
+    }
 }

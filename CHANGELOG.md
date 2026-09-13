@@ -4,6 +4,23 @@ Format follows [Keep a Changelog](https://keepachangelog.com/), versioning
 follows [SemVer](https://semver.org/) — see `docs/MVP.md` section 15 for
 the rules.
 
+## [1.6.0] - 2026-09-13
+
+### Changed
+
+- F-16 (first field night of night mode: "the screen was blazing red; with
+  astigmatism it was very hard to read"): the night filter now has three
+  strengths and the default is no longer the deepest red. Long-pressing the
+  Home line offers **soft** (blue stripped), **amber** (the new default) and
+  **deep red**; the mode stays a single tap away, because switching the
+  filter off is what one wants quickly in the dark. Deep red protects dark
+  adaptation best precisely because the eye is least sensitive to it, which
+  is also why it reads worst: red and green come to focus at different
+  distances and astigmatism widens the gap. Which strength reads well depends
+  on the eye, so it is a setting rather than a constant (`core/sun/NightPolicy`,
+  core: 160). Automatic mode itself was confirmed in the field — the filter
+  arrived by itself at civil dusk.
+
 ## [1.5.0] - 2026-09-13
 
 ### Added

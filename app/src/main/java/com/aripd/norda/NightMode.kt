@@ -44,13 +44,29 @@ import com.aripd.norda.tracking.TrackingService
  */
 object NightMode {
 
-    /** The multiplier: whatever lies beneath is scaled into this red. */
-    val TINT = 0xFFC81E00.toInt()
+    /**
+     * The multiplier per strength (F-16): whatever lies beneath is scaled
+     * into this colour, so white becomes it and black stays black. Deep red
+     * protects night vision best but is the hardest to focus — the eye brings
+     * red and green to focus at different distances and astigmatism widens
+     * that gap, which is what the first field night reported. Amber keeps
+     * some green, reads far more sharply and still holds most of the
+     * protection; soft only strips the blue.
+     */
+    private val TINTS = mapOf(
+        NightPolicy.Strength.SOFT to 0xFFFFD2A0.toInt(),
+        NightPolicy.Strength.MEDIUM to 0xFFFFA050.toInt(),
+        NightPolicy.Strength.STRONG to 0xFFC81E00.toInt()
+    )
+
+    fun tintColor(strength: NightPolicy.Strength): Int =
+        TINTS[strength] ?: TINTS.getValue(NightPolicy.Strength.MEDIUM)
 
     /** How often an open screen re-evaluates the sun. */
     const val RECHECK_MILLIS = 60_000L
 
     private const val KEY_MODE = "night_mode"
+    private const val KEY_STRENGTH = "night_strength"
     private const val OVERLAY_TAG = "night_overlay"
 
     private val handler = Handler(Looper.getMainLooper())
@@ -65,6 +81,13 @@ object NightMode {
 
     fun setMode(context: Context, mode: NightPolicy.Mode) {
         prefs(context).edit().putString(KEY_MODE, mode.name).apply()
+    }
+
+    fun strength(context: Context): NightPolicy.Strength =
+        NightPolicy.Strength.parse(prefs(context).getString(KEY_STRENGTH, null))
+
+    fun setStrength(context: Context, strength: NightPolicy.Strength) {
+        prefs(context).edit().putString(KEY_STRENGTH, strength.name).apply()
     }
 
     /** Called by `NordaApp` on every activity resume. */
@@ -91,16 +114,21 @@ object NightMode {
         val decor = activity.window.decorView as? ViewGroup ?: return
         val existing = decor.findViewWithTag<View>(OVERLAY_TAG)
         if (tint(activity)) {
+            val color = tintColor(strength(activity))
             if (existing == null) {
                 decor.addView(
-                    Overlay(activity),
+                    Overlay(activity, color),
                     FrameLayout.LayoutParams(
                         ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT
                     )
                 )
-            } else if (decor.indexOfChild(existing) != decor.childCount - 1) {
-                // Anything the window added later has to stay under the filter.
-                existing.bringToFront()
+            } else {
+                // A strength picked while the filter is on takes effect at once.
+                (existing as? Overlay)?.setTint(color)
+                if (decor.indexOfChild(existing) != decor.childCount - 1) {
+                    // Anything the window added later has to stay under the filter.
+                    existing.bringToFront()
+                }
             }
         } else if (existing != null) {
             decor.removeView(existing)
@@ -156,11 +184,17 @@ object NightMode {
     private fun prefs(context: Context) = context.getSharedPreferences("ui", Context.MODE_PRIVATE)
 
     /** The filter itself: one window-sized rectangle, multiplied onto the screen. */
-    private class Overlay(context: Context) : View(context) {
+    private class Overlay(context: Context, tint: Int) : View(context) {
 
         private val paint = Paint().apply {
-            color = TINT
+            color = tint
             xfermode = PorterDuffXfermode(PorterDuff.Mode.MULTIPLY)
+        }
+
+        fun setTint(color: Int) {
+            if (paint.color == color) return
+            paint.color = color
+            invalidate()
         }
 
         init {

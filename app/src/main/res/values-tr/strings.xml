@@ -43,6 +43,11 @@
     <string name="night_mode_auto">Gece modu: otomatik</string>
     <string name="night_mode_on">Gece modu: açık</string>
     <string name="night_mode_off">Gece modu: kapalı</string>
+    <string name="night_mode_line">%1$s · %2$s</string>
+    <string name="night_strength_title">Gece süzgeci gücü</string>
+    <string name="night_strength_soft">hafif</string>
+    <string name="night_strength_medium">amber</string>
+    <string name="night_strength_strong">koyu kırmızı</string>
 
     <string name="location_disabled">Konum kapalı — açılmadıkça kayıt hiç nokta alamaz.</string>
     <string name="location_enable">Konumu aç</string>

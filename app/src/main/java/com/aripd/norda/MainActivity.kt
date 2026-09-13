@@ -94,17 +94,60 @@ class MainActivity : Activity(), LocationListener {
             NightMode.apply(this)
             renderNightToggle()
         }
+        // The strength is set once, not in the field, so it lives behind a
+        // long press (F-16): deep red is the hardest colour to focus on, and
+        // which strength reads best depends on the eye.
+        nightToggle.setOnLongClickListener {
+            showNightStrengthDialog()
+            true
+        }
         renderNightToggle()
     }
 
     private fun renderNightToggle() {
-        nightToggle.setText(
-            when (NightMode.mode(this)) {
+        val mode = NightMode.mode(this)
+        val modeLabel = getString(
+            when (mode) {
                 NightPolicy.Mode.AUTO -> R.string.night_mode_auto
                 NightPolicy.Mode.ON -> R.string.night_mode_on
                 NightPolicy.Mode.OFF -> R.string.night_mode_off
             }
         )
+        // With the filter off the strength would be noise on the line.
+        nightToggle.text =
+            if (mode == NightPolicy.Mode.OFF) modeLabel
+            else getString(R.string.night_mode_line, modeLabel, nightStrengthLabel())
+    }
+
+    private fun nightStrengthLabel(): String = getString(
+        when (NightMode.strength(this)) {
+            NightPolicy.Strength.SOFT -> R.string.night_strength_soft
+            NightPolicy.Strength.MEDIUM -> R.string.night_strength_medium
+            NightPolicy.Strength.STRONG -> R.string.night_strength_strong
+        }
+    )
+
+    private fun showNightStrengthDialog() {
+        val options = NightPolicy.Strength.values()
+        val labels = options.map {
+            getString(
+                when (it) {
+                    NightPolicy.Strength.SOFT -> R.string.night_strength_soft
+                    NightPolicy.Strength.MEDIUM -> R.string.night_strength_medium
+                    NightPolicy.Strength.STRONG -> R.string.night_strength_strong
+                }
+            )
+        }.toTypedArray()
+        AlertDialog.Builder(this)
+            .setTitle(R.string.night_strength_title)
+            .setSingleChoiceItems(labels, options.indexOf(NightMode.strength(this))) { dialog, which ->
+                NightMode.setStrength(this, options[which])
+                NightMode.apply(this)
+                renderNightToggle()
+                dialog.dismiss()
+            }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
     }
 
     override fun onResume() {

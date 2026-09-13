@@ -229,6 +229,12 @@ filter exactly as they are drawn by day.
   order. Without any of them the screen stays in daylight — a filter that
   appears for no visible reason is worse than one switched on by hand.
 - **On** and **off** are the user's word and ignore the sun.
+- **Three strengths**, chosen by long-pressing the same line: soft strips the
+  blue, **amber** is the default, deep red protects dark adaptation best. Deep
+  red is also the hardest colour to read — the eye focuses red and green at
+  different distances, and astigmatism widens that gap — which is what the
+  first field night reported (F-16). Which one reads well depends on the eye,
+  so it is a setting rather than a constant, and the default is the middle.
 - The decision is re-made on every screen resume and once a minute while a
   screen stays open, so dusk falling mid-recording tints the screen without
   anyone leaving it.
@@ -324,7 +330,12 @@ a single step and the anchor is updated. Test: a noisy series at constant
 altitude → gain 0; a known staircase profile → the expected total.
 Barometric refinement is post-MVP. Gain and loss are computed from the raw
 ellipsoid heights; the geoid correction (5.7) is a near-constant offset and
-cancels in a difference.
+cancels in a difference. Known limit (field item Y-3): the accumulator is
+knife-edge. Perturbing a real 1274-point series by ±1 cm moves the gain
+between 47 m and 75 m, because a perturbation flips which steps cross the 4 m
+threshold. The number is reproducible for identical input, which is what the
+field cross-validation checks, but it is not robust; smoothing the series
+before accumulation is the candidate fix.
 
 ### 5.5 Auto-pause
 
