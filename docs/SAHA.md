@@ -105,6 +105,7 @@ the tour is repeated on that release. Three clean tours = the v1.0.0 gate.
 | + | 2026-09-13 | v1.3.0 | *Morning walk (3.04 km, 29:10 point span / 32:58 active), clean pipeline — cross-validation ZERO difference: 3044.0 ↔ 3044.0 m; ▲92/▼74 exact; 823 points = accepted; rejections: accuracy 7, teleport 4, jitter 504. Median step 1.80 m/s (6.5 km/h, brisk walk). **3:37 GPS outage mid-walk** (08:45:54→08:49:31 local, 317 m crossed as an air line — the honest lower bound of a covered stretch, as in F-12). **Settling spikes past the first fix (Y-2):** the first nine seconds hold 9.1 m in 1 s, **48.3 m in 5 s (9.65 m/s)** and 7.2 m in 1 s — about 52 m of phantom distance that the F-11 gate does not catch, because it validates the first fix only and the 10 m/s cap is a running cap. Over the whole walk 48 steps are faster than 3 m/s, 251 m in total (8% of the distance) on a track whose median step is 1.8 m/s. 🔋 84% → 81% over 32:58 ≈ 5.5 %/h (B-1 band ~4–5, slightly above). **Report: "the map does not show during use" → F-15.** Night mode could not be tested: the walk was 08:43–09:12 local with the sun at +22°, so automatic mode was correctly in daylight — checked by running `core/sun/Sun` against the file's own timestamps (that day: sunrise 06:45, civil dusk 19:45 local)*
 | + | 2026-09-13 | v1.4.0 | *Second walk of the day, seaside (3.21 km, 34:49 point span / 35:11 active) — **the cleanest tour so far.** Cross-validation ZERO difference: 3212.1 ↔ 3212.1 m; ▲68/▼71 exact; 983 points = accepted; rejections **accuracy 0, teleport 0** (jitter 814). Acquisition + finish tail **22 s** — the fastest lock recorded (F-10 seeding plus open sky at the water). One 21 s gap while standing (2 m of movement), two gaps over 5 s totalling 27 s. Max step 5.04 m/s, and only 3 steps above 3 m/s totalling 16.7 m (0.5% of the distance) — **Y-2: the morning walk's 48 m settling jump did not repeat**, the first four seconds here hold 7.4 + 4.2 + 5.0 m and then settle; the spike is episodic, not a constant. **Y-1 confirmed a second time, same number:** median elevation at the water's edge **39 m** (p5–p95 34–43, mean 38.6) — identical to the Sept 1 seaside median, and the band is only 9 m wide, so this is bias and not noise. Sea level is a few metres, the Istanbul geoid separation is ~+37 m: the device reports ellipsoid height, exactly as `getAltitude` documents. **The charge counter works on this device (B-1, first v1.4.0 recording):** 627 165 µAh at 16% and 2 174 172 µAh at 57% — two independent readings give a full charge of 3920 and 3814 mAh, 2.7% apart, so the capacity estimator holds. No consumption number, and correctly so: the phone was fed during the walk (16% → 57%, counter +1547 mAh). That silence was itself a finding → v1.4.1 shows "🔋 charging" instead of an empty line*
 | + | 2026-09-13 | v1.5.0 | *Night run with a companion (4.07 km, 33:53 point span / 34:03 active) — **the cleanest continuity so far: not a single gap over 5 s** (longest 4 s), acquisition + finish tail **10 s** (the recording was started during the warm-up). Cross-validation ZERO difference: 4069.8 ↔ 4069.8 m; 1274 points = accepted; rejections **accuracy 0, teleport 0** (jitter 456). Median step 2.12 m/s (7.6 km/h, a run), max 4.42 m/s — no settling spike, Y-2 stays episodic. **First real charge-counter measurement (B-1):** 47% → 45%, counter 1 828 281 → 1 725 654 µAh = **103 mAh · 2.64% · 4.67 %/h** — the band holds, and the measurement no longer waits for a whole percent to tick. **Geoid correction validated by an independent source (Y-1):** against the companion's DEM-corrected Strava track at matched positions, Norda's corrected elevation sits at a median of **−1.8 m** (p10 −5.2, p90 +3.0); the raw ellipsoid heights would have been **+35.5 m** out. **Second-device comparison, the best yet:** route agreement median 2.1 m / p90 6.8 m / max 17.4 m; over the matched window (20:32:05→21:02:17, 30.2 min) **Norda 3686.8 ↔ Strava 3740.5 m, −1.44%** — Norda also recorded 367 m of warm-up before the companion started. Elevation ▲71/▼107 from the app; the same file recomputes to ▲61/▼97 because its `ele` is now sea level, and adding the separation back reproduces the app exactly → watch item **Y-3** and a fixed analysis tool. **Night mode came on by itself (matrix 22 ✓)** but the screen was "blazing red, very hard to read with astigmatism" → **F-16** → v1.6.0*
+| + | 2026-09-15 | v1.6.0 | *Short evening walk (1.64 km, 16:47 point span / 20:40 active, 22:54–23:11 local) — cross-validation ZERO difference: 1640.0 ↔ 1640.0 m; 480 points = accepted; rejections accuracy 1, teleport 0 (jitter 344); three gaps over 5 s, longest 8 s; acquisition + finish tail 3:53 (started indoors). **Second charge-counter measurement (B-1):** 3 352 482 → 3 333 477 µAh = **19 mAh · 0.50% · 1.78 %/h** — far below the 4.67 %/h of the Sept 13 run, and the counter is precise enough that the difference is real rather than rounding; the old "4–5 %/h band" came from integer readings whose error bars were ±1.5 %/h, so the band itself needs rebuilding from counter data. **▲118 m on a 1.64 km walk → Y-3 evidence:** the profile is a genuine climb (123 → 180 m raw over the outing, ~57 m net) with ±10 m oscillations riding on it; a 9-sample median leaves ▲84. **Y-2 again, strongest yet:** 54 steps above 3 m/s totalling 280 m, **17.1% of the distance**, top step 8.88 m/s (32 km/h) on a walk whose median step is 1.61 m/s. Night mode was on (amber by default since v1.6.0); no legibility complaint this time, awaiting the verdict*
 
 Gate status: **3/3 clean tours — v1.0.0 CUT (Aug 29).**
 
@@ -232,21 +233,30 @@ Gate status: **3/3 clean tours — v1.0.0 CUT (Aug 29).**
   mode stays a tap away, because turning the filter off is the thing one wants
   quickly in the dark.
 
-- **Y-3** (elevation metric, watch item): gain and loss are not robust. The
-  night run gave ▲71/▼107 from the app and ▲61/▼97 when recomputed from the
-  exported file, and the cause is not the geoid correction as such: with a
-  *constant* offset the accumulator is translation-invariant, and over this
-  route the separation varies by 14 mm. Perturbing the same 1274-point series
-  by ±1 cm moves the gain between **47 m and 75 m** over 20 runs, because a
-  perturbation flips which steps cross the 4 m hysteresis threshold. So the
-  number is reproducible for identical input — the zero-difference check still
-  means what it meant — but it is a knife-edge, and comparing two devices or
-  two versions on ▲/▼ alone is not sound. Candidate fix: smooth the altitude
-  series (a short median window) before the accumulator, which also trims
-  phantom gain. Decision pending; it changes a headline number, so it is not
-  slipped in quietly. Methodology, already fixed: the analysis tool adds the
-  geoid separation back before recomputing, and then reproduces the app
-  exactly.
+- **Y-3** (elevation metric, watch item — decision pending): gain and loss are
+  not robust, and they are probably inflated. Three lines of evidence.
+  *Instability:* perturbing a real 1274-point series by ±1 cm moves the gain
+  between **47 m and 75 m** over 20 runs, because the perturbation flips which
+  steps cross the 4 m hysteresis threshold. The number is reproducible for
+  identical input — the zero-difference check still means what it meant — but
+  it is a knife-edge, so comparing two devices or two versions on ▲/▼ alone is
+  not sound. *Magnitude:* across all 14 field tours the recomputation
+  reproduces the app exactly, and a 9-sample median before the accumulator
+  removes **33%** of the total gain (34.5 → 23.1 m/km). *Reference:* on the
+  three tours with a companion's DEM-corrected Strava track, the same
+  accumulator over that smooth series gives 20, 16 and 24 m where Norda gives
+  71, 79 and 174 — a DEM erases genuine micro-relief, so the truth sits
+  between, but the direction is clear.
+
+  Candidate fix, with one trap already found: the median window must be bounded
+  in **time**, not in samples. On the sparse battery-saver tour (61 points over
+  33 min) a 9-sample window spans ten minutes and flattens the gain to zero,
+  while at the normal ~1 Hz cadence it spans nine seconds. A ±5 s window with a
+  minimum of three samples behaves the same way on both. Not shipped: it moves
+  a headline number on every past recording, so it waits for a decision.
+  Methodology, already fixed: the analysis tool adds the geoid separation back
+  before recomputing (the file's `ele` is sea level since v1.5.0) and then
+  reproduces the app exactly.
 
 - **Y-1** (elevation, fixed → v1.5.0): absolute altitude read about 37 m
   high. Three independent measurements agreed. Two seaside walks (Sept 1 and
