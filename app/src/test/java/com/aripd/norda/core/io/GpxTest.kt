@@ -146,4 +146,41 @@ class GpxTest {
         val t = Gpx.parse(xml).points[0].point.timeMillis
         assertTrue("t=$t", t > 1_700_000_000_000)
     }
+
+    /**
+     * F-17: a manual pause becomes a new `<trkseg>`, which is how GPX marks a
+     * break. Other tools then stop drawing a line across the pause — and so
+     * does our own import, which is where the distance came from.
+     */
+    @Test
+    fun aPauseBecomesASecondSegmentAndSurvivesTheRoundTrip() {
+        val points = listOf(
+            p(1_700_000_000_000, 41.0000, 29.0000, 100.0),
+            p(1_700_000_005_000, 41.0009, 29.0000, 101.0),
+            p(1_700_001_000_000, 41.0100, 29.0000, 102.0),
+            p(1_700_001_005_000, 41.0109, 29.0000, 103.0)
+        )
+        val xml = Gpx.write(
+            "Tur", points, List(points.size) { true }, emptyList(),
+            segmentBreaks = listOf(false, false, true, false)
+        )
+        assertEquals(2, Regex("<trkseg>").findAll(xml).count())
+        val parsed = Gpx.parse(xml).points
+        assertEquals(4, parsed.size)
+        assertFalse(parsed[0].afterPause)
+        assertFalse(parsed[1].afterPause)
+        assertTrue("the second segment opens after a pause", parsed[2].afterPause)
+        assertFalse(parsed[3].afterPause)
+    }
+
+    @Test
+    fun withoutBreaksTheTrackStaysOneSegment() {
+        val points = listOf(
+            p(1_700_000_000_000, 41.0, 29.0, 10.0),
+            p(1_700_000_005_000, 41.001, 29.0, 11.0)
+        )
+        val xml = Gpx.write("Tur", points, listOf(true, true), emptyList())
+        assertEquals(1, Regex("<trkseg>").findAll(xml).count())
+        assertFalse(Gpx.parse(xml).points.any { it.afterPause })
+    }
 }

@@ -173,7 +173,7 @@ class HistoryActivity : Activity() {
                     } else {
                         p.point
                     }
-                    dao.appendPoint(id, point, p.hasAltitude)
+                    dao.appendPoint(id, point, p.hasAltitude, p.afterPause)
                     if (p.hasAltitude) elevation.onAltitude(point.altitude)
                 }
                 val duration =
@@ -186,7 +186,12 @@ class HistoryActivity : Activity() {
                         type = ActivityType.WALK,
                         startTimeMillis = startTime,
                         endTimeMillis = startTime + duration,
-                        distanceM = Stats.totalDistanceMeters(parsed.points.map { it.point }),
+                        // A second <trkseg> marks a break: that leg is not
+                        // distance, on import either (F-17).
+                        distanceM = Stats.totalDistanceMeters(
+                            parsed.points.map { it.point },
+                            parsed.points.map { it.afterPause }
+                        ),
                         durationMillis = duration,
                         elevationGainM = elevation.gainM,
                         elevationLossM = elevation.lossM

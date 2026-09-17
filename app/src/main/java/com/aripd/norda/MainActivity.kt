@@ -393,14 +393,16 @@ class MainActivity : Activity(), LocationListener {
         // If the service is recording, the "unfinished" activity is live — leave it.
         if (TrackingService.isRecording) return
         val unfinished = dao.unfinishedActivity() ?: return
-        val points = dao.pointsFor(unfinished.id)
+        val stored = dao.pointsDetailed(unfinished.id)
+        val points = stored.map { it.point }
         if (points.isEmpty()) {
             // An unfinished recording without a single point: not recovered
             // into history as noise, silently deleted.
             dao.deleteActivity(unfinished.id)
             return
         }
-        val distance = Stats.totalDistanceMeters(points)
+        // Paused legs stay out of the distance on recovery too (F-17).
+        val distance = Stats.totalDistanceMeters(points, stored.map { it.afterPause })
         val elevation = ElevationTracker()
         dao.altitudesFor(unfinished.id).forEach { elevation.onAltitude(it) }
         val endTime = points.lastOrNull()?.timeMillis ?: unfinished.startTimeMillis

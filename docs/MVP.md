@@ -547,14 +547,15 @@ elevation_gain_m REAL         accuracy REAL
 elevation_loss_m REAL         speed REAL
 start_battery INT NULL        bearing REAL
 end_battery INT NULL
-start_charge_uah INT NULL
+start_charge_uah INT NULL     after_pause INT NULL
 end_charge_uah INT NULL
 ```
 
 Waypoints are global, not tied to a recording. The DDL and migration plan live
 in the pure `core/db/Schema` module and are JVM-tested (schema version 1:
 activity + track_point; version 2: + waypoint; version 3: battery columns on
-activity; version 4: the battery charge counter in µAh on activity). A fresh install is produced as the v1 base + the migration chain,
+activity; version 4: the battery charge counter in µAh on activity; version 5:
+`track_point.after_pause`). A fresh install is produced as the v1 base + the migration chain,
 and a parity test guarantees that both paths arrive at the same schema — a
 table cannot make it into create and be forgotten in the migration.
 
@@ -659,6 +660,13 @@ already produces. The Return to Start line stays as it is.
 
 ## 10. GPX exchange
 
+- **Segments**: a manual pause starts a new `<trkseg>`, which is how GPX marks
+  a break in a track (F-17). The ground covered while paused is not distance —
+  the live session skips it — so no tool, ours included, should draw or count a
+  line across it. The flag lives on the point (`track_point.after_pause`), so
+  the file can say where the pause was instead of leaving a gap that looks like
+  a GPS outage; the two are indistinguishable otherwise, and the difference is
+  hundreds of metres.
 - **Export**: activity → `<trk>/<trkseg>/<trkpt>` (with `ele`, `time`);
   waypoints → `<wpt name=...>`. Track + points in a single file. Saved via SAF
   (`ACTION_CREATE_DOCUMENT`). `ele` is written as height above **mean sea
@@ -671,7 +679,8 @@ already produces. The Return to Start line stays as it is.
   block; the filter counters are added only if the last recording is that
   activity.
 - **Import**: `<trkpt>`s as an activity (`lat/lon/ele/time`), `<wpt>`s as
-  waypoints. Malformed input is tolerated by skipping the line, tested.
+  waypoints; a second `<trkseg>` is read back as a break, so a round trip
+  returns the same distance. Malformed input is tolerated by skipping the line, tested.
   `norda:report` does not count as data on import — statistics are always
   recomputed from the points.
 - "Route sharing" is not a separate feature in the MVP: sharing a GPX file

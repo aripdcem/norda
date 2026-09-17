@@ -4,6 +4,29 @@ Format follows [Keep a Changelog](https://keepachangelog.com/), versioning
 follows [SemVer](https://semver.org/) — see `docs/MVP.md` section 15 for
 the rules.
 
+## [1.7.0] - 2026-09-17
+
+### Added
+
+- F-17: the recording now records where it was paused. A 24-minute gap
+  carrying a 317 m jump looks identical in a GPX file whether the user
+  paused deliberately, the app auto-paused, or GPS went silent indoors —
+  and the three mean different things for distance: a manually paused leg is
+  skipped, an outage is counted as an air line. The field walk that surfaced
+  this needed a code reading to tell which had happened, and no other tool
+  could have told at all. The point that opens a leg after a resume now
+  carries a flag (schema v5, migrated), GPX export starts a new `<trkseg>`
+  there — the standard way to mark a break in a track, so other tools stop
+  drawing and counting across it — and import reads the break back, so a
+  round trip returns the same distance.
+
+### Fixed
+
+- Two recomputations used to re-count the ground covered while paused, which
+  the live recording deliberately skips: recovery after process death and GPX
+  import. Both use the pause-aware distance now (`core/track/Stats`, core:
+  168).
+
 ## [1.6.0] - 2026-09-13
 
 ### Changed

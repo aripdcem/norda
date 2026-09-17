@@ -54,7 +54,17 @@ class RecordingSession(
      * A point entering the recording in this call + the persistence flag (the
      * caller writes it to the DB).
      */
-    data class Accepted(val point: TrackPoint, val hasAltitude: Boolean)
+    data class Accepted(
+        val point: TrackPoint,
+        val hasAltitude: Boolean,
+        /**
+         * This point opens a new leg: the ground between it and the previous
+         * point was covered while the recording was paused and is not distance
+         * (F-17). Persisted, so the file can say where the pause was instead
+         * of leaving a gap that looks like a GPS outage.
+         */
+        val afterPause: Boolean = false
+    )
 
     // Settling gate (F-11): on two outings the first fix came in 13–26 m off,
     // and because it was made the anchor, the phantom distance — even with the
@@ -160,6 +170,7 @@ class RecordingSession(
         if (!commitFix) return out
 
         val prev = recorded.lastOrNull()
+        val opensNewLeg = prev != null && breakSegment
         if (prev != null && !breakSegment) {
             distanceM += Geo.distanceMeters(
                 prev.latitude, prev.longitude, fix.latitude, fix.longitude
@@ -171,7 +182,7 @@ class RecordingSession(
         if (gate) filterCounts[GpsFilter.Verdict.ACCEPT.ordinal]++
         recorded += fix
         if (hasAltitude) elevation.onAltitude(fix.altitude)
-        out += Accepted(fix, hasAltitude)
+        out += Accepted(fix, hasAltitude, afterPause = opensNewLeg)
         return out
     }
 

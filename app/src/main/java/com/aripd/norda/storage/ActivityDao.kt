@@ -12,6 +12,16 @@ data class UnfinishedActivity(
     val startTimeMillis: Long
 )
 
+/**
+ * A stored point with the two facts that are not in [TrackPoint] itself: was
+ * its altitude valid, and does it open a new leg after a pause (F-17).
+ */
+data class StoredPoint(
+    val point: TrackPoint,
+    val hasAltitude: Boolean,
+    val afterPause: Boolean
+)
+
 /** Dumb data access layer: only reads and writes, makes no decisions (MVP.md 8.2). */
 class ActivityDao(private val helper: AppDatabase) {
 
@@ -28,7 +38,12 @@ class ActivityDao(private val helper: AppDatabase) {
             if (startChargeUah != null) put("start_charge_uah", startChargeUah)
         })
 
-    fun appendPoint(activityId: Long, p: TrackPoint, hasAltitude: Boolean) {
+    fun appendPoint(
+        activityId: Long,
+        p: TrackPoint,
+        hasAltitude: Boolean,
+        afterPause: Boolean = false
+    ) {
         helper.writableDatabase.insertOrThrow("track_point", null, ContentValues().apply {
             put("activity_id", activityId)
             put("timestamp", p.timeMillis)
@@ -38,6 +53,8 @@ class ActivityDao(private val helper: AppDatabase) {
             put("accuracy", p.accuracyM)
             put("speed", p.speedMps)
             put("bearing", p.bearingDeg)
+            // Only the points that open a leg carry the flag; NULL is the norm.
+            if (afterPause) put("after_pause", 1)
         })
     }
 
@@ -83,25 +100,35 @@ class ActivityDao(private val helper: AppDatabase) {
             out
         }
 
-    /** Points + whether the altitude is valid — for GPX export. */
-    fun pointsDetailed(activityId: Long): List<Pair<TrackPoint, Boolean>> =
+    /**
+     * Points with the altitude flag and the pause flag — for GPX export and
+     * for every recomputation that has to skip the paused legs (F-17).
+     */
+    fun pointsDetailed(activityId: Long): List<StoredPoint> =
         helper.readableDatabase.query(
             "track_point",
-            arrayOf("timestamp", "latitude", "longitude", "altitude", "accuracy", "speed", "bearing"),
+            arrayOf(
+                "timestamp", "latitude", "longitude", "altitude", "accuracy", "speed",
+                "bearing", "after_pause"
+            ),
             "activity_id = ?", arrayOf(activityId.toString()), null, null, "timestamp ASC"
         ).use { c ->
-            val out = ArrayList<Pair<TrackPoint, Boolean>>(c.count)
+            val out = ArrayList<StoredPoint>(c.count)
             while (c.moveToNext()) {
                 val hasAltitude = !c.isNull(3)
-                out += TrackPoint(
-                    timeMillis = c.getLong(0),
-                    latitude = c.getDouble(1),
-                    longitude = c.getDouble(2),
-                    altitude = if (hasAltitude) c.getDouble(3) else 0.0,
-                    accuracyM = c.getFloat(4),
-                    speedMps = c.getFloat(5),
-                    bearingDeg = c.getFloat(6)
-                ) to hasAltitude
+                out += StoredPoint(
+                    TrackPoint(
+                        timeMillis = c.getLong(0),
+                        latitude = c.getDouble(1),
+                        longitude = c.getDouble(2),
+                        altitude = if (hasAltitude) c.getDouble(3) else 0.0,
+                        accuracyM = c.getFloat(4),
+                        speedMps = c.getFloat(5),
+                        bearingDeg = c.getFloat(6)
+                    ),
+                    hasAltitude = hasAltitude,
+                    afterPause = !c.isNull(7) && c.getInt(7) != 0
+                )
             }
             out
         }

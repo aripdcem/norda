@@ -79,6 +79,7 @@ class SchemaTest {
         assertEquals(4, Schema.createStatements(2).size)
         assertEquals(6, Schema.createStatements(3).size)
         assertEquals(8, Schema.createStatements(4).size)
+        assertEquals(9, Schema.createStatements(5).size)
     }
 
     // v1.4.0: the charge counter in µAh — the version 4 columns (B-1).
@@ -96,6 +97,19 @@ class SchemaTest {
         assertTrue(ddl.contains("end_charge_uah"))
         assertFalse(ddl.contains("start_battery"))
         assertFalse(ddl.contains("CREATE TABLE waypoint("))
+    }
+
+    // v1.7.0: where the recording was paused (F-17) — the version 5 column.
+    @Test
+    fun currentSchemaCarriesThePauseColumn() {
+        assertTrue(Schema.createStatements().joinToString("\n").contains("after_pause"))
+    }
+
+    @Test
+    fun upgradeFromV4AddsOnlyThePauseColumn() {
+        val ddl = Schema.upgradeStatements(4).joinToString("\n")
+        assertTrue(ddl.contains("after_pause"))
+        assertFalse(ddl.contains("start_charge_uah"))
     }
 
     @Test

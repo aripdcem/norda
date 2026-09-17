@@ -1,6 +1,7 @@
 package com.aripd.norda.core.track
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -196,6 +197,38 @@ class RecordingSessionTest {
         assertEquals(0.0, s.distanceM, 1e-9)
         assertEquals(1, s.onFix(fix(60_000, 11.0), false, 60_000).size)
         assertEquals(10.0, s.distanceM, 0.5)
+    }
+
+    /**
+     * F-17: the caller has to be able to persist WHERE the pause was, or the
+     * file cannot tell a pause from a GPS outage afterwards and every
+     * recomputation re-counts the leg the session deliberately skipped.
+     */
+    @Test
+    fun theFirstPointAfterAResumeIsMarkedAsSuch() {
+        val s = session()
+        s.onFix(fix(0, 0.0), false, 0)
+        s.pauseManual(5_000)
+        s.resumeManual(50_000)
+        val resumed = s.onFix(fix(55_000, 10.0), false, 55_000)
+        assertEquals(2, resumed.size)
+        // The tentative that finally entered belongs to the first leg.
+        assertFalse("the confirmed tentative is not after a pause", resumed[0].afterPause)
+        assertTrue("the resume fix opens a new leg", resumed[1].afterPause)
+        val next = s.onFix(fix(60_000, 11.0), false, 60_000)
+        assertEquals(1, next.size)
+        assertFalse("only the first point after a resume is marked", next[0].afterPause)
+    }
+
+    @Test
+    fun pointsOfAnUninterruptedRecordingAreNeverMarked() {
+        val s = session()
+        s.onFix(fix(0, 0.0), false, 0)
+        // 5 m in 5 s: past the jitter gate, well under the speed cap.
+        val second = s.onFix(fix(5_000, 0.5), false, 5_000)
+        assertEquals(2, second.size)
+        assertFalse(second[0].afterPause)
+        assertFalse(second[1].afterPause)
     }
 
     @Test

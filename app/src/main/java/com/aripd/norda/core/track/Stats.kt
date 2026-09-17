@@ -11,9 +11,21 @@ object Stats {
     /** Minimum movement required within the live-pace window. */
     const val MIN_WINDOW_DISTANCE_M = 5.0
 
-    fun totalDistanceMeters(points: List<TrackPoint>): Double {
+    fun totalDistanceMeters(points: List<TrackPoint>): Double =
+        totalDistanceMeters(points, emptyList())
+
+    /**
+     * Distance with the paused legs left out (F-17). [afterPause] is parallel
+     * to [points]: true means that point opens a new leg, so the step into it
+     * is ground the user deliberately excluded — the live session skips it, and
+     * every recomputation from stored points has to skip it the same way. A
+     * list of the wrong size is ignored rather than trusted halfway.
+     */
+    fun totalDistanceMeters(points: List<TrackPoint>, afterPause: List<Boolean>): Double {
+        val breaks = if (afterPause.size == points.size) afterPause else emptyList()
         var total = 0.0
         for (i in 1 until points.size) {
+            if (breaks.isNotEmpty() && breaks[i]) continue
             val a = points[i - 1]
             val b = points[i]
             total += Geo.distanceMeters(a.latitude, a.longitude, b.latitude, b.longitude)

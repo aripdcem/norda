@@ -134,8 +134,9 @@ class MapActivity : Activity() {
             // while the database keeps the receiver's ellipsoid height — in
             // Istanbul the two differ by ~37 m (Y-1, MVP 5.7). The conversion
             // happens here, at the edge.
-            val points = detailed.map { (point, hasAltitude) ->
-                if (hasAltitude) {
+            val points = detailed.map { stored ->
+                val point = stored.point
+                if (stored.hasAltitude) {
                     point.copy(
                         altitude = Geoids.toMsl(
                             this, point.latitude, point.longitude, point.altitude
@@ -156,9 +157,12 @@ class MapActivity : Activity() {
             val xml = Gpx.write(
                 trackName = "Norda ${SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())}",
                 points = points,
-                altitudeValid = detailed.map { it.second },
+                altitudeValid = detailed.map { it.hasAltitude },
                 waypoints = waypoints,
-                report = buildReport(dao)
+                report = buildReport(dao),
+                // A manual pause becomes a new <trkseg>: no tool draws or
+                // counts a line across ground covered while paused (F-17).
+                segmentBreaks = detailed.map { it.afterPause }
             )
             contentResolver.openOutputStream(uri)?.use { out ->
                 out.write(xml.toByteArray(Charsets.UTF_8))

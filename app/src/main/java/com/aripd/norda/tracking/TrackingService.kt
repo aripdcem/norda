@@ -103,7 +103,8 @@ class TrackingService : Service(), LocationListener {
      */
     private fun resumeUnfinishedRecording(): Boolean {
         val unfinished = dao.unfinishedActivity() ?: return false
-        val points = dao.pointsFor(unfinished.id)
+        val stored = dao.pointsDetailed(unfinished.id)
+        val points = stored.map { it.point }
         val lastPoint = points.lastOrNull()
         val endTime = lastPoint?.timeMillis ?: unfinished.startTimeMillis
         val s = RecordingSession(
@@ -112,7 +113,10 @@ class TrackingService : Service(), LocationListener {
             startMonotonicMillis = SystemClock.elapsedRealtime()
         )
         s.prime(
-            recoveredDistanceM = Stats.totalDistanceMeters(points),
+            // The legs walked while paused are not distance, here either — the
+            // flags are on disk since v1.7.0, so recovery no longer re-counts
+            // what the live session deliberately skipped (F-17).
+            recoveredDistanceM = Stats.totalDistanceMeters(points, stored.map { it.afterPause }),
             // Pause information is not written to disk; the inherited duration
             // is approximated from the point span.
             recoveredDurationMillis = (endTime - unfinished.startTimeMillis).coerceAtLeast(0),
@@ -188,7 +192,9 @@ class TrackingService : Service(), LocationListener {
         // than one point: the confirmed tentative + the fix itself. The flag
         // belongs to the point — the tentative's may differ from this fix's.
         for (accepted in s.onFix(point, location.hasAltitude(), SystemClock.elapsedRealtime())) {
-            dao.appendPoint(activityId, accepted.point, accepted.hasAltitude)
+            dao.appendPoint(
+                activityId, accepted.point, accepted.hasAltitude, accepted.afterPause
+            )
         }
         // Not a notification on every fix: immediately on a state change,
         // otherwise at least 10 s apart.

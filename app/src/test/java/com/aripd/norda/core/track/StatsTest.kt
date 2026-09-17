@@ -1,6 +1,7 @@
 package com.aripd.norda.core.track
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -54,5 +55,40 @@ class StatsTest {
         val standing = listOf(p(0, 0), p(10_000, 1), p(35_000, 1), p(40_000, 1))
         assertNull(Stats.currentPaceSecPerKm(standing))
         assertNotNull(Stats.currentPaceSecPerKm(listOf(p(0, 0), p(10_000, 1))))
+    }
+
+    /**
+     * F-17: the leg walked while the recording was paused is not distance —
+     * the live session already skips it, and every recomputation from stored
+     * points (recovery, GPX import) has to skip it the same way, or a 24-minute
+     * pause shows up as 317 m that nobody walked on the clock.
+     */
+    @Test
+    fun distanceSkipsTheLegIntoAPointRecordedAfterAPause() {
+        val points = listOf(
+            TrackPoint(1_000, 41.0000, 29.0000, 0.0, 0f, 0f, 0f),
+            TrackPoint(2_000, 41.0009, 29.0000, 0.0, 0f, 0f, 0f),   // ~100 m
+            TrackPoint(9_000, 41.0100, 29.0000, 0.0, 0f, 0f, 0f),   // far: paused leg
+            TrackPoint(10_000, 41.0109, 29.0000, 0.0, 0f, 0f, 0f)   // ~100 m
+        )
+        val plain = Stats.totalDistanceMeters(points)
+        val withPause = Stats.totalDistanceMeters(
+            points, listOf(false, false, true, false)
+        )
+        assertEquals(200.0, withPause, 1.0)
+        assertTrue("the paused leg should be the difference", plain - withPause > 900.0)
+    }
+
+    @Test
+    fun aPauseFlagListOfTheWrongSizeIsIgnoredRatherThanCrashing() {
+        val points = listOf(
+            TrackPoint(1_000, 41.0000, 29.0000, 0.0, 0f, 0f, 0f),
+            TrackPoint(2_000, 41.0009, 29.0000, 0.0, 0f, 0f, 0f)
+        )
+        assertEquals(
+            Stats.totalDistanceMeters(points),
+            Stats.totalDistanceMeters(points, listOf(false)),
+            1e-9
+        )
     }
 }

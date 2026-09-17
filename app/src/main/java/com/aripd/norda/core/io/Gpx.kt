@@ -18,7 +18,12 @@ import org.w3c.dom.Element
  */
 object Gpx {
 
-    class ParsedPoint(val point: TrackPoint, val hasAltitude: Boolean)
+    class ParsedPoint(
+        val point: TrackPoint,
+        val hasAltitude: Boolean,
+        /** First point of a segment after the first: the track broke here (F-17). */
+        val afterPause: Boolean = false
+    )
 
     class Parsed(
         val name: String?,
@@ -60,14 +65,22 @@ object Gpx {
 
     private const val NORDA_NS = "https://github.com/aripdcem/norda/gpx/1"
 
+    /**
+     * [segmentBreaks] is parallel to [points] when given: true means that point
+     * opens a new `<trkseg>`, which is how GPX marks a break in a track (F-17).
+     * Norda writes one at every manual pause, so no tool — ours included —
+     * draws or counts a line across ground that was covered while paused.
+     */
     fun write(
         trackName: String,
         points: List<TrackPoint>,
         altitudeValid: List<Boolean>,
         waypoints: List<Waypoint>,
-        report: Report? = null
+        report: Report? = null,
+        segmentBreaks: List<Boolean> = emptyList()
     ): String {
         require(points.size == altitudeValid.size) { "point and altitude lists must have the same size" }
+        val breaks = if (segmentBreaks.size == points.size) segmentBreaks else emptyList()
         val sb = StringBuilder()
         sb.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
         sb.append("<gpx version=\"1.1\" creator=\"Norda\" ")
@@ -82,6 +95,9 @@ object Gpx {
         if (points.isNotEmpty()) {
             sb.append("<trk>\n<name>").append(escape(trackName)).append("</name>\n<trkseg>\n")
             for (i in points.indices) {
+                if (i > 0 && breaks.isNotEmpty() && breaks[i]) {
+                    sb.append("</trkseg>\n<trkseg>\n")
+                }
                 val p = points[i]
                 sb.append("<trkpt lat=\"").append(p.latitude).append("\" lon=\"")
                     .append(p.longitude).append("\">\n")
@@ -143,24 +159,31 @@ object Gpx {
                 break
             }
         }
-        val trkpts = doc.getElementsByTagName("trkpt")
-        for (i in 0 until trkpts.length) {
-            val el = trkpts.item(i) as Element
-            val lat = el.getAttribute("lat").toDoubleOrNull() ?: continue
-            val lon = el.getAttribute("lon").toDoubleOrNull() ?: continue
-            val ele = childText(el, "ele")?.toDoubleOrNull()
-            points += ParsedPoint(
-                TrackPoint(
-                    timeMillis = parseTimeMillis(childText(el, "time")),
-                    latitude = lat,
-                    longitude = lon,
-                    altitude = ele ?: 0.0,
-                    accuracyM = 0f,
-                    speedMps = 0f,
-                    bearingDeg = 0f
-                ),
-                hasAltitude = ele != null
-            )
+        // Segments matter: a second `<trkseg>` means the track broke there, and
+        // the ground in between is not distance (F-17). Read per segment so the
+        // break survives the round trip; a file with no segment element at all
+        // is read as one continuous track.
+        val segments = doc.getElementsByTagName("trkseg")
+        var segmentCount = 0
+        for (segIndex in 0 until segments.length) {
+            val children = (segments.item(segIndex) as Element).getElementsByTagName("trkpt")
+            var firstOfSegment = true
+            for (i in 0 until children.length) {
+                val parsed = parsePoint(children.item(i) as Element) ?: continue
+                points += if (segmentCount > 0 && firstOfSegment) {
+                    ParsedPoint(parsed.point, parsed.hasAltitude, afterPause = true)
+                } else {
+                    parsed
+                }
+                firstOfSegment = false
+            }
+            if (children.length > 0) segmentCount++
+        }
+        if (points.isEmpty()) {
+            val trkpts = doc.getElementsByTagName("trkpt")
+            for (i in 0 until trkpts.length) {
+                points += parsePoint(trkpts.item(i) as Element) ?: continue
+            }
         }
         val wpts = doc.getElementsByTagName("wpt")
         for (i in 0 until wpts.length) {
@@ -200,6 +223,25 @@ object Gpx {
             gainM = summary.getAttribute("gainM").toDoubleOrNull() ?: return null,
             lossM = summary.getAttribute("lossM").toDoubleOrNull() ?: return null,
             appVersion = el.getAttribute("app").takeIf { it.isNotEmpty() }
+        )
+    }
+
+    /** One `<trkpt>`; null when the line is broken (tolerance rule). */
+    private fun parsePoint(el: Element): ParsedPoint? {
+        val lat = el.getAttribute("lat").toDoubleOrNull() ?: return null
+        val lon = el.getAttribute("lon").toDoubleOrNull() ?: return null
+        val ele = childText(el, "ele")?.toDoubleOrNull()
+        return ParsedPoint(
+            TrackPoint(
+                timeMillis = parseTimeMillis(childText(el, "time")),
+                latitude = lat,
+                longitude = lon,
+                altitude = ele ?: 0.0,
+                accuracyM = 0f,
+                speedMps = 0f,
+                bearingDeg = 0f
+            ),
+            hasAltitude = ele != null
         )
     }
 

@@ -14,11 +14,12 @@ package com.aripd.norda.core.db
  *
  * Versions: v1 activity + track_point (+ index), v2 + waypoint,
  * v3 + activity.start_battery/end_battery,
- * v4 + activity.start_charge_uah/end_charge_uah.
+ * v4 + activity.start_charge_uah/end_charge_uah,
+ * v5 + track_point.after_pause.
  */
 object Schema {
 
-    const val VERSION = 4
+    const val VERSION = 5
 
     private const val CREATE_ACTIVITY = """CREATE TABLE activity(
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -68,6 +69,12 @@ object Schema {
     private const val ALTER_ACTIVITY_END_CHARGE =
         "ALTER TABLE activity ADD COLUMN end_charge_uah INTEGER"
 
+    // v5: where the recording was paused (F-17) — 1 on the first point after a
+    // resume, NULL otherwise. The leg into it is not distance, and GPX writes a
+    // new segment there.
+    private const val ALTER_POINT_AFTER_PAUSE =
+        "ALTER TABLE track_point ADD COLUMN after_pause INTEGER"
+
     /**
      * Fresh install (onCreate) = the v1 base + the migration chain: both
      * install paths feed from the same definition, so parity is preserved
@@ -95,6 +102,7 @@ object Schema {
             out += ALTER_ACTIVITY_START_CHARGE
             out += ALTER_ACTIVITY_END_CHARGE
         }
+        if (oldVersion < 5 && newVersion >= 5) out += ALTER_POINT_AFTER_PAUSE
         return out
     }
 }
