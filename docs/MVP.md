@@ -605,6 +605,12 @@ start and end, which moves with every milliamp-hour.
 - A recording made on the charger has no consumption to report, and the
   History row says "charging" rather than leaving the line empty — an empty
   line reads as "not measured" (field tour, Sept 13: 16% → 57%).
+- What is measured is the **device**, not the app: the counter includes the
+  screen and everything else running. Four field tours spread over 0.92 to
+  8.64 mAh/min, so the honest reading is the floor — about 55 mA, ~1.4 %/h,
+  which is a recording with the screen off — and the rest is screen time
+  (field item B-1). Logging screen-on time per recording is the candidate
+  that would turn that argument into a measurement.
 - Diagnostics shows the level, the counter and the capacity estimate, so
   whether a device serves the counter at all is visible on that device.
 - Both readings travel inside the GPX report (`norda:battery`), so a tour can

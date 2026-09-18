@@ -107,6 +107,7 @@ the tour is repeated on that release. Three clean tours = the v1.0.0 gate.
 | + | 2026-09-13 | v1.5.0 | *Night run with a companion (4.07 km, 33:53 point span / 34:03 active) — **the cleanest continuity so far: not a single gap over 5 s** (longest 4 s), acquisition + finish tail **10 s** (the recording was started during the warm-up). Cross-validation ZERO difference: 4069.8 ↔ 4069.8 m; 1274 points = accepted; rejections **accuracy 0, teleport 0** (jitter 456). Median step 2.12 m/s (7.6 km/h, a run), max 4.42 m/s — no settling spike, Y-2 stays episodic. **First real charge-counter measurement (B-1):** 47% → 45%, counter 1 828 281 → 1 725 654 µAh = **103 mAh · 2.64% · 4.67 %/h** — the band holds, and the measurement no longer waits for a whole percent to tick. **Geoid correction validated by an independent source (Y-1):** against the companion's DEM-corrected Strava track at matched positions, Norda's corrected elevation sits at a median of **−1.8 m** (p10 −5.2, p90 +3.0); the raw ellipsoid heights would have been **+35.5 m** out. **Second-device comparison, the best yet:** route agreement median 2.1 m / p90 6.8 m / max 17.4 m; over the matched window (20:32:05→21:02:17, 30.2 min) **Norda 3686.8 ↔ Strava 3740.5 m, −1.44%** — Norda also recorded 367 m of warm-up before the companion started. Elevation ▲71/▼107 from the app; the same file recomputes to ▲61/▼97 because its `ele` is now sea level, and adding the separation back reproduces the app exactly → watch item **Y-3** and a fixed analysis tool. **Night mode came on by itself (matrix 22 ✓)** but the screen was "blazing red, very hard to read with astigmatism" → **F-16** → v1.6.0*
 | + | 2026-09-15 | v1.6.0 | *Short evening walk (1.64 km, 16:47 point span / 20:40 active, 22:54–23:11 local) — cross-validation ZERO difference: 1640.0 ↔ 1640.0 m; 480 points = accepted; rejections accuracy 1, teleport 0 (jitter 344); three gaps over 5 s, longest 8 s; acquisition + finish tail 3:53 (started indoors). **Second charge-counter measurement (B-1):** 3 352 482 → 3 333 477 µAh = **19 mAh · 0.50% · 1.78 %/h** — far below the 4.67 %/h of the Sept 13 run, and the counter is precise enough that the difference is real rather than rounding; the old "4–5 %/h band" came from integer readings whose error bars were ±1.5 %/h, so the band itself needs rebuilding from counter data. **▲118 m on a 1.64 km walk → Y-3 evidence:** the profile is a genuine climb (123 → 180 m raw over the outing, ~57 m net) with ±10 m oscillations riding on it; a 9-sample median leaves ▲84. **Y-2 again, strongest yet:** 54 steps above 3 m/s totalling 280 m, **17.1% of the distance**, top step 8.88 m/s (32 km/h) on a walk whose median step is 1.61 m/s. Night mode was on (amber by default since v1.6.0); no legibility complaint this time, awaiting the verdict*
 | + | 2026-09-17 | v1.6.0 | *Afternoon walk with a long indoor stretch (app 3704.5 m, 76:59 point span / 63:58 active, 14:26–15:43 local) — 1242 points = accepted; rejections accuracy 0, teleport 1 (jitter 1317); 16 gaps over 5 s totalling 30:50. **First cross-validation that did not match at first sight:** the raw sum of the exported points is 4021.4 m against the app's 3704.5 m, and the difference — **316.9 m** — is exactly the one jump across the 24:36 gap at 15:06 (317.0 m). So the app skipped that leg, which in the code only a **manual pause** does (`resumeManual` sets the break; the settling gate cannot reopen mid-recording). The user reports going into a shopping mall with the recording left running → **F-17**: the file cannot tell a pause from a GPS outage, the two differ by hundreds of metres, and only the pause path drops the leg. **Resolved by the user the same day: the Pause button was tapped deliberately, a while after going inside.** So nothing misbehaved, and the pocket-tap suspicion is closed without a finding. The arithmetic fits the account exactly: of the tour's 76:59 span, 13:01 was not active (manual pause plus any auto-pauses), so **at least 11:34 of the 24:36 gap was recorded-but-fixless indoor time** and the rest was the deliberate pause. Two behaviours are visible in one gap: indoors the device offered nothing at all rather than bad fixes (accuracy rejections 0 over the whole tour — the clean-track stance doing its job), and the paused leg was dropped from the distance. **Third charge-counter measurement (B-1):** 3 500 721 → 3 189 039 µAh = **312 mAh · 8.19% · 6.38 %/h** over wall time (7.68 %/h over active time), and the integer gauge agrees for once (9% → 7.0 %/h) because the tour is long enough for granularity not to dominate. Counter band so far: 1.78 · 4.67 · 6.38 %/h. Elevation ▲138/▼219 raw over 3.7 km with a 97 m corrected span — Y-3 again*
+| + | 2026-09-18 | v1.6.0 | *Short morning walk (1.12 km, 12:19 point span / 13:35 active, 09:28–09:40 local) — clean: cross-validation ZERO difference (1120.4 ↔ 1120.4 m), 358 points = accepted, accuracy rejections 0, one 6 s gap; the raw reconstruction reproduces ▲44/▼34 exactly. Teleport rejections 4 on a 12-minute walk, all filtered. **Amber confirmed in the field (F-16 closed, matrix 22 complete):** the user tested the strengths on the previous night walk — "amber looks better this way" — so the default stays where v1.6.0 put it. **Fourth charge-counter measurement, and it reframes B-1:** 106.4 mAh in 12.3 minutes = 8.64 mAh/min, against 0.92 on the Sept 15 evening walk of similar length. A 9× spread across four tours is not a GPS figure: the counter measures the **device**, so it includes the screen at outdoor brightness and anything else running*
 
 Gate status: **3/3 clean tours — v1.0.0 CUT (Aug 29).**
 
@@ -254,7 +255,9 @@ Gate status: **3/3 clean tours — v1.0.0 CUT (Aug 29).**
   soft (blue stripped), **amber (the new default)**, deep red — and the
   multiplier colour is chosen per strength rather than being a constant. The
   mode stays a tap away, because turning the filter off is the thing one wants
-  quickly in the dark.
+  quickly in the dark. **Confirmed in the field** on the next night walk:
+  "amber looks better this way" — the default stays, and matrix step 22 is
+  complete on both halves, the automatic arrival and the legibility.
 
 - **Y-3** (elevation metric, watch item — decision pending): gain and loss are
   not robust, and they are probably inflated. Three lines of evidence.
@@ -302,22 +305,37 @@ Gate status: **3/3 clean tours — v1.0.0 CUT (Aug 29).**
   Single-fix vertical noise (the 115 m fix of Sept 1, ~75 m off) is a separate
   problem and stays with the DEM/baro candidate.
 
-- **B-1** (battery measurement, sharpened → v1.4.0): the whole-percent gauge
-  cannot measure an outing. The band collected over the tours is ~4–5 %/h
-  (2.8 · 4.0 · 4.0 · 5.0 · 5.8 · 5.1 · 5.5), but two readings were useless:
-  the Sept 12 night walk gave **80% → 80% over 38:50** (0 %/h — the gauge sat
-  on a level and dropped later, in one step), and tours starting from 100%
-  read high. Both are granularity, not physics. From v1.4.0 a recording also
-  stores the **µAh charge counter** at start and end
+- **B-1** (battery measurement, sharpened → v1.4.0; reframed by the counter
+  data): the whole-percent gauge could not measure an outing — the Sept 12
+  night walk read **80% → 80% over 38:50**, and tours starting from 100% read
+  high. From v1.4.0 a recording stores the **µAh charge counter** at both ends
   (`BATTERY_PROPERTY_CHARGE_COUNTER`): consumption comes out in mAh, the
-  percentage is fractional (the difference over a full-charge estimate — a
-  counter reading at a known level gives the capacity), and the rate keeps its
-  wall-clock denominator (F-1). The cleanliness rule stands: no counter on the
-  device, charging during the recording or a span under five minutes yields no
-  number. Diagnostics → BATTERY shows the level, the counter and the capacity
-  estimate, so a device without the counter is visible before the tour. The
-  same night walk, had the counter been recorded, would have reported about
-  116 mAh, 2.9% and 4.5 %/h.
+  percentage is fractional (the difference over a full-charge estimate, which
+  a counter reading at a known level gives), and the rate keeps its wall-clock
+  denominator (F-1). The cleanliness rule stands: no counter on the device,
+  charging during the recording or a span under five minutes yields no number,
+  and Diagnostics → BATTERY shows whether the device serves the counter at all.
+
+  Four real measurements later, the old "4–5 %/h band" turns out to have been
+  an artifact of rounding, and the counter says something more useful:
+
+  | Tour | Minutes | mAh | mAh/min | Start |
+  |---|---|---|---|---|
+  | Sept 15 evening walk | 20.7 | 19 | 0.92 | 88% |
+  | Sept 13 night run | 34.0 | 103 | 3.02 | 47% |
+  | Sept 17 afternoon walk | 77.0 | 312 | 4.05 | 92% |
+  | Sept 18 morning walk | 12.3 | 106 | 8.64 | 95% |
+
+  A ninefold spread, with the highest figure on the shortest walk, is not a
+  GPS number: the counter measures the **device**, not the app, so it includes
+  the screen at outdoor brightness and whatever else the phone was doing. The
+  useful reading is the **floor**: 0.92 mAh/min is about 55 mA, roughly
+  **1.4 %/h** on this ~3.85 Ah battery — that is what a recording with the
+  screen off costs, and it is a good number for an outdoor app. Everything
+  above it is screen and company. To make the split measurable rather than
+  argued, the candidate is to log the **screen-on time** during a recording
+  and carry it in the report; then energy decomposes into a GPS baseline plus
+  screen minutes, and %/h stops being a single band that cannot exist.
 
 - **F-15** (v1.3.0 field report, fixed → v1.3.1): "the map does not show
   during use". The renderer draws its grid wherever a tile is missing, and
